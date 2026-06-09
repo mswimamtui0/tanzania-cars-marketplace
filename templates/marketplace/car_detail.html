@@ -1,0 +1,18 @@
+<!-- Replace the contact button section with -->
+<a href="{% url 'whatsapp_chat' car.id %}" class="btn btn-success btn-lg w-100 mb-2">
+    <i class="fab fa-whatsapp"></i> Chat on WhatsApp
+</a>
+
+{% if car.seller.userprofile.verification_level >= 3 %}
+    <div class="alert alert-success">
+        <i class="fas fa-check-circle"></i> Verified Seller - Direct chat available
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-headset"></i> Our agent will assist you with this car
+    </div>
+{% endif %}
+
+<a href="{% url 'request_inspection' car.id %}" class="btn btn-info w-100">
+    <i class="fas fa-clipboard-list"></i> Request Inspection
+</a>

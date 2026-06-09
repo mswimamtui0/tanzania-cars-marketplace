@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1><i class="fas fa-user"></i> My Dashboard</h1>
+    <p>Welcome back, <strong>{{ user.username }}</strong>!</p>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="stat-card text-center">
+                <i class="fas fa-heart fa-3x"></i>
+                <h3>{{ wishlist_count|default:"0" }}</h3>
+                <p>Wishlist Items</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card text-center" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <i class="fas fa-calendar-check fa-3x"></i>
+                <h3>{{ reservations_count|default:"0" }}</h3>
+                <p>Active Reservations</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card text-center" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <i class="fas fa-envelope fa-3x"></i>
+                <h3>{{ unread_messages|default:"0" }}</h3>
+                <p>Unread Messages</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5><i class="fas fa-heart"></i> Your Wishlist</h5>
+                </div>
+                <div class="card-body">
+                    {% for item in recent_wishlist %}
+                    <div class="border-bottom mb-2 pb-2">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>{{ item.car.year }} {{ item.car.make }} {{ item.car.model }}</strong>
+                                <br><small class="text-muted">{{ item.car.mileage }} km</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="price-tag">TSh {{ item.car.price|floatformat:0 }}</span>
+                                <br>
+                                <a href="{% url 'car_detail' item.car.id %}" class="btn btn-sm btn-primary mt-1">View</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-center">Your wishlist is empty. <a href="{% url 'car_list' %}">Browse cars</a></p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5><i class="fas fa-calendar-alt"></i> Recent Reservations</h5>
+                </div>
+                <div class="card-body">
+                    {% for res in recent_reservations %}
+                    <div class="border-bottom mb-2 pb-2">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>{{ res.car.make }} {{ res.car.model }}</strong>
+                                <br><span class="badge bg-{% if res.status == 'confirmed' %}success{% else %}warning{% endif %}">{{ res.status }}</span>
+                            </div>
+                            <div class="text-end">
+                                <small>{{ res.reservation_date|date:"M d, Y" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-center">No reservations yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Contact Dealer{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Contact {{ dealer.username }}</h3>
+                </div>
+                <div class="card-body">
+                    {% if whatsapp %}
+                    <div class="alert alert-success">
+                        <i class="fab fa-whatsapp"></i> 
+                        <strong>WhatsApp Available!</strong> 
+                        <a href="https://wa.me/{{ whatsapp.whatsapp_number }}" target="_blank" class="btn btn-success btn-sm">
+                            Chat on WhatsApp <i class="fab fa-whatsapp"></i>
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label>Your Message</label>
+                            <textarea name="message" rows="5" class="form-control" required 
+                                placeholder="I'm interested in {% if car %}{{ car.make }} {{ car.model }}{% else %}your cars{% endif %}..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Send Message</button>
+                        <a href="javascript:history.back()" class="btn btn-secondary">Cancel</a>
+                    </form>
+                    
+                    {% if not whatsapp %}
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle"></i> 
+                        WhatsApp not available for this dealer. Your message will be sent via email.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-clipboard-list"></i> Request Vehicle Inspection</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Car:</strong> {{ car.year }} {{ car.make }} {{ car.model }}</p>
+                    <p><strong>Price:</strong> TZS {{ car.price|floatformat:0 }}</p>
+                    <hr>
+                    <p class="text-muted">Inspection fee: <strong>TZS 50,000</strong></p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label>Your Name</label>
+                            <input type="text" name="buyer_name" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Your Phone</label>
+                            <input type="tel" name="buyer_phone" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Preferred Date</label>
+                            <input type="datetime-local" name="inspection_date" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Location</label>
+                            <input type="text" name="location" class="form-control" placeholder="Dar es Salaam, Arusha..." required>
+                        </div>
+                        <button type="submit" class="btn btn-info w-100">Request Inspection</button>
+                    </form>
+                    
+                    <div class="alert alert-secondary mt-3">
+                        <small><i class="fas fa-info-circle"></i> We'll contact you within 2 hours to confirm inspection</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

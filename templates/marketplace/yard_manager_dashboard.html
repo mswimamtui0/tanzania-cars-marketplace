@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}Yard Manager Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1><i class="fas fa-warehouse"></i> Yard Manager Dashboard</h1>
+    <p>Welcome back, {{ user.username }}!</p>
+    
+    <div class="row">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h3>{{ total_yards }}</h3>
+                    <p>Yards Managed</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h3>{{ total_listings }}</h3>
+                    <p>Cars in Your Yards</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h3>{{ pending_escalations }}</h3>
+                    <p>Pending Escalations</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h3>{{ assigned_dealers }}</h3>
+                    <p>Assigned Dealers</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Your Yards</h5>
+                </div>
+                <div class="card-body">
+                    {% for yard in yards %}
+                        <div class="border-bottom mb-2 pb-2">
+                            <strong>{{ yard.name }}</strong><br>
+                            {{ yard.location }}, {{ yard.city }}
+                        </div>
+                    {% empty %}
+                        <p>No yards assigned yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Pending Escalations</h5>
+                </div>
+                <div class="card-body">
+                    {% for escalation in pending_escalations_list %}
+                        <div class="alert alert-warning">
+                            Buyer: {{ escalation.buyer.username }}<br>
+                            Dealer: {{ escalation.dealer.username }}<br>
+                            <a href="#" class="btn btn-sm btn-primary mt-2">Review</a>
+                        </div>
+                    {% empty %}
+                        <p>No pending escalations.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

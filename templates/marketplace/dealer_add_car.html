@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-plus-circle"></i> Add New Car Listing</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label>Car Title *</label>
+                                <input type="text" name="title" class="form-control" placeholder="e.g., Toyota Rav4 2022" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label>Make *</label>
+                                <select name="make" class="form-control" required>
+                                    <option value="">Select Make</option>
+                                    <option value="Toyota">Toyota</option>
+                                    <option value="Honda">Honda</option>
+                                    <option value="Nissan">Nissan</option>
+                                    <option value="BMW">BMW</option>
+                                    <option value="Mercedes">Mercedes</option>
+                                    <option value="Audi">Audi</option>
+                                    <option value="Volkswagen">Volkswagen</option>
+                                    <option value="Suzuki">Suzuki</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label>Model *</label>
+                                <input type="text" name="model" class="form-control" placeholder="e.g., Rav4, CRV, X5" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label>Year *</label>
+                                <input type="number" name="year" class="form-control" min="1980" max="2025" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label>Price (TZS) *</label>
+                                <input type="number" name="price" class="form-control" placeholder="e.g., 25000000" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label>Mileage (km) *</label>
+                                <input type="number" name="mileage" class="form-control" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label>Condition *</label>
+                                <select name="condition" class="form-control">
+                                    <option value="used">Used</option>
+                                    <option value="new">New</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label>Transmission *</label>
+                                <select name="transmission" class="form-control">
+                                    <option value="manual">Manual</option>
+                                    <option value="automatic">Automatic</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label>Fuel Type *</label>
+                                <select name="fuel_type" class="form-control">
+                                    <option value="petrol">Petrol</option>
+                                    <option value="diesel">Diesel</option>
+                                    <option value="electric">Electric</option>
+                                    <option value="hybrid">Hybrid</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label>Listing Package *</label>
+                                <select name="package" class="form-control">
+                                    <option value="normal">Normal - TZS 10,000</option>
+                                    <option value="featured">Featured - TZS 50,000</option>
+                                    <option value="premium">Premium - TZS 100,000</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label>Description *</label>
+                            <textarea name="description" rows="5" class="form-control" placeholder="Describe the car's condition, features, service history..." required></textarea>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> 
+                            Your listing will be reviewed by admin before going live. 
+                            Payment is required after approval.
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save"></i> Submit Listing
+                            </button>
+                            <a href="{% url 'dealer_my_cars' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to My Cars
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

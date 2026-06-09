@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Search Results - Tanzania Car Marketplace{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="search-filters">
+                <h4>Filter Cars</h4>
+                <form method="get">
+                    {{ form.as_p }}
+                    <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <h2>Found {{ cars.paginator.count }} cars</h2>
+            <div class="row">
+                {% for car in cars %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card car-card">
+                        {% if car.main_image %}
+                            <img src="{{ car.main_image.url }}" class="card-img-top" style="height: 150px; object-fit: cover;">
+                        {% endif %}
+                        <div class="card-body">
+                            <h6>{{ car.year }} {{ car.make }} {{ car.model }}</h6>
+                            <p class="price-tag">TSh {{ car.price|floatformat:0 }}</p>
+                            <p><small>{{ car.mileage }} km | {{ car.transmission }}</small></p>
+                            <a href="{% url 'car_detail' car.id %}" class="btn btn-primary btn-sm">View Details</a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p>No cars found matching your criteria.</p>
+                {% endfor %}
+            </div>
+            
+            {% if cars.has_other_pages %}
+            <nav>
+                <ul class="pagination">
+                    {% if cars.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page={{ cars.previous_page_number }}">Previous</a></li>
+                    {% endif %}
+                    {% for i in cars.paginator.page_range %}
+                        <li class="page-item {% if cars.number == i %}active{% endif %}">
+                            <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                        </li>
+                    {% endfor %}
+                    {% if cars.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ cars.next_page_number }}">Next</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
