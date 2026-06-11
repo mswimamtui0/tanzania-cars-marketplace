@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4"><i class="fas fa-chart-line"></i> Compare Cars</h1>
+    
+    {% if cars %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th style="width: 200px;">Specification</th>
+                    {% for car in cars %}
+                    <th style="min-width: 250px;">
+                        <h5>{{ car.year }} {{ car.make }} {{ car.model }}</h5>
+                        {% if car.main_image %}
+                            <img src="{{ car.main_image.url }}" style="height: 100px; width: 100%; object-fit: cover;" class="rounded mt-2">
+                        {% endif %}
+                        <a href="{% url 'remove_from_comparison' car.id %}" class="btn btn-sm btn-danger mt-2 w-100">
+                            <i class="fas fa-trash"></i> Remove
+                        </a>
+                    </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="fw-bold bg-light">Price</td>
+                    {% for car in cars %}
+                    <td class="text-success fw-bold">TSh {{ car.price|floatformat:0 }}</td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td class="fw-bold bg-light">Year</td>
+                    {% for car in cars %}
+                    <td>{{ car.year }}</td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td class="fw-bold bg-light">Mileage</td>
+                    {% for car in cars %}
+                    <td>{{ car.mileage|floatformat:0 }} km</td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td class="fw-bold bg-light">Condition</td>
+                    {% for car in cars %}
+                    <td><span class="badge bg-info">{{ car.condition|title }}</span></td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td class="fw-bold bg-light">Transmission</td>
+                    {% for car in cars %}
+                    <td>{{ car.transmission|title }}</td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td class="fw-bold bg-light">Fuel Type</td>
+                    {% for car in cars %}
+                    <td>{{ car.fuel_type|title }}</td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td class="fw-bold bg-light">Views</td>
+                    {% for car in cars %}
+                    <td>{{ car.views_count }} views</td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td class="fw-bold bg-light">Action</td>
+                    {% for car in cars %}
+                    <td>
+                        <a href="{% url 'car_detail' car.id %}" class="btn btn-primary btn-sm w-100">View Details</a>
+                    </td>
+                    {% endfor %}
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-car fa-4x text-muted mb-3"></i>
+        <h4>No cars to compare</h4>
+        <p>Browse cars and click "Add to Compare" to see them side by side.</p>
+        <a href="{% url 'car_list' %}" class="btn btn-primary">Browse Cars</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

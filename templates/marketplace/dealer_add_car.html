@@ -1,15 +1,16 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
 <div class="container mt-4">
     <div class="row justify-content-center">
-        <div class="col-md-8">
+        <div class="col-md-10">
             <div class="card shadow">
                 <div class="card-header bg-primary text-white">
                     <h4 class="mb-0"><i class="fas fa-plus-circle"></i> Add New Car Listing</h4>
                 </div>
                 <div class="card-body">
-                    <form method="post">
+                    <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         
                         <div class="row">
@@ -29,6 +30,8 @@
                                     <option value="Audi">Audi</option>
                                     <option value="Volkswagen">Volkswagen</option>
                                     <option value="Suzuki">Suzuki</option>
+                                    <option value="Ford">Ford</option>
+                                    <option value="Mazda">Mazda</option>
                                 </select>
                             </div>
                         </div>
@@ -89,6 +92,42 @@
                             </div>
                         </div>
                         
+                        <!-- ========== YARD SELECTION - ADD THIS SECTION ========== -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label>Select Car Yard *</label>
+                                <select name="yard" class="form-control" required>
+                                    <option value="">-- Select a Yard --</option>
+                                    {% for yard in yards %}
+                                        <option value="{{ yard.id }}">{{ yard.name }} - {{ yard.location }}, {{ yard.city }}</option>
+                                    {% empty %}
+                                        <option value="">No yards available. Contact admin.</option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted">Select which yard this car will be displayed in. The yard manager will approve this listing.</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Image Upload Section -->
+                        <div class="mb-3">
+                            <label>Car Images *</label>
+                            <div class="border rounded p-3 bg-light">
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <div class="image-upload-box text-center p-4 border-2 border-dashed" 
+                                             style="border: 2px dashed #ccc; cursor: pointer;" 
+                                             onclick="document.getElementById('car_image').click()">
+                                            <i class="fas fa-cloud-upload-alt fa-3x text-muted"></i>
+                                            <p class="mt-2">Click to upload car image</p>
+                                            <small class="text-muted">Supports: JPG, PNG, GIF (Max 5MB)</small>
+                                        </div>
+                                        <input type="file" name="images" id="car_image" class="d-none" accept="image/*" onchange="previewImage(this)">
+                                    </div>
+                                </div>
+                                <div id="imagePreview" class="row mt-2"></div>
+                            </div>
+                        </div>
+                        
                         <div class="mb-3">
                             <label>Description *</label>
                             <textarea name="description" rows="5" class="form-control" placeholder="Describe the car's condition, features, service history..." required></textarea>
@@ -96,7 +135,7 @@
                         
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle"></i> 
-                            Your listing will be reviewed by admin before going live. 
+                            Your listing will be reviewed by the yard manager before going live. 
                             Payment is required after approval.
                         </div>
                         
@@ -114,4 +153,42 @@
         </div>
     </div>
 </div>
+
+<script>
+function previewImage(input) {
+    var preview = document.getElementById('imagePreview');
+    preview.innerHTML = '';
+    
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var col = document.createElement('div');
+            col.className = 'col-md-3 mb-2';
+            col.innerHTML = `
+                <div class="position-relative">
+                    <img src="${e.target.result}" class="img-fluid rounded" style="height: 120px; width: 100%; object-fit: cover;">
+                    <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1" onclick="removeImage(this)">×</button>
+                </div>
+            `;
+            preview.appendChild(col);
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function removeImage(btn) {
+    btn.closest('.col-md-3').remove();
+    document.getElementById('car_image').value = '';
+}
+</script>
+
+<style>
+.image-upload-box:hover {
+    background-color: #f8f9fa;
+    border-color: #007bff !important;
+}
+.border-dashed {
+    border-style: dashed !important;
+}
+</style>
 {% endblock %}

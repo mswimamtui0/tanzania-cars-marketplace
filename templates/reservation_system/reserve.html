@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-warning">
+                    <h4 class="mb-0"><i class="fas fa-calendar-check"></i> Reserve This Car</h4>
+                </div>
+                <div class="card-body">
+                    <h5>{{ car.year }} {{ car.make }} {{ car.model }}</h5>
+                    <p class="text-success fw-bold">TZS {{ car.price|floatformat:0 }}</p>
+                    <hr>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label>
+                                <input type="checkbox" name="has_part_exchange" id="has_part_exchange"> I have a car to part-exchange
+                            </label>
+                        </div>
+                        <div id="partExchangeSection" style="display:none;" class="mb-3">
+                            <label>Part Exchange Car Details</label>
+                            <textarea name="part_exchange_car" class="form-control" rows="2" placeholder="Make, Model, Year, Condition..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label>
+                                <input type="checkbox" name="wants_finance" id="wants_finance"> I need financing
+                            </label>
+                        </div>
+                        <div id="financeSection" style="display:none;" class="mb-3">
+                            <label>Finance Amount Needed</label>
+                            <input type="number" name="finance_amount" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label>
+                                <input type="checkbox" name="delivery_required" id="delivery_required"> Delivery Required
+                            </label>
+                        </div>
+                        <div id="deliverySection" style="display:none;" class="mb-3">
+                            <label>Delivery Address</label>
+                            <textarea name="delivery_address" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> Reservation fee: TZS 50,000 (refundable)
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100">Reserve Now - TZS 50,000</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h5>Why Reserve?</h5>
+                </div>
+                <div class="card-body">
+                    <ul>
+                        <li>Lock in this price for 3 days</li>
+                        <li>Get vehicle inspection report</li>
+                        <li>Financing available</li>
+                        <li>Free test drive</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('has_part_exchange').addEventListener('change', function() {
+    document.getElementById('partExchangeSection').style.display = this.checked ? 'block' : 'none';
+});
+document.getElementById('wants_finance').addEventListener('change', function() {
+    document.getElementById('financeSection').style.display = this.checked ? 'block' : 'none';
+});
+document.getElementById('delivery_required').addEventListener('change', function() {
+    document.getElementById('deliverySection').style.display = this.checked ? 'block' : 'none';
+});
+</script>
+{% endblock %}

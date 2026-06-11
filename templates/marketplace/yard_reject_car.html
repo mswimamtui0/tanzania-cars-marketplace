@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="fas fa-times-circle"></i> Reject Car Listing</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-car fa-3x text-muted"></i>
+                        <h4>{{ car.year }} {{ car.make }} {{ car.model }}</h4>
+                        <p class="text-muted">Submitted by: {{ car.seller.username }}</p>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label>Rejection Reason (Optional)</label>
+                            <textarea name="rejection_reason" rows="4" class="form-control" 
+                                      placeholder="Why is this car being rejected? This will help the dealer improve their listing."></textarea>
+                        </div>
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Are you sure you want to reject this car listing? The dealer will need to resubmit.
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger btn-lg">
+                                <i class="fas fa-times"></i> Yes, Reject Car
+                            </button>
+                            <a href="{% url 'yard_pending_cars' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Pending List
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

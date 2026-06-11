@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-calculator"></i> Lease & Finance Calculator</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="leaseForm">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label>Car Price (TZS)</label>
+                                <input type="number" name="car_price" id="car_price" class="form-control" value="25000000" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label>Down Payment (TZS)</label>
+                                <input type="number" name="down_payment" id="down_payment" class="form-control" value="5000000">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label>Loan Term (months)</label>
+                                <select name="months" id="months" class="form-control">
+                                    <option value="24">24 months</option>
+                                    <option value="36" selected>36 months</option>
+                                    <option value="48">48 months</option>
+                                    <option value="60">60 months</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label>Interest Rate (%)</label>
+                                <input type="number" name="interest_rate" id="interest_rate" class="form-control" step="0.1" value="5.9">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Calculate</button>
+                    </form>
+                    
+                    {% if result %}
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <h5>Your Monthly Payment:</h5>
+                        <h2 class="text-primary">TZS {{ result.monthly_payment|floatformat:0 }}</h2>
+                        <hr>
+                        <p><strong>Total Payment:</strong> TZS {{ result.total_payment|floatformat:0 }}</p>
+                        <p><strong>Total Interest:</strong> TZS {{ result.total_interest|floatformat:0 }}</p>
+                        <button class="btn btn-success mt-2" onclick="applyForFinance()">Apply for Finance</button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function applyForFinance() {
+    alert("Finance application feature coming soon!");
+}
+</script>
+{% endblock %}

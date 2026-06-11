@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="fas fa-check-circle"></i> Approve Car Listing</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-5">
+                            {% if car.images %}
+                                <img src="{{ car.images.url }}" class="img-fluid rounded" alt="{{ car.title }}">
+                            {% else %}
+                                <div class="bg-light text-center py-5 rounded">
+                                    <i class="fas fa-car fa-4x text-muted"></i>
+                                    <p class="mt-2">No Image</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-7">
+                            <h3>{{ car.year }} {{ car.make }} {{ car.model }}</h3>
+                            <hr>
+                            <p><strong><i class="fas fa-user"></i> Dealer:</strong> {{ car.seller.username }}</p>
+                            <p><strong><i class="fas fa-envelope"></i> Email:</strong> {{ car.seller.email }}</p>
+                            <p><strong><i class="fas fa-dollar-sign"></i> Price:</strong> TSh {{ car.price|floatformat:0 }}</p>
+                            <p><strong><i class="fas fa-tachometer-alt"></i> Mileage:</strong> {{ car.mileage|floatformat:0 }} km</p>
+                            <p><strong><i class="fas fa-cog"></i> Transmission:</strong> {{ car.transmission|title }}</p>
+                            <p><strong><i class="fas fa-gas-pump"></i> Fuel Type:</strong> {{ car.fuel_type|title }}</p>
+                            <p><strong><i class="fas fa-tag"></i> Package:</strong> {{ car.package|title }}</p>
+                            <p><strong><i class="fas fa-map-marker-alt"></i> Yard:</strong> {{ car.yard.name|default:"Not assigned" }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h5>Description:</h5>
+                        <p class="text-muted">{{ car.description }}</p>
+                    </div>
+                    
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            By approving this car, it will become visible to all buyers on the marketplace.
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-check"></i> Yes, Approve This Car
+                            </button>
+                            <a href="{% url 'yard_pending_cars' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Pending List
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

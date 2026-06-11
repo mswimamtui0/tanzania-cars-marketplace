@@ -2,123 +2,32 @@
 
 {% block content %}
 <div class="container mt-4">
+    <h1 class="text-center mb-4">Browse Cars</h1>
+    
     <div class="row">
-        <!-- Sidebar Filters -->
-        <div class="col-md-3">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-filter"></i> Filters</h5>
-                </div>
-                <div class="card-body">
-                    <form method="get">
-                        <div class="mb-3">
-                            <label class="form-label">Make</label>
-                            <select name="make" class="form-select">
-                                <option value="">All Makes</option>
-                                <option value="Toyota">Toyota</option>
-                                <option value="Honda">Honda</option>
-                                <option value="Nissan">Nissan</option>
-                                <option value="BMW">BMW</option>
-                                <option value="Mercedes">Mercedes</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Min Price (TSh)</label>
-                            <input type="number" name="min_price" class="form-control" placeholder="Min Price">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Max Price (TSh)</label>
-                            <input type="number" name="max_price" class="form-control" placeholder="Max Price">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Year</label>
-                            <select name="year" class="form-select">
-                                <option value="">Any Year</option>
-                                <option value="2024">2024</option>
-                                <option value="2023">2023</option>
-                                <option value="2022">2022</option>
-                                <option value="2021">2021</option>
-                                <option value="2020">2020</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Transmission</label>
-                            <select name="transmission" class="form-select">
-                                <option value="">Any</option>
-                                <option value="manual">Manual</option>
-                                <option value="automatic">Automatic</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-custom w-100">
-                            <i class="fas fa-search"></i> Apply Filters
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <!-- Car Listings -->
-        <div class="col-md-9">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3><i class="fas fa-car"></i> Available Cars ({{ cars.paginator.count }})</h3>
-                <select class="form-select w-auto">
-                    <option>Newest First</option>
-                    <option>Price: Low to High</option>
-                    <option>Price: High to Low</option>
-                </select>
-            </div>
-
-            <div class="row">
-                {% for car in cars %}
-                <div class="col-md-6 col-lg-4 mb-4">
-                    <div class="car-card card h-100">
-                        {% if car.main_image %}
-                            <img src="{{ car.main_image.url }}" class="card-img-top" alt="{{ car.title }}" style="height: 180px; object-fit: cover;">
-                        {% else %}
-                            <img src="https://via.placeholder.com/400x200?text=Car+Image" class="card-img-top" alt="No Image">
-                        {% endif %}
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <h6 class="card-title">{{ car.year }} {{ car.make }} {{ car.model }}</h6>
-                                <span class="badge bg-{% if car.condition == 'new' %}success{% else %}secondary{% endif %}">{{ car.condition|title }}</span>
-                            </div>
-                            <p class="text-muted small">
-                                <i class="fas fa-tachometer-alt"></i> {{ car.mileage|floatformat:0 }} km
-                                <br><i class="fas fa-cog"></i> {{ car.transmission|title }}
-                            </p>
-                            <h5 class="price-tag">TSh {{ car.price|floatformat:0 }}</h5>
-                            <a href="{% url 'car_detail' car.id %}" class="btn btn-custom w-100 mt-2">View Details</a>
-                        </div>
+        {% for car in cars %}
+        <div class="col-md-4 mb-4">
+            <div class="card shadow h-100">
+                {% if car.images %}
+                    <img src="{{ car.images.url }}" class="card-img-top" alt="{{ car.title }}" style="height: 200px; object-fit: cover;">
+                {% else %}
+                    <div class="bg-light text-center py-5" style="height: 200px;">
+                        <i class="fas fa-car fa-3x text-muted"></i>
                     </div>
+                {% endif %}
+                <div class="card-body">
+                    <h5>{{ car.year }} {{ car.make }} {{ car.model }}</h5>
+                    <p class="text-muted">{{ car.mileage|floatformat:0 }} km | {{ car.transmission|title }}</p>
+                    <h4 class="text-success">TSh {{ car.price|floatformat:0 }}</h4>
+                    <a href="{% url 'car_detail' car.id %}" class="btn btn-primary w-100">View Details</a>
                 </div>
-                {% empty %}
-                <div class="col-12 text-center py-5">
-                    <i class="fas fa-car fa-4x text-muted mb-3"></i>
-                    <h4>No cars found</h4>
-                    <p>Try adjusting your search filters</p>
-                </div>
-                {% endfor %}
             </div>
-
-            <!-- Pagination -->
-            {% if cars.has_other_pages %}
-            <nav class="mt-4">
-                <ul class="pagination justify-content-center">
-                    {% if cars.has_previous %}
-                        <li class="page-item"><a class="page-link" href="?page={{ cars.previous_page_number }}">Previous</a></li>
-                    {% endif %}
-                    {% for i in cars.paginator.page_range %}
-                        <li class="page-item {% if cars.number == i %}active{% endif %}">
-                            <a class="page-link" href="?page={{ i }}">{{ i }}</a>
-                        </li>
-                    {% endfor %}
-                    {% if cars.has_next %}
-                        <li class="page-item"><a class="page-link" href="?page={{ cars.next_page_number }}">Next</a></li>
-                    {% endif %}
-                </ul>
-            </nav>
-            {% endif %}
         </div>
+        {% empty %}
+        <div class="col-12 text-center">
+            <p>No cars available.</p>
+        </div>
+        {% endfor %}
     </div>
 </div>
 {% endblock %}

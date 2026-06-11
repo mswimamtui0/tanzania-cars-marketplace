@@ -1,83 +1,209 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
 <div class="container-fluid mt-4">
-    <div class="row">
+    <!-- Welcome Banner -->
+    <div class="row mb-4">
         <div class="col-12">
-            <h1><i class="fas fa-user-shield"></i> Admin Dashboard</h1>
-            <p>Welcome back, <strong>{{ user.username }}</strong>! Here's your platform overview.</p>
-        </div>
-    </div>
-
-    <!-- Stats Cards -->
-    <div class="row mt-4">
-        <div class="col-md-3">
-            <div class="stat-card text-center">
-                <i class="fas fa-users fa-3x"></i>
-                <h2 class="mt-2">{{ total_users|default:"0" }}</h2>
-                <p>Total Users</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-card text-center" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                <i class="fas fa-car fa-3x"></i>
-                <h2 class="mt-2">{{ total_listings|default:"0" }}</h2>
-                <p>Total Listings</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-card text-center" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                <i class="fas fa-clock fa-3x"></i>
-                <h2 class="mt-2">{{ pending_approvals|default:"0" }}</h2>
-                <p>Pending Approvals</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-card text-center" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                <i class="fas fa-dollar-sign fa-3x"></i>
-                <h2 class="mt-2">{{ total_sales|default:"0" }}</h2>
-                <p>Total Sales</p>
+            <div class="card bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body">
+                    <h2 class="mb-0">Welcome back, {{ user.username }}!</h2>
+                    <p class="mb-0 mt-2">Here's what's happening with your marketplace today.</p>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="row mt-4">
-        <div class="col-md-8">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0"><i class="fas fa-chart-line"></i> Recent Activity</h5>
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                <i class="fas fa-users"></i> Total Users</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_users }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                <i class="fas fa-car"></i> Total Cars</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_cars }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-car fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                <i class="fas fa-clock"></i> Pending Approvals</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_approvals }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                <i class="fas fa-check-circle"></i> Approved Cars</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ approved_cars }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Approvals Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0"><i class="fas fa-clock"></i> Pending Car Approvals ({{ pending_cars|length }})</h5>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table">
+                        <table class="table table-bordered">
                             <thead>
-                                <tr><th>User</th><th>Action</th><th>Date</th></tr>
+                                <tr>
+                                    <th>Car</th>
+                                    <th>Seller</th>
+                                    <th>Price</th>
+                                    <th>Package</th>
+                                    <th>Date</th>
+                                    <th>Action</th>
+                                </tr>
                             </thead>
                             <tbody>
-                                <tr><td>john_doe</td><td>Listed Toyota Rav4</td><td>2 hours ago</td></tr>
-                                <tr><td>jane_smith</td><td>Registered as Dealer</td><td>5 hours ago</td></tr>
-                                <tr><td>mike_johnson</td><td>Purchased Honda CRV</td><td>1 day ago</td></tr>
+                                {% for car in pending_cars %}
+                                <tr>
+                                    <td>{{ car.year }} {{ car.make }} {{ car.model }}</td>
+                                    <td>{{ car.seller.username|default:"Unknown" }}</td>
+                                    <td>TSh {{ car.price|floatformat:0 }}</td>
+                                    <td>{{ car.package|title }}</td>
+                                    <td>{{ car.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-success approve-car" data-id="{{ car.id }}">
+                                            <i class="fas fa-check"></i> Approve
+                                        </button>
+                                        <button class="btn btn-sm btn-danger reject-car" data-id="{{ car.id }}">
+                                            <i class="fas fa-times"></i> Reject
+                                        </button>
+                                    </td>
+                                </table>
+                                {% empty %}
+                                <tr><td colspan="6" class="text-center">No pending approvals</td></tr>
+                                {% endfor %}
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0"><i class="fas fa-bell"></i> Quick Actions</h5>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-users"></i> Recent Users</h5>
                 </div>
                 <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="#" class="btn btn-outline-primary">Manage Users</a>
-                        <a href="#" class="btn btn-outline-success">Approve Listings</a>
-                        <a href="#" class="btn btn-outline-info">View Reports</a>
-                        <a href="#" class="btn btn-outline-warning">System Settings</a>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr><th>Username</th><th>Role</th><th>Joined</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for user in recent_users %}
+                                <tr>
+                                    <td>{{ user.username }}</td>
+                                    <td><span class="badge bg-info">{{ user.userprofile.role|title }}</span></td>
+                                    <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-car"></i> Recent Car Listings</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr><th>Car</th><th>Price</th><th>Status</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for car in recent_cars %}
+                                <tr>
+                                    <td>{{ car.year }} {{ car.make }} {{ car.model }}</td>
+                                    <td>TSh {{ car.price|floatformat:0 }}</td>
+                                    <td>
+                                        {% if car.status == 'approved' %}
+                                            <span class="badge bg-success">Approved</span>
+                                        {% elif car.status == 'pending' %}
+                                            <span class="badge bg-warning">Pending</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ car.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+document.querySelectorAll('.approve-car').forEach(btn => {
+    btn.addEventListener('click', function() {
+        fetch(`/admin/approve-car/${this.dataset.id}/`, {method: 'POST'})
+        .then(() => location.reload());
+    });
+});
+</script>
 {% endblock %}

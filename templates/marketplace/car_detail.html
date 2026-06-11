@@ -1,18 +1,93 @@
-<!-- Replace the contact button section with -->
-<a href="{% url 'whatsapp_chat' car.id %}" class="btn btn-success btn-lg w-100 mb-2">
-    <i class="fab fa-whatsapp"></i> Chat on WhatsApp
-</a>
+{% extends 'base.html' %}
 
-{% if car.seller.userprofile.verification_level >= 3 %}
-    <div class="alert alert-success">
-        <i class="fas fa-check-circle"></i> Verified Seller - Direct chat available
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow">
+                {% if car.images %}
+                    <img src="{{ car.images.url }}" class="card-img-top" alt="{{ car.title }}" style="height: 400px; object-fit: cover;">
+                {% else %}
+                    <div class="bg-light text-center py-5" style="height: 400px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-car fa-5x text-muted"></i>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card shadow p-4">
+                <h2>{{ car.year }} {{ car.make }} {{ car.model }}</h2>
+                <hr>
+                <h3 class="text-success">TSh {{ car.price|floatformat:0 }}</h3>
+                <table class="table">
+                    <tr><td>Mileage</td><td>{{ car.mileage|floatformat:0 }} km</td></tr>
+                    <tr><td>Transmission</td><td>{{ car.transmission|title }}</td></tr>
+                    <tr><td>Fuel Type</td><td>{{ car.fuel_type|title }}</td></tr>
+                    <tr><td>Condition</td><td>{{ car.condition|title }}</td></tr>
+                </table>
+                
+                <div class="d-grid gap-2">
+                    <a href="{% url 'whatsapp_chat' car.id %}" class="btn btn-success btn-lg">
+                        <i class="fab fa-whatsapp"></i> Chat on WhatsApp
+                    </a>
+                    <a href="{% url 'save_car' car.id %}" class="btn btn-outline-danger">
+                        <i class="far fa-heart"></i> Save to Wishlist
+                    </a>
+                    <a href="{% url 'request_inspection' car.id %}" class="btn btn-info">
+                        <i class="fas fa-clipboard-list"></i> Request Inspection
+                    </a>
+                    <a href="{% url 'add_to_comparison' car.id %}" class="btn btn-outline-primary">
+                        <i class="fas fa-chart-line"></i> Add to Compare
+                    </a>
+                </div>
+                
+                <!-- Mark as Sold Button - Only for buyers -->
+                {% if user.is_authenticated and user.userprofile.role == 'buyer' and car.status == 'approved' %}
+                <div class="mt-3">
+                    <button type="button" class="btn btn-warning btn-lg w-100" data-bs-toggle="modal" data-bs-target="#soldModal">
+                        <i class="fas fa-check-circle"></i> Mark as Sold - I Bought This Car
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
-{% else %}
-    <div class="alert alert-info">
-        <i class="fas fa-headset"></i> Our agent will assist you with this car
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow p-4">
+                <h4>Description</h4>
+                <p>{{ car.description }}</p>
+            </div>
+        </div>
     </div>
+</div>
+
+<!-- Sold Confirmation Modal -->
+{% if user.is_authenticated and user.userprofile.role == 'buyer' and car.status == 'approved' %}
+<div class="modal fade" id="soldModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">Confirm Purchase</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you purchased this car?</p>
+                <p><strong>{{ car.year }} {{ car.make }} {{ car.model }}</strong></p>
+                <p>Price: <strong>TSh {{ car.price|floatformat:0 }}</strong></p>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> The dealer will be notified and will confirm the sale.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <a href="{% url 'mark_as_sold' car.id %}" class="btn btn-warning">Confirm Purchase</a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endif %}
 
-<a href="{% url 'request_inspection' car.id %}" class="btn btn-info w-100">
-    <i class="fas fa-clipboard-list"></i> Request Inspection
-</a>
+{% endblock %}

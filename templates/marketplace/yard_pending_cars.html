@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-white">
+                    <h4 class="mb-0"><i class="fas fa-clock"></i> Pending Car Approvals</h4>
+                    <p class="mb-0">Cars waiting for your approval in your yards</p>
+                </div>
+                <div class="card-body">
+                    {% if pending_cars %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Car Details</th>
+                                        <th>Dealer</th>
+                                        <th>Price (TZS)</th>
+                                        <th>Yard</th>
+                                        <th>Package</th>
+                                        <th>Submitted</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for car in pending_cars %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ car.year }} {{ car.make }} {{ car.model }}</strong>
+                                            <br><small class="text-muted">
+                                                <i class="fas fa-tachometer-alt"></i> {{ car.mileage|floatformat:0 }} km |
+                                                <i class="fas fa-cog"></i> {{ car.transmission|title }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            {{ car.seller.username|default:"Unknown" }}
+                                            <br><small class="text-muted">{{ car.seller.email|default:"No email" }}</small>
+                                        </td>
+                                        <td class="text-success fw-bold">TSh {{ car.price|floatformat:0 }}</td>
+                                        <td>
+                                            {% if car.yard %}
+                                                {{ car.yard.name }}
+                                                <br><small class="text-muted">{{ car.yard.location }}</small>
+                                            {% else %}
+                                                <span class="text-muted">No yard assigned</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if car.package == 'premium' %}
+                                                <span class="badge bg-info">Premium</span>
+                                            {% elif car.package == 'featured' %}
+                                                <span class="badge bg-primary">Featured</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Normal</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ car.created_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{% url 'yard_approve_car' car.id %}" class="btn btn-sm btn-success">
+                                                    <i class="fas fa-check"></i> Approve
+                                                </a>
+                                                <a href="{% url 'yard_reject_car' car.id %}" class="btn btn-sm btn-danger">
+                                                    <i class="fas fa-times"></i> Reject
+                                                </a>
+                                                <a href="{% url 'car_detail' car.id %}" class="btn btn-sm btn-info">
+                                                    <i class="fas fa-eye"></i> View
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                            <h4>No Pending Approvals</h4>
+                            <p>All cars in your yards have been reviewed.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h3>{{ total_pending }}</h3>
+                    <p>Pending Approval</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3>{{ approved_cars }}</h3>
+                    <p>Approved Cars</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <h3>{{ rejected_cars }}</h3>
+                    <p>Rejected Cars</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>{{ total_cars }}</h3>
+                    <p>Total Cars in Yards</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

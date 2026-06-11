@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="fas fa-credit-card"></i> Complete Reservation</h4>
+                </div>
+                <div class="card-body">
+                    <h5>{{ reservation.car.year }} {{ reservation.car.make }} {{ reservation.car.model }}</h5>
+                    <p class="text-muted">Reservation ID: #{{ reservation.id }}</p>
+                    <hr>
+                    <div class="mb-3">
+                        <p><strong>Reservation Fee:</strong> TZS {{ reservation.reservation_fee|floatformat:0 }}</p>
+                        <p><strong>Expires:</strong> {{ reservation.expires_at|date:"M d, Y H:i" }}</p>
+                    </div>
+                    
+                    {% if reservation.has_part_exchange %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-exchange-alt"></i> Part-exchange included
+                    </div>
+                    {% endif %}
+                    
+                    {% if reservation.wants_finance %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-coins"></i> Finance requested: TZS {{ reservation.finance_amount|floatformat:0 }}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-success btn-lg" onclick="simulatePayment()">
+                            <i class="fas fa-check-circle"></i> Confirm Payment
+                        </button>
+                        <a href="{% url 'car_detail' reservation.car.id %}" class="btn btn-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function simulatePayment() {
+    alert("Payment simulation complete! Your car has been reserved.\n\nAn agent will contact you within 24 hours.");
+    window.location.href = "/dashboard/";
+}
+</script>
+{% endblock %}
