@@ -5,11 +5,13 @@
     <div class="row">
         <div class="col-md-6">
             <div class="card shadow">
-                {% if car.images %}
-                    <img src="{{ car.images.url }}" class="card-img-top" alt="{{ car.title }}" style="height: 400px; object-fit: cover;">
+                {% if car.images and car.images.url %}
+                    <img src="{{ car.images.url }}" class="card-img-top" alt="{{ car.title }}" style="height: 400px; object-fit: cover; width: 100%;">
                 {% else %}
-                    <div class="bg-light text-center py-5" style="height: 400px; display: flex; align-items: center; justify-content: center;">
+                    <div class="bg-light text-center py-5" style="height: 400px; display: flex; align-items: center; justify-content: center; flex-direction: column;">
                         <i class="fas fa-car fa-5x text-muted"></i>
+                        <p class="mt-3 text-muted">No Image Available</p>
+                        <small class="text-muted">{{ car.make }} {{ car.model }}</small>
                     </div>
                 {% endif %}
             </div>
@@ -21,10 +23,10 @@
                 <hr>
                 <h3 class="text-success">TSh {{ car.price|floatformat:0 }}</h3>
                 <table class="table">
-                    <tr><td>Mileage</td><td>{{ car.mileage|floatformat:0 }} km</td></tr>
-                    <tr><td>Transmission</td><td>{{ car.transmission|title }}</td></tr>
-                    <tr><td>Fuel Type</td><td>{{ car.fuel_type|title }}</td></tr>
-                    <tr><td>Condition</td><td>{{ car.condition|title }}</td></tr>
+                    <tr><th>Mileage</th><td>{{ car.mileage|floatformat:0 }} km</td></tr>
+                    <tr><th>Transmission</th><td>{{ car.transmission|title }}</td></tr>
+                    <tr><th>Fuel Type</th><td>{{ car.fuel_type|title }}</td></tr>
+                    <tr><th>Condition</th><td>{{ car.condition|title }}</td></tr>
                 </table>
                 
                 <div class="d-grid gap-2">
@@ -42,7 +44,6 @@
                     </a>
                 </div>
                 
-                <!-- Mark as Sold Button - Only for buyers -->
                 {% if user.is_authenticated and user.userprofile.role == 'buyer' and car.status == 'approved' %}
                 <div class="mt-3">
                     <button type="button" class="btn btn-warning btn-lg w-100" data-bs-toggle="modal" data-bs-target="#soldModal">
@@ -88,6 +89,15 @@
         </div>
     </div>
 </div>
+{% endif %}
+{% if car.images and car.images.url %}
+    <img src="{{ car.images.url }}" class="card-img-top" alt="{{ car.title }}" style="height: 400px; object-fit: cover; width: 100%;">
+{% else %}
+    <div class="bg-primary text-white text-center py-5" style="height: 400px; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+        <i class="fas fa-car fa-5x mb-3"></i>
+        <h4>{{ car.make }} {{ car.model }}</h4>
+        <p>{{ car.year }} | TSh {{ car.price|floatformat:0 }}</p>
+    </div>
 {% endif %}
 
 {% endblock %}

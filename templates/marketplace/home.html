@@ -18,11 +18,60 @@
     .hero-section p {
         text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
     }
+    
+    .search-box {
+        background: white;
+        border-radius: 50px;
+        padding: 10px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    }
+    
+    .search-box input {
+        border: none;
+        padding: 12px 20px;
+        border-radius: 50px;
+    }
+    
+    .search-box button {
+        border-radius: 50px;
+        padding: 12px 30px;
+    }
+    
+    .featured-card {
+        border: 2px solid #ffc107;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .featured-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #ffc107;
+        color: #000;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+        z-index: 10;
+    }
+    
+    .new-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: #007bff;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+        z-index: 10;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Hero Section with Background Image -->
+<!-- Hero Section -->
 <div class="hero-section">
     <div class="container">
         <div class="row align-items-center">
@@ -37,7 +86,7 @@
                             <input type="text" name="q" class="form-control" placeholder="Search by make, model, or keyword...">
                         </div>
                         <div class="col-md-4">
-                            <button type="submit" class="btn btn-custom w-100">
+                            <button type="submit" class="btn btn-primary w-100">
                                 <i class="fas fa-search"></i> Search Cars
                             </button>
                         </div>
@@ -67,136 +116,124 @@
 </div>
 
 <div class="container mt-5">
-    <!-- Features Section -->
-    <div class="row mb-5">
-        <div class="col-md-3 text-center">
-            <div class="dashboard-card p-3">
-                <i class="fas fa-check-circle fa-3x text-success"></i>
-                <h5 class="mt-2">Verified Cars</h5>
-                <small>All cars inspected</small>
-            </div>
-        </div>
-        <div class="col-md-3 text-center">
-            <div class="dashboard-card p-3">
-                <i class="fas fa-shield-alt fa-3x text-primary"></i>
-                <h5 class="mt-2">Secure Payment</h5>
-                <small>Safe transactions</small>
-            </div>
-        </div>
-        <div class="col-md-3 text-center">
-            <div class="dashboard-card p-3">
-                <i class="fas fa-headset fa-3x text-info"></i>
-                <h5 class="mt-2">24/7 Support</h5>
-                <small>Always here to help</small>
-            </div>
-        </div>
-        <div class="col-md-3 text-center">
-            <div class="dashboard-card p-3">
-                <i class="fas fa-truck fa-3x text-warning"></i>
-                <h5 class="mt-2">Free Delivery</h5>
-                <small>Within Dar es Salaam</small>
-            </div>
+    <!-- Featured Cars Section -->
+    {% if featured_cars %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-center mb-2">⭐ Featured Cars</h2>
+            <p class="text-center text-muted mb-4">Hand-picked premium vehicles from trusted dealers</p>
         </div>
     </div>
-
-    <!-- Featured Cars -->
-    <h2 class="text-center mb-4">🔥 Featured Cars</h2>
     <div class="row">
         {% for car in featured_cars %}
-        <div class="col-md-4">
-            <div class="car-card card">
-                {% if car.main_images %}
-                    <img src="{{ car.main_images.url }}" class="card-img-top" alt="{{ car.title }}">
+        <div class="col-md-4 mb-4">
+            <div class="card shadow h-100 position-relative featured-card">
+                <span class="featured-badge">
+                    <i class="fas fa-star"></i> FEATURED
+                </span>
+                {% if car.images and car.images.url %}
+                    <img src="{{ car.images.url }}" class="card-img-top" alt="{{ car.title }}" style="height: 200px; object-fit: cover; width: 100%;">
                 {% else %}
-                    <img src="https://via.placeholder.com/400x200?text=Car+Image" class="card-img-top" alt="No Images">
+                    <div class="bg-warning text-white text-center py-4" style="height: 200px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-star fa-3x"></i>
+                    </div>
                 {% endif %}
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h5 class="card-title">{{ car.year }} {{ car.make }} {{ car.model }}</h5>
-                            <p class="text-muted">{{ car.mileage|floatformat:0 }} km | {{ car.transmission|title }}</p>
-                        </div>
-                        <span class="badge bg-{% if car.condition == 'new' %}success{% else %}info{% endif %}">{{ car.condition|title }}</span>
+                    <h5 class="card-title">{{ car.year }} {{ car.make }} {{ car.model }}</h5>
+                    <p class="card-text text-muted">
+                        <i class="fas fa-tachometer-alt"></i> {{ car.mileage|floatformat:0 }} km<br>
+                        <i class="fas fa-cog"></i> {{ car.transmission|title }} | 
+                        <i class="fas fa-gas-pump"></i> {{ car.fuel_type|title }}
+                    </p>
+                    <h4 class="text-success">TSh {{ car.price|floatformat:0 }}</h4>
+                    <a href="{% url 'car_detail' car.id %}" class="btn btn-warning w-100">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Latest Cars Section -->
+    <div class="row mt-5 mb-4">
+        <div class="col-12">
+            <h2 class="text-center mb-2">🔥 Latest Arrivals</h2>
+            <p class="text-center text-muted mb-4">Most recently listed cars on our platform</p>
+        </div>
+    </div>
+    <div class="row">
+        {% for car in latest_cars %}
+        <div class="col-md-4 mb-4">
+            <div class="card shadow h-100 position-relative">
+                <span class="new-badge">
+                    <i class="fas fa-clock"></i> NEW
+                </span>
+                {% if car.images and car.images.url %}
+                    <img src="{{ car.images.url }}" class="card-img-top" alt="{{ car.title }}" style="height: 200px; object-fit: cover; width: 100%;">
+                {% else %}
+                    <div class="bg-primary text-white text-center py-4" style="height: 200px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-car fa-3x"></i>
                     </div>
-                    <h4 class="price-tag">TSh {{ car.price|floatformat:0 }}</h4>
-                    <div class="d-flex justify-content-between mt-3">
-                        <a href="{% url 'car_detail' car.id %}" class="btn btn-custom">View Details</a>
-                        <button class="btn btn-outline-danger" onclick="saveCar({{ car.id }})">
-                            <i class="far fa-heart"></i>
-                        </button>
-                    </div>
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ car.year }} {{ car.make }} {{ car.model }}</h5>
+                    <p class="card-text text-muted">
+                        <i class="fas fa-tachometer-alt"></i> {{ car.mileage|floatformat:0 }} km<br>
+                        <i class="fas fa-cog"></i> {{ car.transmission|title }} | 
+                        <i class="fas fa-gas-pump"></i> {{ car.fuel_type|title }}
+                    </p>
+                    <h4 class="text-success">TSh {{ car.price|floatformat:0 }}</h4>
+                    <a href="{% url 'car_detail' car.id %}" class="btn btn-primary w-100">View Details</a>
                 </div>
             </div>
         </div>
         {% empty %}
         <div class="col-12 text-center">
-            <p>No featured cars available yet.</p>
+            <p class="text-muted">No cars available yet.</p>
         </div>
         {% endfor %}
     </div>
+</div>
 
-    <!-- Popular Makes -->
-    <h2 class="text-center mb-4 mt-5">🏆 Popular Car Makes</h2>
-    <div class="row">
-        <div class="col-md-2 col-4 mb-3">
-            <div class="dashboard-card text-center p-3 bg-light">
-                <i class="fas fa-car fa-2x"></i>
-                <h6 class="mt-2">Toyota</h6>
-                <small>2,500+ cars</small>
-            </div>
+<!-- Features Section -->
+<div class="container mt-5">
+    <div class="row text-center">
+        <div class="col-md-3 col-6 mb-3">
+            <i class="fas fa-check-circle fa-3x text-success"></i>
+            <h5 class="mt-2">Verified Cars</h5>
+            <small class="text-muted">All cars inspected</small>
         </div>
-        <div class="col-md-2 col-4 mb-3">
-            <div class="dashboard-card text-center p-3 bg-light">
-                <i class="fas fa-car fa-2x"></i>
-                <h6 class="mt-2">Honda</h6>
-                <small>1,800+ cars</small>
-            </div>
+        <div class="col-md-3 col-6 mb-3">
+            <i class="fas fa-shield-alt fa-3x text-primary"></i>
+            <h5 class="mt-2">Secure Payment</h5>
+            <small class="text-muted">Safe transactions</small>
         </div>
-        <div class="col-md-2 col-4 mb-3">
-            <div class="dashboard-card text-center p-3 bg-light">
-                <i class="fas fa-car fa-2x"></i>
-                <h6 class="mt-2">Nissan</h6>
-                <small>1,200+ cars</small>
-            </div>
+        <div class="col-md-3 col-6 mb-3">
+            <i class="fas fa-headset fa-3x text-info"></i>
+            <h5 class="mt-2">24/7 Support</h5>
+            <small class="text-muted">Always here to help</small>
         </div>
-        <div class="col-md-2 col-4 mb-3">
-            <div class="dashboard-card text-center p-3 bg-light">
-                <i class="fas fa-car fa-2x"></i>
-                <h6 class="mt-2">BMW</h6>
-                <small>900+ cars</small>
-            </div>
-        </div>
-        <div class="col-md-2 col-4 mb-3">
-            <div class="dashboard-card text-center p-3 bg-light">
-                <i class="fas fa-car fa-2x"></i>
-                <h6 class="mt-2">Mercedes</h6>
-                <small>850+ cars</small>
-            </div>
-        </div>
-        <div class="col-md-2 col-4 mb-3">
-            <div class="dashboard-card text-center p-3 bg-light">
-                <i class="fas fa-car fa-2x"></i>
-                <h6 class="mt-2">Suzuki</h6>
-                <small>600+ cars</small>
-            </div>
-        </div>
-    </div>
-
-    <!-- CTA Banner -->
-    <div class="row mt-5">
-        <div class="col-12">
-            <div class="bg-primary text-white rounded p-5 text-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                <h3>Sell Your Car Today!</h3>
-                <p class="lead">Get instant valuation and reach thousands of potential buyers</p>
-                <a href="{% url 'car_valuation' %}" class="btn btn-light btn-lg">Get Free Valuation</a>
-            </div>
+        <div class="col-md-3 col-6 mb-3">
+            <i class="fas fa-truck fa-3x text-warning"></i>
+            <h5 class="mt-2">Free Delivery</h5>
+            <small class="text-muted">Within Dar es Salaam</small>
         </div>
     </div>
 </div>
 
-<script>
-function saveCar(carId) {
-    window.location.href = `/save-car/${carId}/`;
-}
-</script>
+<!-- CTA Banner -->
+<div class="container mt-5 mb-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="bg-primary text-white rounded p-5 text-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <h3>Sell Your Car Today!</h3>
+                <p class="lead">Get instant valuation and reach thousands of potential buyers</p>
+                <div>
+                    <a href="{% url 'car_valuation' %}" class="btn btn-light btn-lg me-2">Get Free Valuation</a>
+                    <a href="{% url 'sell_car' %}" class="btn btn-outline-light btn-lg">Sell Your Car</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

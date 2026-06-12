@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-car"></i> Cars in My Yards</h1>
+        <a href="{% url 'yard_add_car' %}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Add New Car
+        </a>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>{{ total_cars }}</h3>
+                    <p>Total Cars</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3>{{ approved_cars }}</h3>
+                    <p>Approved</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h3>{{ pending_cars }}</h3>
+                    <p>Pending</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <h3>{{ sold_cars }}</h3>
+                    <p>Sold</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cars Table -->
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">All Cars in Your Yards</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Car</th>
+                            <th>Yard</th>
+                            <th>Price (TZS)</th>
+                            <th>Status</th>
+                            <th>Views</th>
+                            <th>Added</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for car in cars %}
+                        <tr>
+                            <td>
+                                <strong>{{ car.year }} {{ car.make }} {{ car.model }}</strong>
+                                <br><small class="text-muted">{{ car.mileage|floatformat:0 }} km</small>
+                            </td>
+                            <td>{{ car.yard.name|default:"-" }}</td>
+                            <td class="text-success fw-bold">{{ car.price|floatformat:0 }}</td>
+                            <td>
+                                {% if car.status == 'approved' %}
+                                    <span class="badge bg-success">Approved</span>
+                                {% elif car.status == 'pending' %}
+                                    <span class="badge bg-warning">Pending</span>
+                                {% elif car.status == 'sold' %}
+                                    <span class="badge bg-danger">Sold</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ car.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ car.views_count }}</td>
+                            <td>{{ car.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'car_detail' car.id %}" class="btn btn-sm btn-info" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if car.status == 'pending' %}
+                                        <a href="{% url 'yard_approve_car' car.id %}" class="btn btn-sm btn-success" title="Approve">
+                                            <i class="fas fa-check"></i>
+                                        </a>
+                                        <a href="{% url 'yard_reject_car' car.id %}" class="btn btn-sm btn-danger" title="Reject">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <i class="fas fa-car fa-3x text-muted mb-3"></i>
+                                <h5>No cars in your yards yet</h5>
+                                <a href="{% url 'yard_add_car' %}" class="btn btn-primary">Add Your First Car</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

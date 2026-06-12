@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-# User Profile Model
+
 class UserProfile(models.Model):
     ROLE_CHOICES = (
         ('buyer', 'Buyer'),
@@ -22,31 +22,26 @@ class UserProfile(models.Model):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='buyer')
     phone = models.CharField(max_length=15, blank=True, null=True)
     email_verified = models.BooleanField(default=False)
-    
-    # Seller specific fields
     verification_level = models.IntegerField(choices=VERIFICATION_LEVELS, default=1)
     id_uploaded = models.FileField(upload_to='ids/', blank=True, null=True)
     location_verified = models.BooleanField(default=False)
     verified_badge = models.BooleanField(default=False)
     company_name = models.CharField(max_length=100, blank=True)
-    
-    # Agent specific fields
+    whatsapp_number = models.CharField(max_length=20, blank=True, null=True)
     commission_rate = models.DecimalField(max_digits=5, decimal_places=2, default=2.0)
     total_sales = models.IntegerField(default=0)
     total_commission = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     is_active_agent = models.BooleanField(default=True)
-    
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
-        return f"{self.user.username} - {self.role} - Level {self.verification_level}"
+        return f"{self.user.username} - {self.role}"
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.create(user=instance)
 
-# Car Yard Model
 class CarYard(models.Model):
     name = models.CharField(max_length=100)
     manager = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='managed_yards')
@@ -61,39 +56,17 @@ class CarYard(models.Model):
     def __str__(self):
         return f"{self.name} - {self.city}"
 
-# Car Listing Model
 class CarListing(models.Model):
     LISTING_PACKAGES = (
         ('normal', 'Normal - TZS 10,000'),
         ('featured', 'Featured - TZS 50,000'),
         ('premium', 'Premium - TZS 100,000'),
     )
+    CONDITION_CHOICES = (('new', 'New'), ('used', 'Used'))
+    TRANSMISSION_CHOICES = (('manual', 'Manual'), ('automatic', 'Automatic'))
+    STATUS_CHOICES = (('pending', 'Pending'), ('approved', 'Approved'), ('sold', 'Sold'), ('rejected', 'Rejected'))
+    FUEL_CHOICES = (('petrol', 'Petrol'), ('diesel', 'Diesel'), ('electric', 'Electric'), ('hybrid', 'Hybrid'))
     
-    CONDITION_CHOICES = (
-        ('new', 'New'),
-        ('used', 'Used'),
-    )
-    
-    TRANSMISSION_CHOICES = (
-        ('manual', 'Manual'),
-        ('automatic', 'Automatic'),
-    )
-    
-    STATUS_CHOICES = (
-        ('pending', 'Pending Approval'),
-        ('approved', 'Approved'),
-        ('sold', 'Sold'),
-        ('rejected', 'Rejected'),
-    )
-    
-    FUEL_CHOICES = (
-        ('petrol', 'Petrol'),
-        ('diesel', 'Diesel'),
-        ('electric', 'Electric'),
-        ('hybrid', 'Hybrid'),
-    )
-    
-    # Car details
     title = models.CharField(max_length=200)
     make = models.CharField(max_length=50)
     model = models.CharField(max_length=50)
@@ -105,17 +78,11 @@ class CarListing(models.Model):
     fuel_type = models.CharField(max_length=20, choices=FUEL_CHOICES, default='petrol')
     description = models.TextField(blank=True)
     images = models.ImageField(upload_to='cars/', blank=True, null=True)
-    
-    # Seller and verification
     seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name='listings', null=True, blank=True)
     yard = models.ForeignKey(CarYard, on_delete=models.SET_NULL, null=True, blank=True, related_name='cars')
-    
-    # Listing package
     package = models.CharField(max_length=20, choices=LISTING_PACKAGES, default='normal')
     payment_made = models.BooleanField(default=False)
     payment_confirmed = models.BooleanField(default=False)
-    
-    # Status
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     is_featured = models.BooleanField(default=False)
     views_count = models.IntegerField(default=0)
@@ -125,9 +92,7 @@ class CarListing(models.Model):
     def __str__(self):
         return f"{self.year} {self.make} {self.model}"
 
-# Wishlist Model
 class Wishlist(models.Model):
-    """User wishlist for saving favorite cars"""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wishlist_items')
     car = models.ForeignKey(CarListing, on_delete=models.CASCADE, related_name='wishlisted_by')
     added_at = models.DateTimeField(auto_now_add=True)
@@ -138,7 +103,6 @@ class Wishlist(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.car}"
 
-# ComparisonSet Model - CORRECTLY PLACED OUTSIDE
 class ComparisonSet(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='comparison_set')
     cars = models.ManyToManyField(CarListing, related_name='in_comparisons')
@@ -146,8 +110,7 @@ class ComparisonSet(models.Model):
     
     def __str__(self):
         return f"{self.user.username}'s comparison"
-    
-    # Sold Request Model - Buyer reports car as sold, Dealer approves
+
 class SoldRequest(models.Model):
     STATUS_CHOICES = (
         ('pending', 'Pending Dealer Approval'),
@@ -155,7 +118,7 @@ class SoldRequest(models.Model):
         ('rejected', 'Rejected'),
     )
     
-    car = models.ForeignKey('CarListing', on_delete=models.CASCADE, related_name='sold_requests')
+    car = models.ForeignKey(CarListing, on_delete=models.CASCADE, related_name='sold_requests')
     buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sold_requests')
     dealer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='dealer_sold_requests')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
@@ -165,3 +128,42 @@ class SoldRequest(models.Model):
     
     def __str__(self):
         return f"{self.buyer.username} bought {self.car.make} {self.car.model} - {self.status}"
+    
+    # Add these after your existing models
+
+class Reservation(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('confirmed', 'Confirmed'),
+        ('cancelled', 'Cancelled'),
+        ('completed', 'Completed'),
+    )
+    
+    buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reservations')
+    car = models.ForeignKey('CarListing', on_delete=models.CASCADE, related_name='reservations')
+    reservation_fee = models.DecimalField(max_digits=10, decimal_places=2, default=50000)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"{self.buyer.username} - {self.car.make} {self.car.model}"
+
+class InspectionRequest(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('scheduled', 'Scheduled'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    )
+    
+    car = models.ForeignKey('CarListing', on_delete=models.CASCADE, related_name='inspections')
+    buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='inspections')
+    inspection_date = models.DateTimeField(null=True, blank=True)
+    location = models.CharField(max_length=200, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    fee = models.DecimalField(max_digits=10, decimal_places=2, default=50000)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Inspection for {self.car.make} {self.car.model} by {self.buyer.username}"

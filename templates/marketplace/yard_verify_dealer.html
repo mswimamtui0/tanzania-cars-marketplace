@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Verify Dealer</h4>
+                </div>
+                <div class="card-body">
+                    <h5>{{ dealer.username }}</h5>
+                    <p><strong>Email:</strong> {{ dealer.email }}</p>
+                    <p><strong>Company:</strong> {{ dealer.userprofile.company_name|default:"Not provided" }}</p>
+                    <p><strong>Phone:</strong> {{ dealer.userprofile.phone|default:"Not provided" }}</p>
+                    <hr>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label>Assign to Yard</label>
+                            <select name="yard" class="form-control" required>
+                                {% for yard in yards %}
+                                    <option value="{{ yard.id }}">{{ yard.name }} - {{ yard.location }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label>Verification Level</label>
+                            <select name="verification_level" class="form-control">
+                                <option value="2">Level 2 - Partially Verified (ID uploaded)</option>
+                                <option value="3">Level 3 - Fully Verified (ID + Location verified)</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Verify Dealer</button>
+                        <a href="{% url 'yard_pending_dealers' %}" class="btn btn-secondary w-100 mt-2">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

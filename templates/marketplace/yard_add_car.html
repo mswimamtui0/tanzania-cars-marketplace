@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="fas fa-plus-circle"></i> Add Car to Yard</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label>Select Yard</label>
+                            <select name="yard" class="form-control" required>
+                                <option value="">-- Select a Yard --</option>
+                                {% for yard in yards %}
+                                    <option value="{{ yard.id }}">{{ yard.name }} - {{ yard.location }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label>Make</label>
+                                <input type="text" name="make" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label>Model</label>
+                                <input type="text" name="model" class="form-control" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label>Title</label>
+                            <input type="text" name="title" class="form-control" required>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label>Year</label>
+                                <input type="number" name="year" class="form-control" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label>Price (TZS)</label>
+                                <input type="number" name="price" class="form-control" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label>Mileage (km)</label>
+                                <input type="number" name="mileage" class="form-control" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label>Condition</label>
+                                <select name="condition" class="form-control">
+                                    <option value="used">Used</option>
+                                    <option value="new">New</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label>Transmission</label>
+                                <select name="transmission" class="form-control">
+                                    <option value="manual">Manual</option>
+                                    <option value="automatic">Automatic</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label>Fuel Type</label>
+                                <select name="fuel_type" class="form-control">
+                                    <option value="petrol">Petrol</option>
+                                    <option value="diesel">Diesel</option>
+                                    <option value="electric">Electric</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label>Car Image</label>
+                            <input type="file" name="images" class="form-control">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label>Description</label>
+                            <textarea name="description" rows="4" class="form-control"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success w-100">Add Car</button>
+                        <a href="{% url 'yard_my_cars' %}" class="btn btn-secondary w-100 mt-2">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

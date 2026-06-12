@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1><i class="fas fa-user-check"></i> Dealer Verification</h1>
+    <p>Verify and assign dealers to your yards</p>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h3>{{ pending_count }}</h3>
+                    <p>Pending Verification</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3>{{ assigned_dealers.count }}</h3>
+                    <p>Assigned Dealers</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3>{{ yards.count }}</h3>
+                    <p>Your Yards</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Dealers -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-warning">
+            <h5 class="mb-0">Pending Dealer Verification</h5>
+        </div>
+        <div class="card-body">
+            {% if pending_dealers %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Dealer Name</th>
+                            <th>Email</th>
+                            <th>Company</th>
+                            <th>Phone</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dealer in pending_dealers %}
+                        <tr>
+                            <td>{{ dealer.username }}</td>
+                            <td>{{ dealer.email }}</td>
+                            <td>{{ dealer.userprofile.company_name|default:"-" }}</td>
+                            <td>{{ dealer.userprofile.phone|default:"-" }}</td>
+                            <td>
+                                <a href="{% url 'yard_verify_dealer' dealer.id %}" class="btn btn-sm btn-success">Verify</a>
+                                <a href="{% url 'yard_assign_dealer' dealer.id %}" class="btn btn-sm btn-primary">Assign</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-check-circle fa-3x text-success mb-2"></i>
+                <p>No pending dealer verifications.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Assigned Dealers -->
+    <div class="card shadow">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Assigned Dealers</h5>
+        </div>
+        <div class="card-body">
+            {% if assigned_dealers %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Dealer Name</th>
+                            <th>Email</th>
+                            <th>Company</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dealer in assigned_dealers %}
+                        <tr>
+                            <td>{{ dealer.username }}</td>
+                            <td>{{ dealer.email }}</td>
+                            <td>{{ dealer.userprofile.company_name|default:"-" }}</td>
+                            <td><span class="badge bg-success">Verified</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <p>No dealers assigned yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

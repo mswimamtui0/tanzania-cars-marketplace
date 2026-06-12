@@ -1,93 +1,69 @@
 {% extends 'base.html' %}
-{% block title %}Yard Manager Dashboard{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <h1><i class="fas fa-warehouse"></i> Yard Manager Dashboard</h1>
-    <p>Welcome back, {{ user.username }}!</p>
-    
-    <div class="row">
-        <div class="col-md-3 mb-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h3>{{ total_yards }}</h3>
-                    <p>Yards Managed</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h3>{{ total_listings }}</h3>
-                    <p>Cars in Your Yards</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card bg-danger text-white">
-                <div class="card-body">
-                    <h3>{{ pending_escalations }}</h3>
-                    <p>Pending Escalations</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <h3>{{ assigned_dealers }}</h3>
-                    <p>Assigned Dealers</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5>Your Yards</h5>
-                </div>
-                <div class="card-body">
-                    {% for yard in yards %}
-                        <div class="border-bottom mb-2 pb-2">
-                            <strong>{{ yard.name }}</strong><br>
-                            {{ yard.location }}, {{ yard.city }}
-                        </div>
-                    {% empty %}
-                        <p>No yards assigned yet.</p>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5>Pending Escalations</h5>
-                </div>
-                <div class="card-body">
-                    {% for escalation in pending_escalations_list %}
-                        <div class="alert alert-warning">
-                            Buyer: {{ escalation.buyer.username }}<br>
-                            Dealer: {{ escalation.dealer.username }}<br>
-                            <a href="#" class="btn btn-sm btn-primary mt-2">Review</a>
-                        </div>
-                    {% empty %}
-                        <p>No pending escalations.</p>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+    <p>Welcome, <strong>{{ user.username }}</strong>!</p>
 
-<div class="card mt-4">
-    <div class="card-header bg-warning">
-        <h5 class="mb-0"><i class="fas fa-clock"></i> Pending Approvals</h5>
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <a href="/yard/add-car/" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Add Car to Yard
+                    </a>
+                    <a href="/yard/my-cars/" class="btn btn-primary">
+                        <i class="fas fa-car"></i> My Cars
+                    </a>
+                    <a href="/yard/pending-cars/" class="btn btn-warning">
+                        <i class="fas fa-clock"></i> Pending Approvals
+                    </a>
+                    <a href="/yard/pending-dealers/" class="btn btn-info">
+                        <i class="fas fa-user-check"></i> Verify Dealers
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="card-body">
-        <a href="{% url 'yard_pending_cars' %}" class="btn btn-warning">
-            <i class="fas fa-check-circle"></i> Review Pending Cars ({{ total_pending }})
-        </a>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>{{ total_yards|default:"0" }}</h3>
+                    <p>My Yards</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3>{{ total_cars|default:"0" }}</h3>
+                    <p>Total Cars</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h3>{{ pending_approvals|default:"0" }}</h3>
+                    <p>Pending Approvals</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3>{{ approved_cars|default:"0" }}</h3>
+                    <p>Approved Cars</p>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
