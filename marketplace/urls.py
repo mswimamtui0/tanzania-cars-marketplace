@@ -52,4 +52,14 @@ path('yard/pending-dealers/', views.yard_pending_dealers, name='yard_pending_dea
     path('dealer/reject-sold/<int:request_id>/', views.reject_sold, name='reject_sold'),
     path('yard/add-car/', views.yard_add_car, name='yard_add_car'),
 path('yard/my-cars/', views.yard_my_cars, name='yard_my_cars'),
+path('yard/assign-dealer/', views.yard_assign_dealer, name='yard_assign_dealer'),
+path('yard/assigned-dealers/', views.yard_assigned_dealers, name='yard_assigned_dealers'),
+path('yard/remove-dealer/<int:assignment_id>/', views.yard_remove_dealer, name='yard_remove_dealer'),
+# Add these URLs
+path('dealer/commission/', views.dealer_commission_dashboard, name='dealer_commission'),
+path('report-fake/<int:car_id>/', views.report_fake_listing, name='report_fake_listing'),
+path('admin/reports/', views.admin_reports_dashboard, name='admin_reports'),
+path('admin/report/<int:report_id>/resolve/', views.resolve_report, name='resolve_report'),
+path('about-us/', views.about_us, name='about_us'),
+path('about-us/', views.about_us, name='about_us'),
 ]

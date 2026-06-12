@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-users"></i> My Dealers</h1>
+        <a href="{% url 'yard_assign_dealer' %}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Assign New Dealer
+        </a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Assigned Dealers ({{ total_dealers }})</h5>
+        </div>
+        <div class="card-body">
+            {% if assignments %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Dealer</th>
+                            <th>Yard</th>
+                            <th>Company</th>
+                            <th>Phone</th>
+                            <th>Assigned Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for assignment in assignments %}
+                        <tr>
+                            <td>{{ assignment.dealer.username }}</td>
+                            <td>{{ assignment.yard.name }}</td>
+                            <td>{{ assignment.dealer.userprofile.company_name|default:"-" }}</td>
+                            <td>{{ assignment.dealer.userprofile.phone|default:"-" }}</td>
+                            <td>{{ assignment.assigned_at|date:"M d, Y" }}</td>
+                            <td>
+                                <a href="{% url 'yard_remove_dealer' assignment.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Remove this dealer?')">
+                                    <i class="fas fa-trash"></i> Remove
+                                </a>
+                             </td>
+                         </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-users fa-3x text-muted mb-2"></i>
+                <p>No dealers assigned yet.</p>
+                <a href="{% url 'yard_assign_dealer' %}" class="btn btn-primary">Assign Your First Dealer</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

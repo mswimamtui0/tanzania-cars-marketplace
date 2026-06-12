@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Hero Section -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-4">About Tanzania Car Market</h1>
+            <p class="lead">Your trusted partner in buying and selling cars in Tanzania</p>
+        </div>
+    </div>
+
+    <!-- Mission & Vision -->
+    <div class="row mb-5">
+        <div class="col-md-6">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-bullseye fa-3x text-primary mb-3"></i>
+                    <h3>Our Mission</h3>
+                    <p>To create the most trusted car marketplace in Tanzania by combining online convenience with real-world verification and support services.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-eye fa-3x text-primary mb-3"></i>
+                    <h3>Our Vision</h3>
+                    <p>To become Tanzania's #1 platform for safe, transparent, and hassle-free car transactions.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Section -->
+    <div class="row mb-5 text-center">
+        <div class="col-12">
+            <h2 class="mb-4">Platform Statistics</h2>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h2>{{ total_cars }}+</h2>
+                    <p>Cars Listed</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h2>{{ total_dealers }}+</h2>
+                    <p>Trusted Dealers</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h2>{{ total_buyers }}+</h2>
+                    <p>Happy Buyers</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h2>{{ total_verified }}+</h2>
+                    <p>Verified Sellers</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Verification Levels -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center mb-4">How We Build Trust</h2>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <div class="bg-secondary text-white rounded-circle mx-auto d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                        <i class="fas fa-phone fa-3x"></i>
+                    </div>
+                    <h4 class="mt-3">Level 1: Phone Verified</h4>
+                    <p>Seller provides valid phone number</p>
+                    <span class="badge bg-secondary">Agent handles chat</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <div class="bg-warning text-dark rounded-circle mx-auto d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                        <i class="fas fa-id-card fa-3x"></i>
+                    </div>
+                    <h4 class="mt-3">Level 2: ID Verified</h4>
+                    <p>Government ID uploaded and verified</p>
+                    <span class="badge bg-info">Agent-led communication</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 text-center border-success">
+                <div class="card-body">
+                    <div class="bg-success text-white rounded-circle mx-auto d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                        <i class="fas fa-check-circle fa-3x"></i>
+                    </div>
+                    <h4 class="mt-3">Level 3: Fully Verified</h4>
+                    <p>ID + Location verified dealer</p>
+                    <span class="badge bg-success">Direct chat allowed</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Why Choose Us -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center mb-4">Why Choose Tanzania Car Market?</h2>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="text-center">
+                <i class="fas fa-shield-alt fa-3x text-success"></i>
+                <h5 class="mt-2">Verified Sellers</h5>
+                <small>All sellers undergo verification process</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="text-center">
+                <i class="fab fa-whatsapp fa-3x text-success"></i>
+                <h5 class="mt-2">WhatsApp Support</h5>
+                <small>24/7 support via WhatsApp</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="text-center">
+                <i class="fas fa-tools fa-3x text-info"></i>
+                <h5 class="mt-2">Inspection Service</h5>
+                <small>Professional vehicle inspection available</small>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="text-center">
+                <i class="fas fa-hand-holding-usd fa-3x text-warning"></i>
+                <h5 class="mt-2">Best Prices</h5>
+                <small>Competitive prices from trusted dealers</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Testimonials / Reviews -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center mb-4">What Our Customers Say</h2>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <p class="mt-2">"Great platform! Found my dream car easily. The verification process gave me confidence."</p>
+                    <small class="text-muted">- John M., Dar es Salaam</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <p class="mt-2">"The WhatsApp chat feature is very convenient. Sold my car within a week!"</p>
+                    <small class="text-muted">- Sarah K., Arusha</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning"></i>
+                    <p class="mt-2">"Professional inspection service saved me from buying a problematic car. Highly recommended!"</p>
+                    <small class="text-muted">- Michael R., Mwanza</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card bg-dark text-white">
+                <div class="card-body text-center py-5">
+                    <h3>Have Questions?</h3>
+                    <p class="lead">Contact our support team</p>
+                    <a href="https://wa.me/255757170544" class="btn btn-success btn-lg">
+                        <i class="fab fa-whatsapp"></i> Chat on WhatsApp
+                    </a>
+                    <a href="mailto:info@tanzaniacarmarket.com" class="btn btn-outline-light btn-lg ms-2">
+                        <i class="fas fa-envelope"></i> Email Us
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

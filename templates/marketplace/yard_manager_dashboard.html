@@ -66,4 +66,14 @@
         </div>
     </div>
 </div>
+
+<div class="card mt-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="fas fa-users"></i> Dealer Management</h5>
+    </div>
+    <div class="card-body">
+        <a href="{% url 'yard_assign_dealer' %}" class="btn btn-info">Assign Dealer</a>
+        <a href="{% url 'yard_assigned_dealers' %}" class="btn btn-primary">View My Dealers</a>
+    </div>
+</div>
 {% endblock %}

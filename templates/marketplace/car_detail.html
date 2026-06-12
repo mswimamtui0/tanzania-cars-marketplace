@@ -82,11 +82,16 @@
                     <i class="fas fa-info-circle"></i> The dealer will be notified and will confirm the sale.
                 </div>
             </div>
+            
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <a href="{% url 'mark_as_sold' car.id %}" class="btn btn-warning">Confirm Purchase</a>
             </div>
         </div>
+        <!-- Add this button near other action buttons -->
+<a href="{% url 'report_fake_listing' car.id %}" class="btn btn-outline-danger mt-2">
+    <i class="fas fa-flag"></i> Report Fake Listing
+</a>
     </div>
 </div>
 {% endif %}

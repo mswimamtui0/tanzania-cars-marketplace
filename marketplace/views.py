@@ -1,3 +1,7 @@
+from django.db.models import Sum
+from .models import UserProfile, CarListing, CarYard, Wishlist, ComparisonSet, SoldRequest, DealerCommission, FakeListingReport
+from .models import UserProfile, CarListing, CarYard, Wishlist, ComparisonSet
+from .models import UserProfile, CarListing, CarYard, Wishlist, ComparisonSet, SoldRequest, DealerCommission, FakeListingReport
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
@@ -10,16 +14,101 @@ from urllib.parse import quote
 from django.utils import timezone
 from .models import UserProfile, CarListing, CarYard, Wishlist, ComparisonSet
 
+
+
+
+@login_required
+def dealer_commission_dashboard(request):
+    """Dealer views their commission earnings"""
+    if request.user.userprofile.role != 'dealer':
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+    
+    commissions = DealerCommission.objects.filter(dealer=request.user).order_by('-created_at')
+    
+    total_earned = commissions.filter(status='paid').aggregate(Sum('commission_amount'))['commission_amount__sum'] or 0
+    total_pending = commissions.filter(status='pending').aggregate(Sum('commission_amount'))['commission_amount__sum'] or 0
+    
+    context = {
+        'commissions': commissions,
+        'total_earned': total_earned,
+        'total_pending': total_pending,
+        'pending_count': commissions.filter(status='pending').count(),
+        'paid_count': commissions.filter(status='paid').count(),
+    }
+    return render(request, 'marketplace/dealer_commission.html', context)
+
+@login_required
+def report_fake_listing(request, car_id):
+    """Buyer reports a fake or suspicious listing"""
+    car = get_object_or_404(CarListing, id=car_id)
+    
+    if request.method == 'POST':
+        report = FakeListingReport.objects.create(
+            car=car,
+            reported_by=request.user,
+            reason=request.POST.get('reason'),
+            description=request.POST.get('description')
+        )
+        messages.success(request, 'Thank you for your report. Our team will investigate within 24 hours.')
+        return redirect('car_detail', car_id=car.id)
+    
+    return render(request, 'marketplace/report_fake_listing.html', {'car': car})
+
+@login_required
+def admin_reports_dashboard(request):
+    """Admin views all reports"""
+    if request.user.userprofile.role != 'admin' and not request.user.is_superuser:
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+    
+    reports = FakeListingReport.objects.all().order_by('-created_at')
+    pending_reports = reports.filter(status='pending')
+    
+    context = {
+        'reports': reports,
+        'pending_reports': pending_reports,
+        'pending_count': pending_reports.count(),
+        'investigating_count': reports.filter(status='investigating').count(),
+        'resolved_count': reports.filter(status='resolved').count(),
+    }
+    return render(request, 'marketplace/admin_reports.html', context)
+
+def about_us(request):
+    """About us page - trust building"""
+    from django.contrib.auth.models import User
+    from django.db.models import Count
+    
+    total_cars = CarListing.objects.filter(status='approved').count()
+    total_dealers = User.objects.filter(userprofile__role='dealer').count()
+    total_buyers = User.objects.filter(userprofile__role='buyer').count()
+    total_verified = User.objects.filter(userprofile__verification_level=3).count()
+    
+    context = {
+        'total_cars': total_cars,
+        'total_dealers': total_dealers,
+        'total_buyers': total_buyers,
+        'total_verified': total_verified,
+    }
+    return render(request, 'marketplace/about_us.html', context)
+
 # ========== HOME VIEW ==========
 def home(request):
+    # Get latest cars (newest first)
     latest_cars = CarListing.objects.filter(status='approved').order_by('-created_at')[:6]
+    
+    # Get featured cars (manually marked as featured)
     featured_cars = CarListing.objects.filter(status='approved', is_featured=True)[:6]
     
-    return render(request, 'marketplace/home.html', {
+    # If no featured cars, show some latest cars as featured
+    if not featured_cars and latest_cars:
+        featured_cars = latest_cars[:3]
+    
+    context = {
         'latest_cars': latest_cars,
         'featured_cars': featured_cars,
-    })
-
+    }
+    return render(request, 'marketplace/home.html', context)
 # ========== CAR LISTINGS ==========
 def car_list(request):
     cars = CarListing.objects.filter(status='approved')
@@ -149,6 +238,20 @@ def yard_pending_dealers(request):
     return render(request, 'marketplace/yard_pending_dealers.html', context)
 
 @login_required
+def save_car(request, car_id):
+    """Add or remove car from wishlist"""
+    car = get_object_or_404(CarListing, id=car_id)
+    wishlist_item, created = Wishlist.objects.get_or_create(user=request.user, car=car)
+    
+    if created:
+        messages.success(request, f'{car.make} {car.model} added to your wishlist!')
+    else:
+        wishlist_item.delete()
+        messages.info(request, f'{car.make} {car.model} removed from wishlist.')
+    
+    return redirect('car_detail', car_id=car.id)
+
+@login_required
 def yard_verify_dealer(request, dealer_id):
     """Yard manager verifies a dealer"""
     if request.user.userprofile.role != 'yard_manager':
@@ -257,27 +360,23 @@ def yard_manager_dashboard(request):
 
 @login_required
 def buyer_dashboard(request):
+    from marketplace.models import Wishlist, Reservation
+    
+    # Get wishlist items
     wishlist = Wishlist.objects.filter(user=request.user)
+    
+    # Get reservations
+    reservations = Reservation.objects.filter(buyer=request.user)
+    
     context = {
         'wishlist_count': wishlist.count(),
         'recent_wishlist': wishlist.order_by('-added_at')[:5],
+        'reservations_count': reservations.count(),
+        'active_reservations': reservations.filter(status='confirmed'),
+        'unread_messages': 0,  # You can add messaging system later
+        'recent_reservations': reservations.order_by('-created_at')[:5],
     }
     return render(request, 'marketplace/buyer_dashboard.html', context)
-
-# ========== WISHLIST ==========
-@login_required
-def save_car(request, car_id):
-    car = get_object_or_404(CarListing, id=car_id)
-    wishlist_item, created = Wishlist.objects.get_or_create(user=request.user, car=car)
-    
-    if created:
-        messages.success(request, f'{car.make} {car.model} added to your wishlist!')
-    else:
-        wishlist_item.delete()
-        messages.info(request, f'{car.make} {car.model} removed from wishlist.')
-    
-    return redirect('car_detail', car_id=car.id)
-
 # ========== DEALER CAR MANAGEMENT ==========
 @login_required
 def dealer_add_car(request):
@@ -647,3 +746,231 @@ def yard_add_car(request):
             messages.error(request, f'Error: {str(e)}')
     
     return render(request, 'marketplace/yard_add_car.html', {'yards': yards})
+
+
+from .models import YardDealerAssignment
+
+@login_required
+def yard_assign_dealer(request):
+    """Yard manager assigns a dealer to their yard"""
+    if request.user.userprofile.role != 'yard_manager':
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+    
+    yards = CarYard.objects.filter(manager=request.user)
+    
+    if not yards:
+        messages.error(request, 'You need to be assigned to a yard first.')
+        return redirect('yard_manager_dashboard')
+    
+    # Get dealers not already assigned to these yards
+    assigned_dealer_ids = YardDealerAssignment.objects.filter(
+        yard__in=yards, 
+        is_active=True
+    ).values_list('dealer_id', flat=True)
+    
+    available_dealers = User.objects.filter(
+        userprofile__role='dealer'
+    ).exclude(id__in=assigned_dealer_ids)
+    
+    if request.method == 'POST':
+        yard_id = request.POST.get('yard')
+        dealer_id = request.POST.get('dealer')
+        
+        yard = CarYard.objects.get(id=yard_id, manager=request.user)
+        dealer = User.objects.get(id=dealer_id)
+        
+        # Check if already assigned
+        assignment, created = YardDealerAssignment.objects.get_or_create(
+            yard=yard,
+            dealer=dealer,
+            defaults={'assigned_by': request.user}
+        )
+        
+        if created:
+            messages.success(request, f'Dealer {dealer.username} assigned to {yard.name}!')
+        else:
+            messages.info(request, 'Dealer already assigned to this yard.')
+        
+        return redirect('yard_assigned_dealers')
+    
+    context = {
+        'yards': yards,
+        'available_dealers': available_dealers,
+    }
+    return render(request, 'marketplace/yard_assign_dealer.html', context)
+
+@login_required
+def yard_assigned_dealers(request):
+    """View all dealers assigned to yard manager's yards"""
+    if request.user.userprofile.role != 'yard_manager':
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+    
+    yards = CarYard.objects.filter(manager=request.user)
+    assignments = YardDealerAssignment.objects.filter(
+        yard__in=yards, 
+        is_active=True
+    ).select_related('dealer', 'yard')
+    
+    context = {
+        'assignments': assignments,
+        'yards': yards,
+        'total_dealers': assignments.count(),
+    }
+    return render(request, 'marketplace/yard_assigned_dealers.html', context)
+
+@login_required
+def yard_remove_dealer(request, assignment_id):
+    """Yard manager removes a dealer from their yard"""
+    if request.user.userprofile.role != 'yard_manager':
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+    
+    assignment = get_object_or_404(YardDealerAssignment, id=assignment_id)
+    
+    # Verify yard manager owns this yard
+    if assignment.yard.manager != request.user:
+        messages.error(request, 'You can only remove dealers from your yards.')
+        return redirect('yard_assigned_dealers')
+    
+    if request.method == 'POST':
+        assignment.is_active = False
+        assignment.save()
+        messages.success(request, f'Dealer {assignment.dealer.username} removed from {assignment.yard.name}.')
+        return redirect('yard_assigned_dealers')
+    
+    return render(request, 'marketplace/yard_remove_dealer.html', {'assignment': assignment})
+
+
+# ========== DEALER COMMISSION DASHBOARD ==========
+@login_required
+def dealer_commission_dashboard(request):
+    """Dealer views their commission earnings"""
+    if request.user.userprofile.role != 'dealer':
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+    
+    from django.db.models import Sum
+    
+    commissions = DealerCommission.objects.filter(dealer=request.user).order_by('-created_at')
+    
+    # Calculate totals
+    total_earned = commissions.filter(status='paid').aggregate(Sum('commission_amount'))['commission_amount__sum'] or 0
+    total_pending = commissions.filter(status='pending').aggregate(Sum('commission_amount'))['commission_amount__sum'] or 0
+    
+    context = {
+        'commissions': commissions,
+        'total_earned': total_earned,
+        'total_pending': total_pending,
+        'pending_count': commissions.filter(status='pending').count(),
+        'paid_count': commissions.filter(status='paid').count(),
+    }
+    return render(request, 'marketplace/dealer_commission.html', context)
+
+# ========== FAKE LISTING REPORT ==========
+@login_required
+def report_fake_listing(request, car_id):
+    """Buyer reports a fake or suspicious listing"""
+    car = get_object_or_404(CarListing, id=car_id)
+    
+    if request.method == 'POST':
+        report = FakeListingReport.objects.create(
+            car=car,
+            reported_by=request.user,
+            reason=request.POST.get('reason'),
+            description=request.POST.get('description')
+        )
+        messages.success(request, 'Thank you for your report. Our team will investigate within 24 hours.')
+        return redirect('car_detail', car_id=car.id)
+    
+    return render(request, 'marketplace/report_fake_listing.html', {'car': car})
+
+@login_required
+def admin_reports_dashboard(request):
+    """Admin views all reports"""
+    if request.user.userprofile.role != 'admin' and not request.user.is_superuser:
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+    
+    reports = FakeListingReport.objects.all().order_by('-created_at')
+    pending_reports = reports.filter(status='pending')
+    
+    context = {
+        'reports': reports,
+        'pending_reports': pending_reports,
+        'pending_count': pending_reports.count(),
+        'investigating_count': reports.filter(status='investigating').count(),
+        'resolved_count': reports.filter(status='resolved').count(),
+    }
+    return render(request, 'marketplace/admin_reports.html', context)
+
+@login_required
+def resolve_report(request, report_id):
+    """Admin resolves a report"""
+    if request.user.userprofile.role != 'admin' and not request.user.is_superuser:
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+    
+    report = get_object_or_404(FakeListingReport, id=report_id)
+    
+    if request.method == 'POST':
+        report.status = request.POST.get('status')
+        report.admin_notes = request.POST.get('admin_notes', '')
+        report.resolved_at = timezone.now()
+        report.save()
+        
+        # If report is resolved and car is fake, hide the listing
+        if report.status == 'resolved' and request.POST.get('hide_car') == 'on':
+            report.car.status = 'rejected'
+            report.car.save()
+        
+        messages.success(request, f'Report #{report.id} has been updated.')
+        return redirect('admin_reports_dashboard')
+    
+    return render(request, 'marketplace/resolve_report.html', {'report': report})
+
+# ========== ABOUT US PAGE ==========
+def about_us(request):
+    """About us page - trust building"""
+    from django.contrib.auth.models import User
+    from django.db.models import Count, Sum
+    
+    # Statistics for trust building
+    total_cars = CarListing.objects.filter(status='approved').count()
+    total_dealers = User.objects.filter(userprofile__role='dealer').count()
+    total_buyers = User.objects.filter(userprofile__role='buyer').count()
+    total_verified = User.objects.filter(userprofile__verification_level=3).count()
+    
+    context = {
+        'total_cars': total_cars,
+        'total_dealers': total_dealers,
+        'total_buyers': total_buyers,
+        'total_verified': total_verified,
+    }
+    return render(request, 'marketplace/about_us.html', context)
+
+
+def about_us(request):
+    """About us page - trust building"""
+    from django.contrib.auth.models import User
+    from django.db.models import Count
+    
+    total_cars = CarListing.objects.filter(status='approved').count()
+    total_dealers = User.objects.filter(userprofile__role='dealer').count()
+    total_yard_managers = User.objects.filter(userprofile__role='yard_manager').count()
+    total_buyers = User.objects.filter(userprofile__role='buyer').count()
+    total_verified = User.objects.filter(userprofile__verification_level=3).count()
+    
+    # Get recent reviews (example data)
+    recent_reviews = []
+    
+    context = {
+        'total_cars': total_cars,
+        'total_dealers': total_dealers,
+        'total_yard_managers': total_yard_managers,
+        'total_buyers': total_buyers,
+        'total_verified': total_verified,
+        'recent_reviews': recent_reviews,
+    }
+    return render(request, 'marketplace/about_us.html', context)
