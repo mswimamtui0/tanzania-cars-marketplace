@@ -6,7 +6,7 @@
         <div class="col-md-8">
             <div class="card shadow">
                 <div class="card-header bg-success text-white">
-                    <h4 class="mb-0"><i class="fas fa-plus-circle"></i> Add Car to Yard</h4>
+                    <h4 class="mb-0">Add Car to Yard</h4>
                 </div>
                 <div class="card-body">
                     <form method="post" enctype="multipart/form-data">
@@ -15,9 +15,8 @@
                         <div class="mb-3">
                             <label>Select Yard</label>
                             <select name="yard" class="form-control" required>
-                                <option value="">-- Select a Yard --</option>
                                 {% for yard in yards %}
-                                    <option value="{{ yard.id }}">{{ yard.name }} - {{ yard.location }}</option>
+                                    <option value="{{ yard.id }}">{{ yard.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -48,7 +47,7 @@
                                 <input type="number" name="price" class="form-control" required>
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label>Mileage (km)</label>
+                                <label>Mileage</label>
                                 <input type="number" name="mileage" class="form-control" required>
                             </div>
                         </div>
@@ -79,17 +78,17 @@
                         </div>
                         
                         <div class="mb-3">
-                            <label>Car Image</label>
+                            <label>Image</label>
                             <input type="file" name="images" class="form-control">
                         </div>
                         
                         <div class="mb-3">
                             <label>Description</label>
-                            <textarea name="description" rows="4" class="form-control"></textarea>
+                            <textarea name="description" rows="3" class="form-control"></textarea>
                         </div>
                         
                         <button type="submit" class="btn btn-success w-100">Add Car</button>
-                        <a href="{% url 'yard_my_cars' %}" class="btn btn-secondary w-100 mt-2">Cancel</a>
+                        <a href="/yard-panel/" class="btn btn-secondary w-100 mt-2">Cancel</a>
                     </form>
                 </div>
             </div>
