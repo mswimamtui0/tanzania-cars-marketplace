@@ -9,7 +9,12 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-fix-this-key-2024'
 DEBUG = True
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    '.onrender.com',  # This allows all Render apps
+    'tanzania-cars-marketplace.onrender.com',
+]
 
 # Security settings for production
 if not DEBUG:
