@@ -154,21 +154,26 @@ def yard_add_car(request):
     yards = CarYard.objects.filter(manager=request.user)
     
     if not yards:
-        messages.error(request, 'You need to be assigned to a yard first.')
+        messages.error(request, 'You are not assigned to any yard.')
         return redirect('yard_manager_dashboard')
     
     if request.method == 'POST':
         try:
             yard_id = request.POST.get('yard')
+            if not yard_id:
+                messages.error(request, 'Please select a yard.')
+                return redirect('yard_add_car')
+            
             yard = CarYard.objects.get(id=yard_id, manager=request.user)
             
+            # Create car with explicit field mapping
             car = CarListing.objects.create(
-                title=request.POST.get('title'),
-                make=request.POST.get('make'),
-                model=request.POST.get('model'),
-                year=request.POST.get('year'),
-                price=request.POST.get('price'),
-                mileage=request.POST.get('mileage'),
+                title=request.POST.get('title', ''),
+                make=request.POST.get('make', ''),
+                model=request.POST.get('model', ''),
+                year=int(request.POST.get('year', 0)),
+                price=float(request.POST.get('price', 0)),
+                mileage=int(request.POST.get('mileage', 0)),
                 condition=request.POST.get('condition', 'used'),
                 transmission=request.POST.get('transmission', 'manual'),
                 fuel_type=request.POST.get('fuel_type', 'petrol'),
@@ -187,8 +192,10 @@ def yard_add_car(request):
             return redirect('yard_my_cars')
         except Exception as e:
             messages.error(request, f'Error: {str(e)}')
+            return redirect('yard_add_car')
     
     return render(request, 'marketplace/yard_add_car.html', {'yards': yards})
+
 
 @login_required
 def yard_my_cars(request):

@@ -65,13 +65,17 @@ TEMPLATES = [
 WSGI_APPLICATION = 'tanzania_car_marketplace.wsgi.application'
 
 # Database
-# Database
+import dj_database_url
+
+# Database - supports both SQLite (local) and PostgreSQL (Render)
 DATABASES = {
     'default': dj_database_url.config(
         default='sqlite:///db.sqlite3',
         conn_max_age=600
     )
 }
+
+
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},

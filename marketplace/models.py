@@ -175,22 +175,23 @@ class InspectionRequest(models.Model):
         return f"Inspection for {self.car.make} {self.car.model} by {self.buyer.username}"
 
 # ========== YARD DEALER ASSIGNMENT ==========
+# ONLY ONE DEFINITION - KEEP THIS ONE
 class YardDealerAssignment(models.Model):
-    """Track which dealers are assigned to which yards"""
+    """Yard manager assigns dealers to their yard"""
     yard = models.ForeignKey(CarYard, on_delete=models.CASCADE, related_name='assigned_dealers')
     dealer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='assigned_yards')
     assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='dealer_assignments')
-    assigned_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+    assigned_at = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(blank=True)
     
     class Meta:
         unique_together = ('yard', 'dealer')
     
     def __str__(self):
-        return f"{self.dealer.username} → {self.yard.name}"
-    
-    # Add after your existing models
+        return f"{self.dealer.username} assigned to {self.yard.name}"
 
+# ========== DEALER COMMISSION ==========
 class DealerCommission(models.Model):
     """Track dealer commissions"""
     STATUS_CHOICES = (
@@ -200,7 +201,7 @@ class DealerCommission(models.Model):
     )
     
     dealer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='commissions')
-    car = models.ForeignKey('CarListing', on_delete=models.CASCADE)
+    car = models.ForeignKey(CarListing, on_delete=models.CASCADE)
     sale_amount = models.DecimalField(max_digits=12, decimal_places=2)
     commission_rate = models.DecimalField(max_digits=5, decimal_places=2, default=2.0)
     commission_amount = models.DecimalField(max_digits=12, decimal_places=2)
@@ -212,6 +213,7 @@ class DealerCommission(models.Model):
     def __str__(self):
         return f"{self.dealer.username} - {self.commission_amount} - {self.status}"
 
+# ========== FAKE LISTING REPORT ==========
 class FakeListingReport(models.Model):
     """Report fake or suspicious listings"""
     STATUS_CHOICES = (
@@ -229,7 +231,7 @@ class FakeListingReport(models.Model):
         ('other', 'Other'),
     )
     
-    car = models.ForeignKey('CarListing', on_delete=models.CASCADE, related_name='reports')
+    car = models.ForeignKey(CarListing, on_delete=models.CASCADE, related_name='reports')
     reported_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reports')
     reason = models.CharField(max_length=20, choices=REASON_CHOICES)
     description = models.TextField()
