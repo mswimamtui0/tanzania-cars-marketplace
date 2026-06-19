@@ -130,13 +130,24 @@ def register(request):
         if form.is_valid():
             user = form.save()
             role = request.POST.get('role', 'buyer')
-            user.userprofile.role = role
-            user.userprofile.save()
+            
+            # Create profile
+            profile = UserProfile.objects.get(user=user)
+            profile.role = role
+            profile.verification_level = 1
+            profile.save()
+            
             login(request, user)
-            messages.success(request, 'Registration successful!')
+            
+            if role == 'dealer':
+                messages.info(request, 'Your account is pending approval. A yard manager will assign you to a yard.')
+            else:
+                messages.success(request, 'Registration successful!')
+            
             return redirect('dashboard')
     else:
         form = UserCreationForm()
+    
     return render(request, 'marketplace/register.html', {'form': form})
 
 def logout_view(request):
@@ -305,8 +316,10 @@ def yard_assign_dealer(request, dealer_id):
     return render(request, 'marketplace/yard_assign_dealer.html', {'dealer': dealer, 'yards': yards})
 
 # ========== DASHBOARDS ==========
+
 @login_required
 def dashboard(request):
+    """Redirect users to their role-specific dashboard"""
     role = request.user.userprofile.role
     if role == 'admin' or request.user.is_superuser:
         return redirect('admin_dashboard')
@@ -316,7 +329,7 @@ def dashboard(request):
         return redirect('yard_manager_dashboard')
     else:
         return redirect('buyer_dashboard')
-
+    
 @login_required
 def admin_dashboard(request):
     from django.contrib.auth.models import User
@@ -981,3 +994,50 @@ def about_us(request):
         'recent_reviews': recent_reviews,
     }
     return render(request, 'marketplace/about_us.html', context)
+
+
+@login_required
+def yard_add_car(request):
+    """Yard manager adds a car to their yard"""
+    if request.user.userprofile.role != 'yard_manager':
+        messages.error(request, 'Only yard managers can add cars.')
+        return redirect('dashboard')
+    
+    yards = CarYard.objects.filter(manager=request.user)
+    
+    if not yards:
+        messages.error(request, 'You are not assigned to any yard. Contact admin.')
+        return redirect('yard_manager_dashboard')
+    
+    if request.method == 'POST':
+        try:
+            yard_id = request.POST.get('yard')
+            yard = CarYard.objects.get(id=yard_id, manager=request.user)
+            
+            car = CarListing.objects.create(
+                title=request.POST.get('title'),
+                make=request.POST.get('make'),
+                model=request.POST.get('model'),
+                year=request.POST.get('year'),
+                price=request.POST.get('price'),
+                mileage=request.POST.get('mileage'),
+                condition=request.POST.get('condition', 'used'),
+                transmission=request.POST.get('transmission', 'manual'),
+                fuel_type=request.POST.get('fuel_type', 'petrol'),
+                description=request.POST.get('description', ''),
+                package=request.POST.get('package', 'normal'),
+                seller=request.user,
+                yard=yard,
+                status='approved'
+            )
+            
+            if request.FILES.get('images'):
+                car.images = request.FILES['images']
+                car.save()
+            
+            messages.success(request, f'{car.make} {car.model} added to {yard.name}!')
+            return redirect('yard_my_cars')
+        except Exception as e:
+            messages.error(request, f'Error: {str(e)}')
+    
+    return render(request, 'marketplace/yard_add_car.html', {'yards': yards})

@@ -22,7 +22,10 @@
                     <a href="/yard/pending-cars/" class="btn btn-warning">
                         <i class="fas fa-clock"></i> Pending Approvals
                     </a>
-                    <a href="/yard/pending-dealers/" class="btn btn-info">
+                    <a href="/yard/manage-dealers/" class="btn btn-info">
+                        <i class="fas fa-users-cog"></i> Manage Dealers
+                    </a>
+                    <a href="/yard/pending-dealers/" class="btn btn-secondary">
                         <i class="fas fa-user-check"></i> Verify Dealers
                     </a>
                 </div>
@@ -64,16 +67,6 @@
                 </div>
             </div>
         </div>
-    </div>
-</div>
-
-<div class="card mt-4">
-    <div class="card-header bg-info text-white">
-        <h5 class="mb-0"><i class="fas fa-users"></i> Dealer Management</h5>
-    </div>
-    <div class="card-body">
-        <a href="{% url 'yard_assign_dealer' %}" class="btn btn-info">Assign Dealer</a>
-        <a href="{% url 'yard_assigned_dealers' %}" class="btn btn-primary">View My Dealers</a>
     </div>
 </div>
 {% endblock %}
