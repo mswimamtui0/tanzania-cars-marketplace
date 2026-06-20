@@ -8,15 +8,14 @@ urlpatterns = [
     # Home
     path('', views.home, name='home'),
     
-    # Authentication - Using standard view names
+    # Authentication
     path('register/', views.register, name='register'),
-    path('login/', views.login, name='login'),          # <-- Changed from user_login
-    path('logout/', views.logout, name='logout'),       # <-- Changed from user_logout
+    path('login/', views.login, name='login'),
+    path('logout/', views.logout, name='logout'),
     path('profile/', views.profile, name='profile'),
     
-    # Car listings
+    # Car listings (removed search_cars)
     path('cars/', views.car_list, name='car_list'),
-    path('cars/search/', views.search_cars, name='search_cars'),
     path('cars/<int:car_id>/', views.car_detail, name='car_detail'),
     path('cars/add/', views.add_car, name='add_car'),
     path('cars/<int:car_id>/edit/', views.edit_car, name='edit_car'),
