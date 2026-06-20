@@ -1,0 +1,19 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% trans "Yard Dashboard" %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    {% include 'includes/navbar.html' %}
+    <div class="container mt-5">
+        <h1>{% trans "Yard Dashboard" %}</h1>
+        <p>{% trans "Welcome" %} {{ user.username }}!</p>
+        <a href="{% url 'yard_add_car' %}" class="btn btn-success">{% trans "Add Car" %}</a>
+        <a href="{% url 'yard_pending_cars' %}" class="btn btn-warning">{% trans "Pending Cars" %}</a>
+    </div>
+    {% include 'includes/footer.html' %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

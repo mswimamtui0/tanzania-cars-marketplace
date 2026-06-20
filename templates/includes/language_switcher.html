@@ -1,35 +1,10 @@
 {% load i18n %}
 {% get_current_language as LANGUAGE_CODE %}
-{% get_available_languages as LANGUAGES %}
-
-<div class="language-switcher">
-    <div class="dropdown">
-        <button class="btn btn-outline-primary dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-            🌐 
-            {% if LANGUAGE_CODE == 'sw' %}
-                Kiswahili
-            {% else %}
-                English
-            {% endif %}
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
-            {% for language_code, language_name in LANGUAGES %}
-                <li>
-                    <form action="{% url 'set_language' %}" method="post" style="display: inline;">
-                        {% csrf_token %}
-                        <input name="next" type="hidden" value="{{ request.get_full_path }}" />
-                        <input name="language" type="hidden" value="{{ language_code }}" />
-                        <button type="submit" class="dropdown-item {% if language_code == LANGUAGE_CODE %}active{% endif %}" 
-                                style="border: none; background: none; width: 100%; text-align: left;">
-                            {% if language_code == 'en' %}🇬🇧{% else %}🇹🇿{% endif %}
-                            {{ language_name }}
-                            {% if language_code == LANGUAGE_CODE %}
-                                <span class="badge bg-success ms-2">✓</span>
-                            {% endif %}
-                        </button>
-                    </form>
-                </li>
-            {% endfor %}
-        </ul>
-    </div>
-</div>
+<form action="{% url 'set_language' %}" method="post" class="d-inline">
+    {% csrf_token %}
+    <input name="next" type="hidden" value="{{ request.get_full_path }}" />
+    <select name="language" class="form-select form-select-sm" onchange="this.form.submit()">
+        <option value="en" {% if LANGUAGE_CODE == 'en' %}selected{% endif %}>English</option>
+        <option value="sw" {% if LANGUAGE_CODE == 'sw' %}selected{% endif %}>Kiswahili</option>
+    </select>
+</form>
