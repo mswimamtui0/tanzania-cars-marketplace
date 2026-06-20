@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1><i class="fas fa-envelope"></i> My Messages</h1>
+    <p>Manage your conversations with buyers</p>
+
+    <!-- Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>{{ sent_count }}</h3>
+                    <p>Sent Messages</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3>{{ received_count }}</h3>
+                    <p>Received Messages</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <a href="{% url 'dealer_send_message' %}" class="btn btn-success w-100">
+                        <i class="fas fa-plus"></i> Send New Message
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sent Messages -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">📤 Sent Messages</h5>
+        </div>
+        <div class="card-body">
+            {% if sent_messages %}
+                {% for msg in sent_messages %}
+                <div class="border-bottom mb-3 pb-3">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <strong>To:</strong> {{ msg.receiver.username }}
+                            <br>
+                            <strong>Subject:</strong> {{ msg.subject }}
+                            <br>
+                            <small class="text-muted">{{ msg.created_at|date:"M d, Y H:i" }}</small>
+                        </div>
+                        <div>
+                            <a href="{% url 'dealer_message_detail' msg.id %}" class="btn btn-sm btn-primary">View</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-envelope fa-3x text-muted mb-2"></i>
+                    <p>No sent messages.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Received Messages -->
+    <div class="card shadow">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">📥 Received Messages</h5>
+        </div>
+        <div class="card-body">
+            {% if received_messages %}
+                {% for msg in received_messages %}
+                <div class="border-bottom mb-3 pb-3">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <strong>From:</strong> {{ msg.sender.username }}
+                            <br>
+                            <strong>Subject:</strong> {{ msg.subject }}
+                            <br>
+                            <small class="text-muted">{{ msg.created_at|date:"M d, Y H:i" }}</small>
+                        </div>
+                        <div>
+                            {% if not msg.is_read %}
+                                <span class="badge bg-danger">Unread</span>
+                            {% endif %}
+                            <a href="{% url 'dealer_message_detail' msg.id %}" class="btn btn-sm btn-primary">View</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-envelope fa-3x text-muted mb-2"></i>
+                    <p>No received messages.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

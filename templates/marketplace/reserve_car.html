@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-warning">
+                    <h4 class="mb-0"><i class="fas fa-calendar-check"></i> Reserve Car</h4>
+                </div>
+                <div class="card-body">
+                    <h5>{{ car.year }} {{ car.make }} {{ car.model }}</h5>
+                    <p class="text-success fw-bold">TSh {{ car.price|floatformat:0 }}</p>
+                    <hr>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> Reservation fee: <strong>TSh 50,000</strong>
+                            <br>This fee is refundable if you decide not to purchase.
+                        </div>
+                        <div class="form-check mb-3">
+                            <input type="checkbox" class="form-check-input" required>
+                            <label class="form-check-label">I agree to the reservation terms</label>
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100">Reserve Now - TSh 50,000</button>
+                        <a href="{% url 'car_detail' car.id %}" class="btn btn-secondary w-100 mt-2">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

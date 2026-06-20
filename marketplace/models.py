@@ -242,3 +242,19 @@ class FakeListingReport(models.Model):
     
     def __str__(self):
         return f"Report on {self.car} by {self.reported_by.username}"
+
+
+
+
+# ========== MESSAGE ==========
+class Message(models.Model):
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
+    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
+    car = models.ForeignKey('CarListing', on_delete=models.CASCADE, null=True, blank=True)
+    subject = models.CharField(max_length=200)
+    content = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.sender.username} → {self.receiver.username}: {self.subject[:30]}"

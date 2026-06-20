@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Message</h4>
+                </div>
+                <div class="card-body">
+                    <p><strong>From:</strong> {{ message.sender.username }}</p>
+                    <p><strong>To:</strong> {{ message.receiver.username }}</p>
+                    <p><strong>Subject:</strong> {{ message.subject }}</p>
+                    <hr>
+                    <div class="bg-light p-3 rounded">
+                        {{ message.content|linebreaks }}
+                    </div>
+                    <hr>
+                    <p><small class="text-muted">{{ message.created_at|date:"M d, Y H:i" }}</small></p>
+                    <a href="{% url 'buyer_messages' %}" class="btn btn-secondary">Back</a>
+                    {% if user == message.receiver %}
+                        <a href="{% url 'reply_message' message.id %}" class="btn btn-primary">
+                            <i class="fas fa-reply"></i> Reply
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

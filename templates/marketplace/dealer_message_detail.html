@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-envelope"></i> Message</h4>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>From:</strong> {{ message.sender.username }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>To:</strong> {{ message.receiver.username }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Subject:</strong> {{ message.subject }}
+                    </div>
+                    {% if message.car %}
+                    <div class="mb-3">
+                        <strong>Car:</strong> {{ message.car.year }} {{ message.car.make }} {{ message.car.model }}
+                        <a href="{% url 'car_detail' message.car.id %}" class="btn btn-sm btn-primary">View Car</a>
+                    </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <strong>Message:</strong>
+                        <div class="border p-3 bg-light rounded">
+                            {{ message.content|linebreaks }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Sent: {{ message.created_at|date:"M d, Y H:i" }}</small>
+                    </div>
+                    
+                    <!-- Reply Button -->
+                    <div class="d-grid gap-2">
+                        {% if message.sender != request.user %}
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#replyModal">
+                                <i class="fas fa-reply"></i> Reply to {{ message.sender.username }}
+                            </button>
+                        {% endif %}
+                        <a href="{% url 'dealer_messages' %}" class="btn btn-secondary">Back to Messages</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reply Modal -->
+{% if message.sender != request.user %}
+<div class="modal fade" id="replyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-reply"></i> Reply to {{ message.sender.username }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'reply_message' message.id %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label>Subject</label>
+                        <input type="text" name="subject" class="form-control" value="RE: {{ message.subject }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Message</label>
+                        <textarea name="content" rows="5" class="form-control" required></textarea>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Your reply will be sent to {{ message.sender.username }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Send Reply</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

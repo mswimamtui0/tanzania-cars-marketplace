@@ -5,31 +5,27 @@
     <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="card shadow">
-                <div class="card-header bg-success text-white">
+                <div class="card-header bg-primary text-white">
                     <h4 class="mb-0">Assign Dealer to Yard</h4>
                 </div>
                 <div class="card-body">
+                    <h5>Dealer: {{ dealer.username }}</h5>
+                    <p><strong>Email:</strong> {{ dealer.email }}</p>
+                    <p><strong>Company:</strong> {{ dealer.userprofile.company_name|default:"-" }}</p>
+                    <hr>
                     <form method="post">
                         {% csrf_token %}
                         <div class="mb-3">
                             <label>Select Yard</label>
                             <select name="yard" class="form-control" required>
+                                <option value="">-- Select a Yard --</option>
                                 {% for yard in yards %}
                                     <option value="{{ yard.id }}">{{ yard.name }} - {{ yard.location }}</option>
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="mb-3">
-                            <label>Select Dealer</label>
-                            <select name="dealer" class="form-control" required>
-                                <option value="">-- Select Dealer --</option>
-                                {% for dealer in available_dealers %}
-                                    <option value="{{ dealer.id }}">{{ dealer.username }} - {{ dealer.userprofile.company_name|default:"" }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
                         <button type="submit" class="btn btn-success w-100">Assign Dealer</button>
-                        <a href="{% url 'yard_assigned_dealers' %}" class="btn btn-secondary w-100 mt-2">View Assigned Dealers</a>
+                        <a href="{% url 'yard_manage_dealers' %}" class="btn btn-secondary w-100 mt-2">Cancel</a>
                     </form>
                 </div>
             </div>

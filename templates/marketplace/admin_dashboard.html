@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% load static %}
 
 {% block content %}
 <div class="container-fluid mt-4">
@@ -23,8 +22,9 @@
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                <i class="fas fa-users"></i> Total Users</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_users }}</div>
+                                <i class="fas fa-users"></i> Total Users
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_users|default:"0" }}</div>
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-users fa-2x text-gray-300"></i>
@@ -40,8 +40,9 @@
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                <i class="fas fa-car"></i> Total Cars</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_cars }}</div>
+                                <i class="fas fa-car"></i> Total Cars
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_cars|default:"0" }}</div>
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-car fa-2x text-gray-300"></i>
@@ -57,8 +58,9 @@
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                <i class="fas fa-clock"></i> Pending Approvals</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_approvals }}</div>
+                                <i class="fas fa-clock"></i> Pending Approvals
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_approvals|default:"0" }}</div>
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-clock fa-2x text-gray-300"></i>
@@ -74,11 +76,57 @@
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                <i class="fas fa-check-circle"></i> Approved Cars</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ approved_cars }}</div>
+                                <i class="fas fa-check-circle"></i> Approved Cars
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ approved_cars|default:"0" }}</div>
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-bolt"></i> Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-2 col-6 mb-2">
+                            <a href="/admin/" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-cog"></i> Admin Panel
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-6 mb-2">
+                            <a href="{% url 'car_list' %}" class="btn btn-outline-success w-100">
+                                <i class="fas fa-car"></i> Manage Cars
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-6 mb-2">
+                            <a href="/admin/auth/user/" class="btn btn-outline-info w-100">
+                                <i class="fas fa-users"></i> Manage Users
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-6 mb-2">
+                            <a href="{% url 'admin_verify_yard' %}" class="btn btn-outline-warning w-100">
+                                <i class="fas fa-check-circle"></i> Verify Yards
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-6 mb-2">
+                            <a href="{% url 'admin_reports' %}" class="btn btn-outline-danger w-100">
+                                <i class="fas fa-flag"></i> View Reports
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-6 mb-2">
+                            <a href="{% url 'car_valuation' %}" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-chart-line"></i> Car Valuation
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -115,14 +163,21 @@
                                     <td>{{ car.package|title }}</td>
                                     <td>{{ car.created_at|date:"M d, Y" }}</td>
                                     <td>
-                                        <button class="btn btn-sm btn-success approve-car" data-id="{{ car.id }}">
-                                            <i class="fas fa-check"></i> Approve
-                                        </button>
-                                        <button class="btn btn-sm btn-danger reject-car" data-id="{{ car.id }}">
-                                            <i class="fas fa-times"></i> Reject
-                                        </button>
+                                        <form method="post" action="{% url 'yard_approve_car' car.id %}" style="display:inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                <i class="fas fa-check"></i> Approve
+                                            </button>
+                                        </form>
+                                        <form method="post" action="{% url 'yard_reject_car' car.id %}" style="display:inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                <i class="fas fa-times"></i> Reject
+                                            </button>
+                                        </form>
+                                        <a href="{% url 'car_detail' car.id %}" class="btn btn-sm btn-info">View</a>
                                     </td>
-                                </table>
+                                </tr>
                                 {% empty %}
                                 <tr><td colspan="6" class="text-center">No pending approvals</td></tr>
                                 {% endfor %}
@@ -154,6 +209,8 @@
                                     <td><span class="badge bg-info">{{ user.userprofile.role|title }}</span></td>
                                     <td>{{ user.date_joined|date:"M d, Y" }}</td>
                                 </tr>
+                                {% empty %}
+                                <tr><td colspan="3" class="text-center">No users yet</td></tr>
                                 {% endfor %}
                             </tbody>
                         </table>
@@ -188,6 +245,8 @@
                                         {% endif %}
                                     </td>
                                 </tr>
+                                {% empty %}
+                                <tr><td colspan="3" class="text-center">No cars yet</td></tr>
                                 {% endfor %}
                             </tbody>
                         </table>
@@ -196,14 +255,36 @@
             </div>
         </div>
     </div>
-</div>
 
-<script>
-document.querySelectorAll('.approve-car').forEach(btn => {
-    btn.addEventListener('click', function() {
-        fetch(`/admin/approve-car/${this.dataset.id}/`, {method: 'POST'})
-        .then(() => location.reload());
-    });
-});
-</script>
+    <!-- Yard Statistics -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-warehouse"></i> Yard Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <h3>{{ total_yards|default:"0" }}</h3>
+                            <p>Total Yards</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h3>{{ assigned_yards|default:"0" }}</h3>
+                            <p>Assigned Yards</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h3>{{ pending_yards|default:"0" }}</h3>
+                            <p>Pending Yards</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h3>{{ yard_managers|default:"0" }}</h3>
+                            <p>Yard Managers</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

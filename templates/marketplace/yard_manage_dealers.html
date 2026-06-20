@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1><i class="fas fa-users-cog"></i> Manage Dealers</h1>
+    <p>Assign and manage dealers in your yards</p>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-warning">
+                <div class="card-body text-center">
+                    <h3>{{ pending_count }}</h3>
+                    <p>Pending Dealers</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3>{{ assigned_count }}</h3>
+                    <p>Assigned Dealers</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3>{{ yards.count }}</h3>
+                    <p>Your Yards</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Your Yards -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Your Yards</h5>
+        </div>
+        <div class="card-body">
+            {% for yard in yards %}
+            <div class="border-bottom mb-2 pb-2">
+                <h5>{{ yard.name }}</h5>
+                <p class="text-muted">{{ yard.location }}, {{ yard.city }}</p>
+            </div>
+            {% empty %}
+            <p>No yards assigned to you.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Pending Dealers -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-warning">
+            <h5 class="mb-0">Pending Dealers ({{ pending_count }})</h5>
+        </div>
+        <div class="card-body">
+            {% if pending_dealers %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Dealer</th>
+                            <th>Email</th>
+                            <th>Company</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dealer in pending_dealers %}
+                        <tr>
+                            <td>{{ dealer.username }}</td>
+                            <td>{{ dealer.email }}</td>
+                            <td>{{ dealer.userprofile.company_name|default:"-" }}</td>
+                            <td>
+                                <a href="{% url 'yard_assign_dealer' dealer.id %}" class="btn btn-sm btn-success">
+                                    <i class="fas fa-check"></i> Assign
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-center">All dealers are assigned.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Assigned Dealers -->
+    <div class="card shadow">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Assigned Dealers ({{ assigned_count }})</h5>
+        </div>
+        <div class="card-body">
+            {% if assigned_dealers %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Dealer</th>
+                            <th>Yard</th>
+                            <th>Assigned By</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for assignment in assigned_dealers %}
+                        <tr>
+                            <td>{{ assignment.dealer.username }}</td>
+                            <td>{{ assignment.yard.name }}</td>
+                            <td>{{ assignment.assigned_by.username|default:"-" }}</td>
+                            <td>{{ assignment.assigned_at|date:"M d, Y" }}</td>
+                            <td>
+                                <a href="{% url 'yard_remove_dealer' assignment.id %}" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-times"></i> Remove
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-center">No dealers assigned to your yards yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

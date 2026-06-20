@@ -8,20 +8,21 @@
             <i class="fas fa-plus"></i> Add New Car
         </a>
     </div>
+    <p>Welcome back, <strong>{{ user.username }}</strong>!</p>
 
     <!-- Statistics Cards -->
     <div class="row mb-4">
         <div class="col-md-3">
             <div class="card bg-primary text-white">
-                <div class="card-body">
+                <div class="card-body text-center">
                     <h3>{{ total_cars|default:"0" }}</h3>
-                    <p>Total Listings</p>
+                    <p>Total Cars</p>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card bg-success text-white">
-                <div class="card-body">
+                <div class="card-body text-center">
                     <h3>{{ approved_cars|default:"0" }}</h3>
                     <p>Approved</p>
                 </div>
@@ -29,7 +30,7 @@
         </div>
         <div class="col-md-3">
             <div class="card bg-warning text-dark">
-                <div class="card-body">
+                <div class="card-body text-center">
                     <h3>{{ pending_cars|default:"0" }}</h3>
                     <p>Pending Approval</p>
                 </div>
@@ -37,7 +38,7 @@
         </div>
         <div class="col-md-3">
             <div class="card bg-danger text-white">
-                <div class="card-body">
+                <div class="card-body text-center">
                     <h3>{{ sold_cars|default:"0" }}</h3>
                     <p>Sold</p>
                 </div>
@@ -45,13 +46,91 @@
         </div>
     </div>
 
-    <!-- Total Views Card -->
+    <!-- Quick Actions -->
     <div class="row mb-4">
         <div class="col-md-12">
-            <div class="card bg-info text-white">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-bolt"></i> Quick Actions</h5>
+                </div>
                 <div class="card-body">
-                    <h3>{{ total_views|default:"0" }}</h3>
-                    <p>Total Views on Your Listings</p>
+                    <div class="row">
+                        <div class="col-md-2 col-6 mb-2">
+                            <a href="{% url 'dealer_add_car' %}" class="btn btn-success w-100">
+                                <i class="fas fa-plus"></i> Add Car
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-6 mb-2">
+                            <a href="{% url 'dealer_my_cars' %}" class="btn btn-primary w-100">
+                                <i class="fas fa-car"></i> My Cars
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-6 mb-2">
+                            <a href="{% url 'dealer_sold_requests' %}" class="btn btn-warning w-100">
+                                <i class="fas fa-shopping-cart"></i> Sold Requests
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-6 mb-2">
+                            <a href="{% url 'dealer_commission' %}" class="btn btn-info w-100">
+                                <i class="fas fa-chart-line"></i> Commission
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-6 mb-2">
+                            <a href="{% url 'dealer_messages' %}" class="btn btn-secondary w-100">
+                                <i class="fas fa-envelope"></i> Messages
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-6 mb-2">
+                            <a href="{% url 'dealer_send_message' %}" class="btn btn-success w-100">
+                                <i class="fas fa-plus"></i> Send Message
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sales Management -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-shopping-cart"></i> Sales Management</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'dealer_sold_requests' %}" class="btn btn-warning">
+                            <i class="fas fa-list"></i> View Sold Requests
+                            {% if pending_sold_count %}
+                                <span class="badge bg-danger float-end">{{ pending_sold_count }}</span>
+                            {% endif %}
+                        </a>
+                        <a href="{% url 'dealer_commission' %}" class="btn btn-info">
+                            <i class="fas fa-chart-line"></i> View Commission Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-envelope"></i> Messages & Communication</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'dealer_messages' %}" class="btn btn-info">
+                            <i class="fas fa-inbox"></i> View Messages
+                            {% if unread_count %}
+                                <span class="badge bg-danger float-end">{{ unread_count }}</span>
+                            {% endif %}
+                        </a>
+                        <a href="{% url 'dealer_send_message' %}" class="btn btn-success">
+                            <i class="fas fa-paper-plane"></i> Send New Message
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -59,8 +138,8 @@
 
     <!-- Recent Listings -->
     <div class="card shadow">
-        <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-list"></i> Your Recent Listings</h5>
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-list"></i> Recent Listings ({{ total_cars|default:"0" }})</h5>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -97,8 +176,17 @@
                             <td>{{ car.views_count }}</td>
                             <td>{{ car.created_at|date:"M d, Y" }}</td>
                             <td>
-                                <a href="{% url 'car_detail' car.id %}" class="btn btn-sm btn-info">View</a>
-                                <a href="{% url 'dealer_edit_car' car.id %}" class="btn btn-sm btn-warning">Edit</a>
+                                <div class="btn-group">
+                                    <a href="{% url 'car_detail' car.id %}" class="btn btn-sm btn-info" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'dealer_edit_car' car.id %}" class="btn btn-sm btn-warning" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'dealer_delete_car' car.id %}" class="btn btn-sm btn-danger" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         {% empty %}

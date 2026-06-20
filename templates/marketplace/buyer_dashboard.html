@@ -2,82 +2,283 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h1><i class="fas fa-user"></i> My Dashboard</h1>
+    <h1 class="mb-4"><i class="fas fa-user"></i> My Dashboard</h1>
     <p>Welcome back, <strong>{{ user.username }}</strong>!</p>
 
-    <div class="row">
-        <div class="col-md-4">
-            <div class="stat-card text-center">
-                <i class="fas fa-heart fa-3x"></i>
-                <h3>{{ wishlist_count|default:"0" }}</h3>
-                <p>Wishlist Items</p>
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-danger text-white shadow">
+                <div class="card-body text-center">
+                    <i class="fas fa-heart fa-2x"></i>
+                    <h3 class="mt-2">{{ wishlist_count|default:"0" }}</h3>
+                    <p>Cars in Wishlist</p>
+                    <a href="#wishlist-section" class="text-white">View All →</a>
+                </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="stat-card text-center" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                <i class="fas fa-calendar-check fa-3x"></i>
-                <h3>{{ reservations_count|default:"0" }}</h3>
-                <p>Active Reservations</p>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-dark shadow">
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar-check fa-2x"></i>
+                    <h3 class="mt-2">{{ reservations_count|default:"0" }}</h3>
+                    <p>Active Reservations</p>
+                    <a href="#reservations-section" class="text-dark">View All →</a>
+                </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="stat-card text-center" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                <i class="fas fa-envelope fa-3x"></i>
-                <h3>{{ unread_messages|default:"0" }}</h3>
-                <p>Unread Messages</p>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white shadow">
+                <div class="card-body text-center">
+                    <i class="fas fa-envelope fa-2x"></i>
+                    <h3 class="mt-2">{{ unread_messages|default:"0" }}</h3>
+                    <p>Unread Messages</p>
+                    <a href="{% url 'buyer_messages' %}" class="text-white">View All →</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white shadow">
+                <div class="card-body text-center">
+                    <i class="fas fa-tools fa-2x"></i>
+                    <h3 class="mt-2">{{ pending_inspections|default:"0" }}</h3>
+                    <p>Pending Inspections</p>
+                    <a href="{% url 'buyer_inspections' %}" class="text-white">View All →</a>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="row mt-4">
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white">
-                    <h5><i class="fas fa-heart"></i> Your Wishlist</h5>
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-bolt"></i> Quick Actions</h5>
                 </div>
                 <div class="card-body">
-                    {% for item in recent_wishlist %}
-                    <div class="border-bottom mb-2 pb-2">
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <strong>{{ item.car.year }} {{ item.car.make }} {{ item.car.model }}</strong>
-                                <br><small class="text-muted">{{ item.car.mileage }} km</small>
-                            </div>
-                            <div class="text-end">
-                                <span class="price-tag">TSh {{ item.car.price|floatformat:0 }}</span>
-                                <br>
-                                <a href="{% url 'car_detail' item.car.id %}" class="btn btn-sm btn-primary mt-1">View</a>
-                            </div>
+                    <div class="row">
+                        <div class="col-md-2 col-6 mb-2">
+                            <a href="{% url 'car_list' %}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-search"></i> Browse Cars
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-6 mb-2">
+                            <a href="{% url 'compare_cars' %}" class="btn btn-outline-info w-100">
+                                <i class="fas fa-chart-line"></i> Compare Cars
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-6 mb-2">
+                            <a href="{% url 'car_valuation' %}" class="btn btn-outline-success w-100">
+                                <i class="fas fa-chart-line"></i> Value My Car
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-6 mb-2">
+                            <a href="{% url 'buyer_messages' %}" class="btn btn-outline-info w-100">
+                                <i class="fas fa-envelope"></i> Messages
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-6 mb-2">
+                            <a href="{% url 'buyer_inspections' %}" class="btn btn-outline-success w-100">
+                                <i class="fas fa-tools"></i> Inspections
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-6 mb-2">
+                            <a href="{% url 'profile' %}" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-user-edit"></i> Edit Profile
+                            </a>
                         </div>
                     </div>
-                    {% empty %}
-                    <p class="text-center">Your wishlist is empty. <a href="{% url 'car_list' %}">Browse cars</a></p>
-                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wishlist & Reservations -->
+    <div class="row mb-4">
+        <div class="col-md-6" id="wishlist-section">
+            <div class="card shadow h-100">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-heart"></i> My Wishlist ({{ wishlist_count }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_wishlist %}
+                        {% for item in recent_wishlist %}
+                        <div class="border-bottom mb-3 pb-3">
+                            <div class="row align-items-center">
+                                <div class="col-8">
+                                    <strong>{{ item.car.year }} {{ item.car.make }} {{ item.car.model }}</strong>
+                                    <br><small class="text-muted">{{ item.car.mileage|floatformat:0 }} km</small>
+                                    <br><span class="text-success fw-bold">TSh {{ item.car.price|floatformat:0 }}</span>
+                                </div>
+                                <div class="col-4 text-end">
+                                    <a href="{% url 'car_detail' item.car.id %}" class="btn btn-sm btn-primary w-100 mb-1">View</a>
+                                    <a href="{% url 'save_car' item.car.id %}" class="btn btn-sm btn-danger w-100">Remove</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-heart fa-3x text-muted mb-2"></i>
+                            <p>Your wishlist is empty.</p>
+                            <a href="{% url 'car_list' %}" class="btn btn-primary">Browse Cars</a>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
 
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white">
-                    <h5><i class="fas fa-calendar-alt"></i> Recent Reservations</h5>
+        <div class="col-md-6" id="reservations-section">
+            <div class="card shadow h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-calendar-check"></i> Recent Reservations ({{ reservations_count }})</h5>
                 </div>
                 <div class="card-body">
-                    {% for res in recent_reservations %}
-                    <div class="border-bottom mb-2 pb-2">
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <strong>{{ res.car.make }} {{ res.car.model }}</strong>
-                                <br><span class="badge bg-{% if res.status == 'confirmed' %}success{% else %}warning{% endif %}">{{ res.status }}</span>
-                            </div>
-                            <div class="text-end">
-                                <small>{{ res.reservation_date|date:"M d, Y" }}</small>
+                    {% if recent_reservations %}
+                        {% for reservation in recent_reservations %}
+                        <div class="border-bottom mb-3 pb-3">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <strong>{{ reservation.car.year }} {{ reservation.car.make }} {{ reservation.car.model }}</strong>
+                                    <br>
+                                    <span class="badge bg-{% if reservation.status == 'confirmed' %}success{% elif reservation.status == 'pending' %}warning{% else %}secondary{% endif %}">
+                                        {{ reservation.status|title }}
+                                    </span>
+                                    <br>
+                                    <small class="text-muted">Fee: TSh {{ reservation.reservation_fee|floatformat:0 }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <small>{{ reservation.created_at|date:"M d, Y" }}</small>
+                                    <br>
+                                    <a href="{% url 'car_detail' reservation.car.id %}" class="btn btn-sm btn-primary mt-1">View</a>
+                                </div>
                             </div>
                         </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-calendar-check fa-3x text-muted mb-2"></i>
+                            <p>No recent reservations.</p>
+                            <a href="{% url 'car_list' %}" class="btn btn-primary">Browse Cars</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inspections & Messages -->
+    <div class="row mb-4">
+        <div class="col-md-6" id="inspections-section">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-tools"></i> Inspection Requests</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_inspections %}
+                        {% for inspection in recent_inspections %}
+                        <div class="border-bottom mb-2 pb-2">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <strong>{{ inspection.car.year }} {{ inspection.car.make }} {{ inspection.car.model }}</strong>
+                                    <br>
+                                    <span class="badge bg-{% if inspection.status == 'pending' %}warning{% elif inspection.status == 'scheduled' %}info{% elif inspection.status == 'completed' %}success{% else %}secondary{% endif %}">
+                                        {{ inspection.status|title }}
+                                    </span>
+                                </div>
+                                <small>{{ inspection.created_at|date:"M d, Y" }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-tools fa-3x text-muted mb-2"></i>
+                            <p>No pending inspection requests.</p>
+                            <a href="{% url 'car_list' %}" class="btn btn-primary">Request Inspection</a>
+                        </div>
+                    {% endif %}
+                    {% if pending_inspections > 0 %}
+                        <a href="{% url 'buyer_inspections' %}" class="btn btn-sm btn-info mt-2">View All</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6" id="messages-section">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-envelope"></i> Recent Messages</h5>
+                </div>
+                <div class="card-body">
+                    {% if unread_messages > 0 %}
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                            <i class="fas fa-bell"></i> You have <strong>{{ unread_messages }}</strong> unread message(s)
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endif %}
+                    
+                    {% if recent_messages %}
+                        {% for msg in recent_messages %}
+                        <div class="border-bottom mb-2 pb-2">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <strong>{{ msg.sender.username }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ msg.subject|truncatechars:30 }}</small>
+                                </div>
+                                <div>
+                                    {% if not msg.is_read %}
+                                        <span class="badge bg-danger">New</span>
+                                    {% endif %}
+                                    <a href="{% url 'message_detail' msg.id %}" class="btn btn-sm btn-primary">View</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        <a href="{% url 'buyer_messages' %}" class="btn btn-sm btn-info mt-2">View All Messages</a>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-envelope fa-3x text-muted mb-2"></i>
+                            <p>No messages yet.</p>
+                            <a href="{% url 'car_list' %}" class="btn btn-primary">Contact Dealers</a>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="mt-2">
+                        <a href="{% url 'send_message' %}" class="btn btn-success btn-sm">
+                            <i class="fas fa-plus"></i> Send Message
+                        </a>
                     </div>
-                    {% empty %}
-                    <p class="text-center">No reservations yet.</p>
-                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-history"></i> Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_activity %}
+                        <ul class="list-unstyled">
+                            {% for activity in recent_activity %}
+                            <li class="border-bottom pb-2 mb-2">
+                                <i class="fas fa-{{ activity.icon }} text-{{ activity.color }}"></i>
+                                {{ activity.text }}
+                                <small class="text-muted float-end">{{ activity.time }}</small>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <p class="text-muted">Your recent activity will appear here.</p>
+                            <a href="{% url 'car_list' %}" class="btn btn-primary">Start Exploring</a>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

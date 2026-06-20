@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-paper-plane"></i> Send Message to Buyer</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label>To (Buyer)</label>
+                            <select name="receiver_id" class="form-control" required>
+                                <option value="">-- Select Buyer --</option>
+                                {% for buyer in buyers %}
+                                    <option value="{{ buyer.id }}">{{ buyer.username }} ({{ buyer.email }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label>Related Car (Optional)</label>
+                            <select name="car_id" class="form-control">
+                                <option value="">-- Select Car --</option>
+                                {% for car in cars %}
+                                    <option value="{{ car.id }}">{{ car.year }} {{ car.make }} {{ car.model }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label>Subject</label>
+                            <input type="text" name="subject" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Message</label>
+                            <textarea name="content" rows="5" class="form-control" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Send Message</button>
+                        <a href="{% url 'dealer_messages' %}" class="btn btn-secondary w-100 mt-2">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

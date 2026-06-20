@@ -40,6 +40,12 @@
     .featured-card {
         border: 2px solid #ffc107;
         box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        transition: transform 0.3s;
+    }
+    
+    .featured-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
     }
     
     .featured-badge {
@@ -66,6 +72,15 @@
         font-size: 12px;
         font-weight: bold;
         z-index: 10;
+    }
+    
+    .car-card {
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .car-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
     }
 </style>
 {% endblock %}
@@ -119,9 +134,10 @@
     <!-- Featured Cars Section -->
     {% if featured_cars %}
     <div class="row mb-4">
-        <div class="col-12">
-            <h2 class="text-center mb-2">⭐ Featured Cars</h2>
-            <p class="text-center text-muted mb-4">Hand-picked premium vehicles from trusted dealers</p>
+        <div class="col-12 text-center">
+            <h2 class="mb-0">⭐ Featured Cars</h2>
+            <p class="text-muted mb-2">Hand-picked premium vehicles from trusted dealers</p>
+            <span class="badge bg-warning text-dark p-2">Premium Listings</span>
         </div>
     </div>
     <div class="row">
@@ -142,8 +158,7 @@
                     <h5 class="card-title">{{ car.year }} {{ car.make }} {{ car.model }}</h5>
                     <p class="card-text text-muted">
                         <i class="fas fa-tachometer-alt"></i> {{ car.mileage|floatformat:0 }} km<br>
-                        <i class="fas fa-cog"></i> {{ car.transmission|title }} | 
-                        <i class="fas fa-gas-pump"></i> {{ car.fuel_type|title }}
+                        <i class="fas fa-cog"></i> {{ car.transmission|title }}
                     </p>
                     <h4 class="text-success">TSh {{ car.price|floatformat:0 }}</h4>
                     <a href="{% url 'car_detail' car.id %}" class="btn btn-warning w-100">View Details</a>
@@ -156,34 +171,35 @@
 
     <!-- Latest Cars Section -->
     <div class="row mt-5 mb-4">
-        <div class="col-12">
-            <h2 class="text-center mb-2">🔥 Latest Arrivals</h2>
-            <p class="text-center text-muted mb-4">Most recently listed cars on our platform</p>
+        <div class="col-12 text-center">
+            <h2 class="mb-0">🔥 Latest Arrivals</h2>
+            <p class="text-muted mb-2">Most recently listed cars on our platform ({{ total_latest }} total)</p>
+            <a href="{% url 'car_list' %}" class="btn btn-outline-primary">View All Cars →</a>
         </div>
     </div>
     <div class="row">
         {% for car in latest_cars %}
-        <div class="col-md-4 mb-4">
-            <div class="card shadow h-100 position-relative">
+        <div class="col-md-4 col-lg-3 mb-4">
+            <div class="card shadow h-100 position-relative car-card">
                 <span class="new-badge">
                     <i class="fas fa-clock"></i> NEW
                 </span>
                 {% if car.images and car.images.url %}
-                    <img src="{{ car.images.url }}" class="card-img-top" alt="{{ car.title }}" style="height: 200px; object-fit: cover; width: 100%;">
+                    <img src="{{ car.images.url }}" class="card-img-top" alt="{{ car.title }}" style="height: 180px; object-fit: cover; width: 100%;">
                 {% else %}
-                    <div class="bg-primary text-white text-center py-4" style="height: 200px; display: flex; align-items: center; justify-content: center;">
+                    <div class="bg-primary text-white text-center py-4" style="height: 180px; display: flex; align-items: center; justify-content: center;">
                         <i class="fas fa-car fa-3x"></i>
                     </div>
                 {% endif %}
                 <div class="card-body">
-                    <h5 class="card-title">{{ car.year }} {{ car.make }} {{ car.model }}</h5>
-                    <p class="card-text text-muted">
+                    <h6 class="card-title">{{ car.year }} {{ car.make }} {{ car.model }}</h6>
+                    <p class="card-text text-muted small">
                         <i class="fas fa-tachometer-alt"></i> {{ car.mileage|floatformat:0 }} km<br>
                         <i class="fas fa-cog"></i> {{ car.transmission|title }} | 
                         <i class="fas fa-gas-pump"></i> {{ car.fuel_type|title }}
                     </p>
-                    <h4 class="text-success">TSh {{ car.price|floatformat:0 }}</h4>
-                    <a href="{% url 'car_detail' car.id %}" class="btn btn-primary w-100">View Details</a>
+                    <h5 class="text-success">TSh {{ car.price|floatformat:0 }}</h5>
+                    <a href="{% url 'car_detail' car.id %}" class="btn btn-primary btn-sm w-100">View Details</a>
                 </div>
             </div>
         </div>
@@ -193,6 +209,15 @@
         </div>
         {% endfor %}
     </div>
+    
+    <!-- Load More / View All -->
+    {% if latest_cars|length >= 30 %}
+    <div class="text-center mt-4">
+        <a href="{% url 'car_list' %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-car"></i> View All {{ total_latest }} Cars
+        </a>
+    </div>
+    {% endif %}
 </div>
 
 <!-- Features Section -->
