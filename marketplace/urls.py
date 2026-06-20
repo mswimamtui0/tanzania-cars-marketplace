@@ -14,15 +14,10 @@ urlpatterns = [
     path('logout/', views.logout, name='logout'),
     path('profile/', views.profile, name='profile'),
     
-    # Car listings - Using only views that exist
+    # Car listings
     path('cars/', views.car_list, name='car_list'),
     path('cars/<int:car_id>/', views.car_detail, name='car_detail'),
     path('cars/add/', views.save_car, name='add_car'),
-    # REMOVED: edit_car and delete_car - they don't exist
-    
-    # Favorites
-    path('favorites/', views.favorites_list, name='favorites_list'),
-    path('favorites/<int:car_id>/toggle/', views.favorite_car, name='favorite_car'),
     
     # Dealer dashboard
     path('dealer/dashboard/', views.dealer_dashboard, name='dealer_dashboard'),
@@ -38,7 +33,6 @@ urlpatterns = [
     path('yard/dashboard/', views.yard_manager_dashboard, name='yard_dashboard'),
     path('yard/cars/', views.yard_my_cars, name='yard_cars'),
     path('yard/cars/add/', views.yard_add_car, name='yard_add_car'),
-    # REMOVED: yard_edit_car and yard_delete_car - use dealer versions or add if needed
     path('yard/pending/', views.yard_pending_cars, name='yard_pending_cars'),
     path('yard/approve/<int:car_id>/', views.yard_approve_car, name='yard_approve_car'),
     path('yard/reject/<int:car_id>/', views.yard_reject_car, name='yard_reject_car'),
