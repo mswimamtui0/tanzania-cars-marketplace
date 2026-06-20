@@ -212,7 +212,11 @@ SITE_ID = 1
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
+    
 ]
+
+# Account settings
+SITE_ID = 1  # Required for allauth
 
 # Account settings
 ACCOUNT_EMAIL_REQUIRED = True
@@ -220,7 +224,11 @@ ACCOUNT_USERNAME_REQUIRED = True
 ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 ACCOUNT_EMAIL_VERIFICATION = 'optional'
 ACCOUNT_SESSION_REMEMBER = True
+ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = True
 
+# Login/Logout redirects
+LOGIN_REDIRECT_URL = 'home'
+ACCOUNT_LOGOUT_REDIRECT_URL = 'home'
 # Logging
 LOGGING = {
     'version': 1,
