@@ -1,6 +1,18 @@
 import os
 from pathlib import Path
 
+
+
+# Cloudinary Configuration
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': 'your-cloud-name-here',
+    'API_KEY': 'your-api-key-here',
+    'API_SECRET': 'your-api-secret-here',
+}
+
+# Use Cloudinary for media storage
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -21,6 +33,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'marketplace',
+'cloudinary',  # Add this
+    'cloudinary_storage',
 ]
 
 MIDDLEWARE = [
