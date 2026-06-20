@@ -43,7 +43,6 @@ urlpatterns = [
     
     # Admin dashboard
     path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
-    path('admin/users/', views.admin_users, name='admin_users'),
     path('admin/cars/', views.admin_cars, name='admin_cars'),
     path('admin/dealers/', views.admin_dealers, name='admin_dealers'),
     path('admin/yards/', views.admin_yards, name='admin_yards'),
@@ -57,7 +56,6 @@ urlpatterns = [
     path('buyer/dashboard/', views.buyer_dashboard, name='buyer_dashboard'),
     path('buyer/inspections/', views.buyer_inspections, name='buyer_inspections'),
     path('buyer/messages/', views.buyer_messages, name='buyer_messages'),
-    path('buyer/request-inspection/', views.request_inspection, name='request_inspection'),
     
     # Car comparison
     path('compare/', views.compare_cars, name='compare_cars'),
