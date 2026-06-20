@@ -1,74 +1,79 @@
-from django.urls import path
-from django.contrib.auth import views as auth_views
-from . import views
 from django.urls import path, include
 from django.conf.urls.i18n import i18n_patterns
+from django.conf import settings
+from django.conf.urls.static import static
+from . import views
+from .views import (
+    home, car_list, car_detail, add_car, edit_car, delete_car,
+    register, user_login, user_logout, profile, favorite_car,
+    favorites_list, search_cars, dealer_dashboard, dealer_cars,
+    dealer_add_car, dealer_edit_car, dealer_delete_car,
+    yard_dashboard, yard_cars, yard_add_car, yard_edit_car, yard_delete_car,
+    admin_dashboard, admin_users, admin_cars, admin_dealers,
+    admin_yards, admin_reports, about, contact, terms, privacy,
+    set_language
+)
 
+# Main URL patterns
 urlpatterns = [
-    path('', views.home, name='home'),
-    path('cars/', views.car_list, name='car_list'),
-    path('car/<int:car_id>/', views.car_detail, name='car_detail'),
-    path('login/', auth_views.LoginView.as_view(template_name='marketplace/login.html'), name='login'),
-    path('register/', views.register, name='register'),
-    path('logout/', views.logout_view, name='logout'),
-    path('dashboard/', views.dashboard, name='dashboard'),
-    path('admin-panel/', views.admin_dashboard, name='admin_dashboard'),
-    path('dealer-panel/', views.dealer_dashboard, name='dealer_dashboard'),
-    path('yard-panel/', views.yard_manager_dashboard, name='yard_manager_dashboard'),
-    path('buyer-panel/', views.buyer_dashboard, name='buyer_dashboard'),
-    path('dealer/add-car/', views.dealer_add_car, name='dealer_add_car'),
-    path('dealer/my-cars/', views.dealer_my_cars, name='dealer_my_cars'),
-    path('dealer/edit-car/<int:car_id>/', views.dealer_edit_car, name='dealer_edit_car'),
-    path('dealer/delete-car/<int:car_id>/', views.dealer_delete_car, name='dealer_delete_car'),
-    path('save-car/<int:car_id>/', views.save_car, name='save_car'),
-    path('yard/add-car/', views.yard_add_car, name='yard_add_car'),
-    path('yard/my-cars/', views.yard_my_cars, name='yard_my_cars'),
-    path('yard/pending-cars/', views.yard_pending_cars, name='yard_pending_cars'),
-    path('yard/approve-car/<int:car_id>/', views.yard_approve_car, name='yard_approve_car'),
-    path('yard/reject-car/<int:car_id>/', views.yard_reject_car, name='yard_reject_car'),
-    path('yard/manage-dealers/', views.yard_manage_dealers, name='yard_manage_dealers'),
-    path('yard/assign-dealer/<int:dealer_id>/', views.yard_assign_dealer, name='yard_assign_dealer'),
-    path('yard/remove-dealer/<int:assignment_id>/', views.yard_remove_dealer, name='yard_remove_dealer'),
-    path('yard/pending-dealers/', views.yard_pending_dealers, name='yard_pending_dealers'),
-    path('yard/verify-dealer/<int:dealer_id>/', views.yard_verify_dealer, name='yard_verify_dealer'),
-    path('admin-verify-yard/', views.admin_verify_yard, name='admin_verify_yard'),
-    path('admin-assign-yard/', views.admin_assign_yard, name='admin_assign_yard'),
-    path('admin-create-yard/', views.admin_create_yard, name='admin_create_yard'),
-    path('admin-reports/', views.admin_reports_dashboard, name='admin_reports'),
-    path('whatsapp/chat/<int:car_id>/', views.whatsapp_chat, name='whatsapp_chat'),
-    path('request-inspection/<int:car_id>/', views.request_inspection, name='request_inspection'),
-    path('compare/', views.compare_cars, name='compare_cars'),
-    path('compare/add/<int:car_id>/', views.add_to_comparison, name='add_to_comparison'),
-    path('compare/remove/<int:car_id>/', views.remove_from_comparison, name='remove_from_comparison'),
-    path('mark-as-sold/<int:car_id>/', views.mark_as_sold, name='mark_as_sold'),
-    path('dealer/sold-requests/', views.dealer_sold_requests, name='dealer_sold_requests'),
-    path('dealer/approve-sold/<int:request_id>/', views.approve_sold, name='approve_sold'),
-    path('dealer/reject-sold/<int:request_id>/', views.reject_sold, name='reject_sold'),
-    path('dealer/commission/', views.dealer_commission_dashboard, name='dealer_commission'),
-    path('report-fake/<int:car_id>/', views.report_fake_listing, name='report_fake_listing'),
-    path('about-us/', views.about_us, name='about_us'),
-    path('sell-car/', views.sell_car, name='sell_car'),
-    path('profile/', views.profile, name='profile'),
-    path('valuation/', views.car_valuation, name='car_valuation'),
-    path('create-listing/', views.create_listing, name='create_listing'),
-    path('report-resolve/<int:report_id>/', views.resolve_report, name='resolve_report'),
-    path('reserve-car/<int:car_id>/', views.create_reservation, name='create_reservation'),
-    path('buyer-inspections/', views.buyer_inspections, name='buyer_inspections'),
-    path('send-message/', views.send_message, name='send_message'),
-    path('buyer-messages/', views.buyer_messages, name='buyer_messages'),
-    path('message/<int:message_id>/', views.message_detail, name='message_detail'),
-    path('reply-message/<int:message_id>/', views.reply_message, name='reply_message'),
-    path('dealer/send-message/', views.dealer_send_message, name='dealer_send_message'),
-    path('dealer/messages/', views.dealer_messages, name='dealer_messages'),
-    path('dealer/message/<int:message_id>/', views.dealer_message_detail, name='dealer_message_detail'),
-     path('i18n/', include('django.conf.urls.i18n')),
+    # Home and general pages
+    path('', home, name='home'),
+    path('about/', about, name='about'),
+    path('contact/', contact, name='contact'),
+    path('terms/', terms, name='terms'),
+    path('privacy/', privacy, name='privacy'),
+    
+    # Language switcher
+    path('i18n/', include('django.conf.urls.i18n')),
+    path('set-language/', set_language, name='set_language'),
+    
+    # Authentication
+    path('register/', register, name='register'),
+    path('login/', user_login, name='login'),
+    path('logout/', user_logout, name='logout'),
+    path('profile/', profile, name='profile'),
+    
+    # Car listings
+    path('cars/', car_list, name='car_list'),
+    path('cars/search/', search_cars, name='search_cars'),
+    path('cars/<int:car_id>/', car_detail, name='car_detail'),
+    path('cars/add/', add_car, name='add_car'),
+    path('cars/<int:car_id>/edit/', edit_car, name='edit_car'),
+    path('cars/<int:car_id>/delete/', delete_car, name='delete_car'),
+    
+    # Favorites
+    path('favorites/', favorites_list, name='favorites_list'),
+    path('favorites/<int:car_id>/toggle/', favorite_car, name='favorite_car'),
+    
+    # Dealer dashboard
+    path('dealer/dashboard/', dealer_dashboard, name='dealer_dashboard'),
+    path('dealer/cars/', dealer_cars, name='dealer_cars'),
+    path('dealer/cars/add/', dealer_add_car, name='dealer_add_car'),
+    path('dealer/cars/<int:car_id>/edit/', dealer_edit_car, name='dealer_edit_car'),
+    path('dealer/cars/<int:car_id>/delete/', dealer_delete_car, name='dealer_delete_car'),
+    
+    # Yard Manager dashboard
+    path('yard/dashboard/', yard_dashboard, name='yard_dashboard'),
+    path('yard/cars/', yard_cars, name='yard_cars'),
+    path('yard/cars/add/', yard_add_car, name='yard_add_car'),
+    path('yard/cars/<int:car_id>/edit/', yard_edit_car, name='yard_edit_car'),
+    path('yard/cars/<int:car_id>/delete/', yard_delete_car, name='yard_delete_car'),
+    
+    # Admin dashboard
+    path('admin/dashboard/', admin_dashboard, name='admin_dashboard'),
+    path('admin/users/', admin_users, name='admin_users'),
+    path('admin/cars/', admin_cars, name='admin_cars'),
+    path('admin/dealers/', admin_dealers, name='admin_dealers'),
+    path('admin/yards/', admin_yards, name='admin_yards'),
+    path('admin/reports/', admin_reports, name='admin_reports'),
 ]
+
+# Language-prefixed URLs (optional - for multi-language support)
 urlpatterns += i18n_patterns(
     path('', include('marketplace.urls')),
 )
 
-
-# Serve media files in development
+# Serve media and static files in development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
