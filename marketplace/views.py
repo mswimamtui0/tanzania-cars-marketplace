@@ -36,7 +36,7 @@ def home(request):
 
 def about_us(request):
     """About page."""
-    return render(request, 'marketplace/about.html')
+    return render(request, 'marketplace/about_us.html')
 
 def contact(request):
     """Contact page."""
@@ -44,11 +44,11 @@ def contact(request):
 
 def terms(request):
     """Terms and conditions page."""
-    return render(request, 'terms.html')
+    return render(request, 'marketplace/terms.html')
 
 def privacy(request):
     """Privacy policy page."""
-    return render(request, 'privacy.html')
+    return render(request, 'marketplace/privacy.html')
 
 # ========== AUTHENTICATION ==========
 
@@ -98,7 +98,7 @@ def profile(request):
         'user_cars': user_cars,
         'favorites': favorites,
     }
-    return render(request, 'profile.html', context)
+    return render(request, 'marketplace/profile.html', context)
 
 # ========== CAR LISTINGS ==========
 
@@ -160,7 +160,7 @@ def car_list(request):
         'transmission': transmission,
         'fuel_type': fuel_type,
     }
-    return render(request, 'cars/list.html', context)
+    return render(request, 'marketplace/car_list.html', context)
 
 def car_detail(request, car_id):
     """Car detail view."""
@@ -178,7 +178,7 @@ def car_detail(request, car_id):
         'related_cars': related_cars,
         'is_favorite': is_favorite,
     }
-    return render(request, 'cars/detail.html', context)
+    return render(request, 'marketplace/car_detail.html', context)
 
 @login_required
 def save_car(request):
@@ -200,7 +200,12 @@ def save_car(request):
     else:
         form = CarForm()
     
-    return render(request, 'cars/add.html', {'form': form})
+    return render(request, 'marketplace/sell_car.html', {'form': form})
+
+@login_required
+def add_car(request):
+    """Add car view - alias for save_car."""
+    return save_car(request)
 
 @login_required
 def edit_car(request, car_id):
@@ -221,7 +226,7 @@ def edit_car(request, car_id):
     else:
         form = CarForm(instance=car)
     
-    return render(request, 'cars/edit.html', {'form': form, 'car': car})
+    return render(request, 'marketplace/sell_car.html', {'form': form, 'car': car})
 
 @login_required
 def delete_car(request, car_id):
@@ -238,7 +243,7 @@ def delete_car(request, car_id):
         messages.success(request, _('Car deleted successfully!'))
         return redirect('car_list')
     
-    return render(request, 'cars/delete_confirm.html', {'car': car})
+    return render(request, 'marketplace/car_confirm_delete.html', {'car': car})
 
 @login_required
 def sell_car(request):
@@ -256,7 +261,7 @@ def create_listing(request):
 def favorites_list(request):
     """View user's favorite cars."""
     favorites = Favorite.objects.filter(user=request.user).select_related('car')
-    return render(request, 'favorites/list.html', {'favorites': favorites})
+    return render(request, 'marketplace/favorites.html', {'favorites': favorites})
 
 @login_required
 def favorite_car(request, car_id):
@@ -295,7 +300,7 @@ def dealer_dashboard(request):
         'available_cars': available_cars,
         'sold_cars': sold_cars,
     }
-    return render(request, 'dealer/dashboard.html', context)
+    return render(request, 'marketplace/dealer_dashboard.html', context)
 
 @login_required
 def dealer_my_cars(request):
@@ -311,7 +316,7 @@ def dealer_my_cars(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    return render(request, 'dealer/cars.html', {'page_obj': page_obj})
+    return render(request, 'marketplace/dealer_my_cars.html', {'page_obj': page_obj})
 
 @login_required
 def dealer_add_car(request):
@@ -339,7 +344,7 @@ def dealer_add_car(request):
     else:
         form = CarForm()
     
-    return render(request, 'dealer/add_car.html', {'form': form})
+    return render(request, 'marketplace/dealer_add_car.html', {'form': form})
 
 @login_required
 def dealer_edit_car(request, car_id):
@@ -364,7 +369,7 @@ def dealer_edit_car(request, car_id):
     else:
         form = CarForm(instance=car)
     
-    return render(request, 'dealer/edit_car.html', {'form': form, 'car': car})
+    return render(request, 'marketplace/dealer_add_car.html', {'form': form, 'car': car})
 
 @login_required
 def dealer_delete_car(request, car_id):
@@ -385,7 +390,7 @@ def dealer_delete_car(request, car_id):
         messages.success(request, _('Car deleted successfully!'))
         return redirect('dealer_my_cars')
     
-    return render(request, 'dealer/delete_confirm.html', {'car': car})
+    return render(request, 'marketplace/car_confirm_delete.html', {'car': car})
 
 @login_required
 def dealer_messages(request):
@@ -397,7 +402,7 @@ def dealer_messages(request):
         return redirect('profile')
     
     messages_list = Message.objects.filter(recipient=request.user).order_by('-created_at')
-    return render(request, 'dealer/messages.html', {'messages': messages_list})
+    return render(request, 'marketplace/dealer_messages.html', {'messages': messages_list})
 
 @login_required
 def dealer_sold_requests(request):
@@ -409,7 +414,7 @@ def dealer_sold_requests(request):
         return redirect('profile')
     
     cars = Car.objects.filter(dealer=dealer, status='pending').order_by('-created_at')
-    return render(request, 'dealer/sold_requests.html', {'cars': cars})
+    return render(request, 'marketplace/dealer_sold_requests.html', {'cars': cars})
 
 @login_required
 def dealer_commission_dashboard(request):
@@ -429,7 +434,7 @@ def dealer_commission_dashboard(request):
         'total_commission': total_commission,
         'total_cars_sold': cars.count(),
     }
-    return render(request, 'dealer/commission.html', context)
+    return render(request, 'marketplace/dealer_commission.html', context)
 
 # ========== YARD MANAGER DASHBOARD ==========
 
@@ -451,7 +456,7 @@ def yard_manager_dashboard(request):
         'available_cars': cars.filter(status='available').count(),
         'pending_cars': cars.filter(status='pending').count(),
     }
-    return render(request, 'yard/dashboard.html', context)
+    return render(request, 'marketplace/yard_manager_dashboard.html', context)
 
 @login_required
 def yard_my_cars(request):
@@ -468,7 +473,7 @@ def yard_my_cars(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    return render(request, 'yard/cars.html', {'page_obj': page_obj, 'yard': yard})
+    return render(request, 'marketplace/yard_my_cars.html', {'page_obj': page_obj, 'yard': yard})
 
 @login_required
 def yard_add_car(request):
@@ -498,7 +503,7 @@ def yard_add_car(request):
     else:
         form = CarForm()
     
-    return render(request, 'yard/add_car.html', {'form': form, 'yard': yard})
+    return render(request, 'marketplace/yard_add_car.html', {'form': form, 'yard': yard})
 
 @login_required
 def yard_edit_car(request, car_id):
@@ -519,7 +524,7 @@ def yard_edit_car(request, car_id):
     else:
         form = CarForm(instance=car)
     
-    return render(request, 'yard/edit_car.html', {'form': form, 'car': car})
+    return render(request, 'marketplace/yard_add_car.html', {'form': form, 'car': car})
 
 @login_required
 def yard_delete_car(request, car_id):
@@ -536,7 +541,7 @@ def yard_delete_car(request, car_id):
         messages.success(request, _('Car deleted successfully!'))
         return redirect('yard_my_cars')
     
-    return render(request, 'yard/delete_confirm.html', {'car': car})
+    return render(request, 'marketplace/car_confirm_delete.html', {'car': car})
 
 @login_required
 def yard_pending_cars(request):
@@ -549,7 +554,7 @@ def yard_pending_cars(request):
     yard = yards.first()
     cars = Car.objects.filter(yard=yard, status='pending').order_by('-created_at')
     
-    return render(request, 'yard/pending.html', {'cars': cars, 'yard': yard})
+    return render(request, 'marketplace/yard_pending_cars.html', {'cars': cars, 'yard': yard})
 
 @login_required
 def yard_approve_car(request, car_id):
@@ -597,7 +602,7 @@ def yard_manage_dealers(request):
         'yard': yard,
         'assignments': assignments,
     }
-    return render(request, 'yard/dealers.html', context)
+    return render(request, 'marketplace/yard_manage_dealers.html', context)
 
 @login_required
 def yard_assign_dealer(request):
@@ -629,7 +634,7 @@ def yard_assign_dealer(request):
     dealers = Dealer.objects.filter(is_verified=True).exclude(
         yard_assignments__yard=yard
     )
-    return render(request, 'yard/assign_dealer.html', {'yard': yard, 'dealers': dealers})
+    return render(request, 'marketplace/yard_assign_dealer.html', {'yard': yard, 'dealers': dealers})
 
 @login_required
 def yard_remove_dealer(request, dealer_id):
@@ -682,7 +687,7 @@ def admin_dashboard(request):
         'recent_cars': Car.objects.order_by('-created_at')[:10],
         'recent_users': User.objects.order_by('-date_joined')[:10],
     }
-    return render(request, 'admin/dashboard.html', context)
+    return render(request, 'marketplace/admin_dashboard.html', context)
 
 @login_required
 def admin_users(request):
@@ -696,7 +701,7 @@ def admin_users(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    return render(request, 'admin/users.html', {'page_obj': page_obj})
+    return render(request, 'marketplace/admin_users.html', {'page_obj': page_obj})
 
 @login_required
 def admin_cars(request):
@@ -710,7 +715,7 @@ def admin_cars(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    return render(request, 'admin/cars.html', {'page_obj': page_obj})
+    return render(request, 'marketplace/admin_cars.html', {'page_obj': page_obj})
 
 @login_required
 def admin_dealers(request):
@@ -720,7 +725,7 @@ def admin_dealers(request):
         return redirect('home')
     
     dealers = Dealer.objects.all().order_by('business_name')
-    return render(request, 'admin/dealers.html', {'dealers': dealers})
+    return render(request, 'marketplace/admin_dealers.html', {'dealers': dealers})
 
 @login_required
 def admin_yards(request):
@@ -730,7 +735,7 @@ def admin_yards(request):
         return redirect('home')
     
     yards = Yard.objects.all().order_by('name')
-    return render(request, 'admin/yards.html', {'yards': yards})
+    return render(request, 'marketplace/admin_yards.html', {'yards': yards})
 
 @login_required
 def admin_reports_dashboard(request):
@@ -744,7 +749,7 @@ def admin_reports_dashboard(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    return render(request, 'admin/reports.html', {'page_obj': page_obj})
+    return render(request, 'marketplace/admin_reports.html', {'page_obj': page_obj})
 
 @login_required
 def resolve_report(request, report_id):
@@ -763,7 +768,7 @@ def resolve_report(request, report_id):
         messages.success(request, _('Report resolved!'))
         return redirect('admin_reports')
     
-    return render(request, 'admin/resolve_report.html', {'report': report})
+    return render(request, 'marketplace/resolve_report.html', {'report': report})
 
 @login_required
 def admin_create_yard(request):
@@ -781,7 +786,7 @@ def admin_create_yard(request):
     else:
         form = YardForm()
     
-    return render(request, 'admin/create_yard.html', {'form': form})
+    return render(request, 'marketplace/admin_create_yard.html', {'form': form})
 
 @login_required
 def admin_assign_yard(request):
@@ -817,7 +822,7 @@ def admin_assign_yard(request):
         'dealers': dealers,
         'yards': yards,
     }
-    return render(request, 'admin/assign_yard.html', context)
+    return render(request, 'marketplace/admin_assign_yard.html', context)
 
 @login_required
 def admin_verify_yard(request, yard_id):
@@ -848,19 +853,19 @@ def buyer_dashboard(request):
         'inspection_requests': inspection_requests[:5],
         'unread_messages': messages_list,
     }
-    return render(request, 'buyer/dashboard.html', context)
+    return render(request, 'marketplace/buyer_dashboard.html', context)
 
 @login_required
 def buyer_inspections(request):
     """Buyer inspections view."""
     inspections = InspectionRequest.objects.filter(requested_by=request.user).order_by('-created_at')
-    return render(request, 'buyer/inspections.html', {'inspections': inspections})
+    return render(request, 'marketplace/buyer_inspections.html', {'inspections': inspections})
 
 @login_required
 def buyer_messages(request):
     """Buyer messages view."""
     messages_list = Message.objects.filter(recipient=request.user).order_by('-created_at')
-    return render(request, 'buyer/messages.html', {'messages': messages_list})
+    return render(request, 'marketplace/buyer_messages.html', {'messages': messages_list})
 
 # ========== INSPECTIONS ==========
 
@@ -888,7 +893,7 @@ def request_inspection(request):
     car_id = request.GET.get('car_id')
     car = get_object_or_404(Car, id=car_id) if car_id else None
     
-    return render(request, 'buyer/request_inspection.html', {'car': car})
+    return render(request, 'marketplace/request_inspection.html', {'car': car})
 
 # ========== CAR COMPARISON ==========
 
@@ -897,7 +902,7 @@ def compare_cars(request):
     car_ids = request.GET.getlist('car_ids')
     cars = Car.objects.filter(id__in=car_ids)
     
-    return render(request, 'compare.html', {'cars': cars})
+    return render(request, 'marketplace/compare.html', {'cars': cars})
 
 @login_required
 def add_to_comparison(request, car_id):
@@ -938,10 +943,10 @@ def car_valuation(request):
         year = int(request.POST.get('year', 0))
         mileage = int(request.POST.get('mileage', 0))
         
-        # Simple valuation logic (you can make this more sophisticated)
-        base_price = 10000  # Base price
+        # Simple valuation logic
+        base_price = 10000
         age = 2026 - year
-        depreciation = age * 500  # Depreciation per year
+        depreciation = age * 500
         mileage_deduction = (mileage // 10000) * 500
         
         estimated_price = max(1000, base_price - depreciation - mileage_deduction)
@@ -954,9 +959,9 @@ def car_valuation(request):
             'estimated_price': estimated_price,
             'valuation_done': True,
         }
-        return render(request, 'valuation.html', context)
+        return render(request, 'marketplace/valuation_form.html', context)
     
-    return render(request, 'valuation.html')
+    return render(request, 'marketplace/valuation_form.html')
 
 # ========== MESSAGES ==========
 
@@ -972,7 +977,7 @@ def message_detail(request, message_id):
     message.is_read = True
     message.save()
     
-    return render(request, 'messages/detail.html', {'message': message})
+    return render(request, 'marketplace/message_detail.html', {'message': message})
 
 @login_required
 def send_message(request):
@@ -995,7 +1000,7 @@ def send_message(request):
         messages.success(request, _('Message sent!'))
         return redirect('message_detail', message_id=message.id)
     
-    return render(request, 'messages/send.html')
+    return render(request, 'marketplace/send_message.html')
 
 @login_required
 def reply_message(request, message_id):
@@ -1016,7 +1021,7 @@ def reply_message(request, message_id):
         messages.success(request, _('Reply sent!'))
         return redirect('message_detail', message_id=message.id)
     
-    return render(request, 'messages/reply.html', {'parent_message': parent_message})
+    return render(request, 'marketplace/reply_message.html', {'parent_message': parent_message})
 
 # ========== ADDITIONAL FEATURES ==========
 
@@ -1038,7 +1043,7 @@ def report_fake_listing(request):
             car = get_object_or_404(Car, id=car_id)
             form.fields['car'].initial = car
     
-    return render(request, 'report.html', {'form': form})
+    return render(request, 'marketplace/report_fake_listing.html', {'form': form})
 
 def whatsapp_chat(request, car_id):
     """WhatsApp chat integration."""
@@ -1069,7 +1074,7 @@ def mark_as_sold(request, car_id):
         messages.success(request, _('Car marked as pending sale. Waiting for approval.'))
         return redirect('dealer_sold_requests' if hasattr(request.user, 'dealer_profile') else 'car_detail', car_id=car.id)
     
-    return render(request, 'cars/mark_sold.html', {'car': car})
+    return render(request, 'marketplace/reserve_car.html', {'car': car})
 
 @login_required
 def approve_sold(request, car_id):
@@ -1098,6 +1103,49 @@ def reject_sold(request, car_id):
     car.save()
     messages.warning(request, _('Sale rejected.'))
     return redirect('admin_cars' if request.user.is_staff else 'dealer_sold_requests')
+
+# ========== RESERVATIONS ==========
+
+@login_required
+def reserve_car(request, car_id):
+    """Reserve a car."""
+    car = get_object_or_404(Car, id=car_id)
+    
+    if request.method == 'POST':
+        # Add reservation logic here
+        messages.success(request, _('Car reserved successfully!'))
+        return redirect('car_detail', car_id=car.id)
+    
+    return render(request, 'marketplace/reserve_car.html', {'car': car})
+
+@login_required
+def create_reservation(request):
+    """Create a reservation."""
+    if request.method == 'POST':
+        car_id = request.POST.get('car_id')
+        car = get_object_or_404(Car, id=car_id)
+        # Add reservation logic
+        messages.success(request, _('Reservation created!'))
+        return redirect('car_detail', car_id=car.id)
+    
+    return render(request, 'marketplace/reserve_car.html')
+
+# ========== SEARCH ==========
+
+def search_cars(request):
+    """Search cars view."""
+    query = request.GET.get('q', '')
+    cars = Car.objects.filter(
+        Q(title__icontains=query) |
+        Q(brand__icontains=query) |
+        Q(model__icontains=query)
+    )
+    
+    context = {
+        'cars': cars,
+        'query': query,
+    }
+    return render(request, 'marketplace/search_results.html', context)
 
 # ========== LANGUAGE SWITCHER ==========
 
