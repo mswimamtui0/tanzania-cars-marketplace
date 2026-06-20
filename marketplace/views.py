@@ -883,3 +883,113 @@ def set_language(request):
             translation.activate(language)
             request.session[translation.LANGUAGE_SESSION_KEY] = language
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('home')))
+
+
+
+# Add this at the top with your other imports
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
+from django.contrib.auth.models import User
+from django.core.paginator import Paginator
+from django.db.models import Q
+from django.http import JsonResponse, HttpResponse
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.translation import gettext as _
+from .models import Car, Dealer, Yard, Report, Favorite, Message, Review, CarImage
+from .forms import (
+    CarForm, CarImageForm, DealerForm, ReviewForm, 
+    ReportForm, MessageForm, YardForm, DealerAssignmentForm,
+    CustomUserCreationForm
+)
+
+# ========== MISSING VIEWS TO ADD ==========
+
+# Admin Views
+def admin_users(request):
+    """View for admin to manage users."""
+    users = User.objects.all().order_by('-date_joined')
+    return render(request, 'admin/users.html', {'users': users})
+
+def admin_cars(request):
+    """View for admin to manage all car listings."""
+    cars = Car.objects.all().order_by('-created_at')
+    return render(request, 'admin/cars.html', {'cars': cars})
+
+# Favorites Views
+@login_required
+def favorites_list(request):
+    """View for users to see their favorite cars."""
+    favorites = Favorite.objects.filter(user=request.user).select_related('car')
+    return render(request, 'favorites/list.html', {'favorites': favorites})
+
+@login_required
+def favorite_car(request, car_id):
+    """Toggle favorite status for a car."""
+    car = get_object_or_404(Car, id=car_id)
+    favorite, created = Favorite.objects.get_or_create(user=request.user, car=car)
+    if not created:
+        favorite.delete()
+        messages.success(request, _('Removed from favorites'))
+    else:
+        messages.success(request, _('Added to favorites'))
+    return redirect('car_detail', car_id=car_id)
+
+# Generic Car Management Views
+def edit_car(request, car_id):
+    """Edit a car listing (generic)."""
+    car = get_object_or_404(Car, id=car_id)
+    if request.user != car.seller and not request.user.is_staff:
+        messages.error(request, _('You do not have permission to edit this car.'))
+        return redirect('car_detail', car_id=car_id)
+    
+    if request.method == 'POST':
+        form = CarForm(request.POST, request.FILES, instance=car)
+        if form.is_valid():
+            form.save()
+            messages.success(request, _('Car updated successfully!'))
+            return redirect('car_detail', car_id=car_id)
+    else:
+        form = CarForm(instance=car)
+    return render(request, 'cars/edit.html', {'form': form, 'car': car})
+
+def delete_car(request, car_id):
+    """Delete a car listing (generic)."""
+    car = get_object_or_404(Car, id=car_id)
+    if request.user != car.seller and not request.user.is_staff:
+        messages.error(request, _('You do not have permission to delete this car.'))
+        return redirect('car_detail', car_id=car_id)
+    
+    if request.method == 'POST':
+        car.delete()
+        messages.success(request, _('Car deleted successfully!'))
+        return redirect('car_list')
+    return render(request, 'cars/delete_confirm.html', {'car': car})
+
+# Yard Edit and Delete Views
+@login_required
+def yard_edit_car(request, car_id):
+    """Yard manager edit car view."""
+    car = get_object_or_404(Car, id=car_id)
+    # Check if user is a yard manager for this car
+    if request.method == 'POST':
+        form = CarForm(request.POST, request.FILES, instance=car)
+        if form.is_valid():
+            form.save()
+            messages.success(request, _('Car updated successfully!'))
+            return redirect('yard_my_cars')
+    else:
+        form = CarForm(instance=car)
+    return render(request, 'yard/edit_car.html', {'form': form, 'car': car})
+
+@login_required
+def yard_delete_car(request, car_id):
+    """Yard manager delete car view."""
+    car = get_object_or_404(Car, id=car_id)
+    if request.method == 'POST':
+        car.delete()
+        messages.success(request, _('Car deleted successfully!'))
+        return redirect('yard_my_cars')
+    return render(request, 'yard/delete_confirm.html', {'car': car})

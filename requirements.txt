@@ -11,4 +11,4 @@ dj-database-url==2.1.0
 cloudinary==1.36.0
 django-cloudinary-storage==0.3.0
 python-dotenv==1.0.0
-crispy-bootstrap5==0.7   # <-- ADD THIS LINE
+crispy-bootstrap5==0.7

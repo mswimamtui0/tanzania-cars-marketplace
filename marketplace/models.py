@@ -258,3 +258,74 @@ class Message(models.Model):
     
     def __str__(self):
         return f"{self.sender.username} → {self.receiver.username}: {self.subject[:30]}"
+    
+
+
+
+
+    from django.db import models
+from django.contrib.auth.models import User
+from django.utils import timezone
+
+# Add these if they don't exist
+
+class Favorite(models.Model):
+    """Model for user favorites."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorites')
+    car = models.ForeignKey('Car', on_delete=models.CASCADE, related_name='favorited_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'car')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.car.title}"
+
+class Report(models.Model):
+    """Model for reporting issues with listings."""
+    REASON_CHOICES = [
+        ('fake', 'Fake Listing'),
+        ('fraud', 'Fraud/Scam'),
+        ('duplicate', 'Duplicate Listing'),
+        ('price_misleading', 'Misleading Price'),
+        ('other', 'Other'),
+    ]
+    STATUS_CHOICES = [
+        ('pending', 'Pending Review'),
+        ('investigating', 'Under Investigation'),
+        ('resolved', 'Resolved'),
+        ('dismissed', 'Dismissed'),
+    ]
+    
+    car = models.ForeignKey('Car', on_delete=models.CASCADE, related_name='reports')
+    reported_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reports')
+    reason = models.CharField(max_length=50, choices=REASON_CHOICES)
+    description = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    resolved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='resolved_reports')
+    resolution_notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.reason} - {self.car.title}"
+
+class Message(models.Model):
+    """Model for user-to-user messages."""
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
+    car = models.ForeignKey('Car', on_delete=models.CASCADE, null=True, blank=True, related_name='messages')
+    content = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    parent_message = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.sender.username} -> {self.recipient.username}: {self.content[:30]}..."
