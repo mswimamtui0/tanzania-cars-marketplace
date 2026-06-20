@@ -9,22 +9,31 @@
         border-radius: 20px;
         box-shadow: 0 10px 40px rgba(0,0,0,0.08);
         overflow: hidden;
+        background: white;
     }
     
     .register-card .card-header {
         background: linear-gradient(135deg, #0d6efd, #0a58ca);
         padding: 25px 30px;
         border: none;
+        text-align: center;
     }
     
     .register-card .card-header h3 {
         font-weight: 700;
         margin: 0;
         color: white;
+        font-size: 1.5rem;
     }
     
     .register-card .card-header i {
         margin-right: 10px;
+    }
+    
+    .register-card .card-header p {
+        color: rgba(255,255,255,0.8);
+        margin: 5px 0 0;
+        font-size: 0.9rem;
     }
     
     .register-card .card-body {
@@ -36,6 +45,7 @@
         padding: 12px 16px;
         border: 2px solid #e9ecef;
         transition: all 0.3s ease;
+        width: 100%;
     }
     
     .register-card .form-control:focus {
@@ -47,6 +57,12 @@
         font-weight: 600;
         color: #212529;
         margin-bottom: 8px;
+        display: block;
+    }
+    
+    .register-card .form-label i {
+        margin-right: 8px;
+        color: #0d6efd;
     }
     
     .register-card .btn-register {
@@ -58,6 +74,7 @@
         font-size: 1.05rem;
         transition: all 0.3s ease;
         color: white;
+        width: 100%;
     }
     
     .register-card .btn-register:hover {
@@ -72,6 +89,7 @@
         background-color: white;
         cursor: pointer;
         transition: all 0.3s ease;
+        width: 100%;
         appearance: none;
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
         background-repeat: no-repeat;
@@ -83,10 +101,18 @@
         box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
     }
     
+    .register-card .role-option {
+        padding: 8px 12px;
+    }
+    
+    .register-card .role-option i {
+        margin-right: 10px;
+    }
+    
     .register-card .divider {
         display: flex;
         align-items: center;
-        margin: 20px 0;
+        margin: 25px 0;
         color: #adb5bd;
     }
     
@@ -112,6 +138,19 @@
         text-decoration: underline;
     }
     
+    .register-card .extra-fields {
+        display: none;
+        margin-top: 15px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 12px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .register-card .extra-fields.show {
+        display: block;
+    }
+    
     @media (max-width: 576px) {
         .register-card .card-body {
             padding: 25px 20px;
@@ -126,18 +165,18 @@
     <div class="row justify-content-center">
         <div class="col-md-6 col-lg-5">
             <div class="register-card card">
-                <div class="card-header text-center">
+                <div class="card-header">
                     <h3><i class="fas fa-user-plus"></i> {% trans "Create Account" %}</h3>
-                    <p class="text-white-50 mb-0 small">{% trans "Join thousands of car buyers and sellers" %}</p>
+                    <p>{% trans "Join thousands of car buyers and sellers" %}</p>
                 </div>
                 <div class="card-body">
-                    <form method="post">
+                    <form method="post" id="registerForm">
                         {% csrf_token %}
                         
                         <!-- Username -->
                         <div class="mb-3">
                             <label class="form-label">
-                                <i class="fas fa-user text-primary me-1"></i> {% trans "Username" %}
+                                <i class="fas fa-user"></i> {% trans "Username" %}
                             </label>
                             <input type="text" name="username" class="form-control" placeholder="{% trans 'Choose a username' %}" required>
                         </div>
@@ -145,7 +184,7 @@
                         <!-- Email -->
                         <div class="mb-3">
                             <label class="form-label">
-                                <i class="fas fa-envelope text-primary me-1"></i> {% trans "Email Address" %}
+                                <i class="fas fa-envelope"></i> {% trans "Email Address" %}
                             </label>
                             <input type="email" name="email" class="form-control" placeholder="{% trans 'Enter your email address' %}" required>
                         </div>
@@ -153,30 +192,46 @@
                         <!-- Password -->
                         <div class="mb-3">
                             <label class="form-label">
-                                <i class="fas fa-lock text-primary me-1"></i> {% trans "Password" %}
+                                <i class="fas fa-lock"></i> {% trans "Password" %}
                             </label>
-                            <input type="password" name="password1" class="form-control" placeholder="{% trans 'Choose a password (min 4 characters)' %}" required>
+                            <input type="password" name="password1" class="form-control" placeholder="{% trans 'Choose a password (min 4 characters)' %}" required minlength="4">
                         </div>
                         
                         <!-- Confirm Password -->
                         <div class="mb-3">
                             <label class="form-label">
-                                <i class="fas fa-check-circle text-primary me-1"></i> {% trans "Confirm Password" %}
+                                <i class="fas fa-check-circle"></i> {% trans "Confirm Password" %}
                             </label>
                             <input type="password" name="password2" class="form-control" placeholder="{% trans 'Confirm your password' %}" required>
                         </div>
                         
                         <!-- Role Selection -->
-                        <div class="mb-4">
+                        <div class="mb-3">
                             <label class="form-label">
-                                <i class="fas fa-user-tag text-primary me-1"></i> {% trans "I want to register as:" %}
+                                <i class="fas fa-user-tag"></i> {% trans "I want to register as:" %}
                             </label>
-                            <select name="role" class="role-select form-control" required>
-                                <option value="" disabled selected>{% trans "Select your role" %}</option>
-                                <option value="buyer"><i class="fas fa-user"></i> {% trans "Buyer" %}</option>
-                                <option value="dealer"><i class="fas fa-store"></i> {% trans "Dealer" %}</option>
-                                <option value="yard_manager"><i class="fas fa-warehouse"></i> {% trans "Yard Manager" %}</option>
+                            <select name="role" id="roleSelect" class="role-select form-control" required>
+                                <option value="buyer" selected>{% trans "Buyer" %} - {% trans "Browse and purchase cars" %}</option>
+                                <option value="dealer">{% trans "Dealer" %} - {% trans "List and sell cars" %}</option>
+                                <option value="yard_manager">{% trans "Yard Manager" %} - {% trans "Manage car yards" %}</option>
                             </select>
+                        </div>
+                        
+                        <!-- Extra Fields for Dealer -->
+                        <div id="dealerFields" class="extra-fields">
+                            <h6 class="fw-bold mb-3"><i class="fas fa-store text-success"></i> {% trans "Dealer Information" %}</h6>
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Business Name" %}</label>
+                                <input type="text" name="business_name" class="form-control" placeholder="{% trans 'Enter your business name' %}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Phone Number" %}</label>
+                                <input type="tel" name="phone" class="form-control" placeholder="{% trans 'Enter your phone number' %}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">{% trans "Location" %}</label>
+                                <input type="text" name="location" class="form-control" placeholder="{% trans 'Enter your location' %}">
+                            </div>
                         </div>
                         
                         <!-- Terms -->
@@ -184,10 +239,11 @@
                             <input type="checkbox" class="form-check-input" id="terms" required>
                             <label class="form-check-label small" for="terms">
                                 {% trans "I agree to the" %} <a href="{% url 'terms' %}" class="text-primary">{% trans "Terms & Conditions" %}</a>
+                                {% trans "and" %} <a href="{% url 'privacy' %}" class="text-primary">{% trans "Privacy Policy" %}</a>
                             </label>
                         </div>
                         
-                        <button type="submit" class="btn btn-register w-100">
+                        <button type="submit" class="btn btn-register">
                             <i class="fas fa-user-plus me-2"></i> {% trans "Create Account" %}
                         </button>
                     </form>
@@ -205,4 +261,22 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const roleSelect = document.getElementById('roleSelect');
+        const dealerFields = document.getElementById('dealerFields');
+        
+        function toggleDealerFields() {
+            if (roleSelect.value === 'dealer') {
+                dealerFields.classList.add('show');
+            } else {
+                dealerFields.classList.remove('show');
+            }
+        }
+        
+        roleSelect.addEventListener('change', toggleDealerFields);
+        toggleDealerFields();
+    });
+</script>
 {% endblock %}

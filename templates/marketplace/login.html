@@ -9,6 +9,7 @@
         border-radius: 20px;
         box-shadow: 0 10px 40px rgba(0,0,0,0.08);
         overflow: hidden;
+        background: white;
     }
     
     .login-card .card-header {
@@ -22,6 +23,7 @@
         font-weight: 700;
         margin: 0;
         color: white;
+        font-size: 1.5rem;
     }
     
     .login-card .card-header i {
@@ -29,8 +31,8 @@
     }
     
     .login-card .card-header p {
-        color: rgba(255,255,255,0.7);
-        margin-bottom: 0;
+        color: rgba(255,255,255,0.8);
+        margin: 5px 0 0;
         font-size: 0.9rem;
     }
     
@@ -43,6 +45,7 @@
         padding: 12px 16px;
         border: 2px solid #e9ecef;
         transition: all 0.3s ease;
+        width: 100%;
     }
     
     .login-card .form-control:focus {
@@ -54,6 +57,12 @@
         font-weight: 600;
         color: #212529;
         margin-bottom: 8px;
+        display: block;
+    }
+    
+    .login-card .form-label i {
+        margin-right: 8px;
+        color: #0d6efd;
     }
     
     .login-card .btn-login {
@@ -65,6 +74,7 @@
         font-size: 1.05rem;
         transition: all 0.3s ease;
         color: white;
+        width: 100%;
     }
     
     .login-card .btn-login:hover {
@@ -117,6 +127,7 @@
         border-radius: 12px;
         padding: 15px 20px;
         background: #f8f9fa;
+        margin-top: 15px;
     }
     
     .demo-accounts .badge {
@@ -172,10 +183,20 @@
                     <form method="post">
                         {% csrf_token %}
                         
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-pill" role="alert">
+                                    <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                        
                         <!-- Username -->
                         <div class="mb-3">
                             <label class="form-label">
-                                <i class="fas fa-user text-primary me-1"></i> {% trans "Username" %}
+                                <i class="fas fa-user"></i> {% trans "Username" %}
                             </label>
                             <input type="text" name="username" class="form-control" placeholder="{% trans 'Enter your username' %}" required autofocus>
                         </div>
@@ -184,7 +205,7 @@
                         <div class="mb-3">
                             <div class="d-flex justify-content-between">
                                 <label class="form-label">
-                                    <i class="fas fa-lock text-primary me-1"></i> {% trans "Password" %}
+                                    <i class="fas fa-lock"></i> {% trans "Password" %}
                                 </label>
                                 <a href="#" class="forgot-link">{% trans "Forgot Password?" %}</a>
                             </div>
@@ -197,7 +218,7 @@
                             <label class="form-check-label small" for="remember">{% trans "Remember me" %}</label>
                         </div>
                         
-                        <button type="submit" class="btn btn-login w-100">
+                        <button type="submit" class="btn btn-login">
                             <i class="fas fa-sign-in-alt me-2"></i> {% trans "Login" %}
                         </button>
                     </form>
@@ -214,7 +235,7 @@
             </div>
             
             <!-- Demo Accounts -->
-            <div class="demo-accounts mt-3 text-center">
+            <div class="demo-accounts text-center">
                 <small class="text-muted d-block mb-2"><i class="fas fa-info-circle"></i> {% trans "Demo Accounts" %}</small>
                 <div class="d-flex flex-wrap justify-content-center gap-1">
                     <span class="badge badge-admin"><i class="fas fa-user-shield me-1"></i> Admin: admin / admin123</span>

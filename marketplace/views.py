@@ -58,12 +58,37 @@ def register(request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
+            # Get the selected role from POST data
+            role = request.POST.get('role', 'buyer')
+            
+            # Create user profile based on role
+            if role == 'dealer':
+                # Create dealer profile
+                Dealer.objects.create(
+                    user=user,
+                    business_name=request.POST.get('business_name', f"{user.username}'s Dealership"),
+                    phone=request.POST.get('phone', ''),
+                    location=request.POST.get('location', ''),
+                    is_verified=False
+                )
+            elif role == 'yard_manager':
+                # Create yard manager - they need to be assigned to a yard by admin
+                pass  # Yard managers are assigned by admin
+            
             auth_login(request, user)
             messages.success(request, _('Registration successful! Welcome to Tanzania Cars Marketplace.'))
-            return redirect('home')
+            
+            # Redirect based on role
+            if role == 'dealer':
+                return redirect('dealer_dashboard')
+            elif role == 'yard_manager':
+                return redirect('yard_dashboard')
+            else:
+                return redirect('home')
     else:
         form = CustomUserCreationForm()
-    return render(request, 'registration/register.html', {'form': form})
+    
+    return render(request, 'marketplace/register.html', {'form': form})
 
 def login(request):
     """User login view."""
