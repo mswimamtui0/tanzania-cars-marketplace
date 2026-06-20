@@ -66,6 +66,10 @@ urlpatterns = [
     path('admin/dealers/', admin_dealers, name='admin_dealers'),
     path('admin/yards/', admin_yards, name='admin_yards'),
     path('admin/reports/', admin_reports, name='admin_reports'),
+    
+    path('i18n/', include('django.conf.urls.i18n')),
+    path('set-language/', views.set_language, name='set_language'),
+    
 ]
 
 # Language-prefixed URLs (optional - for multi-language support)

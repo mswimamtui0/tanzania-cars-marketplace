@@ -867,3 +867,19 @@ def dealer_message_detail(request, message_id):
         message.save()
     
     return render(request, 'marketplace/dealer_message_detail.html', {'message': message})
+
+
+# Add this at the top with other imports
+from django.utils import translation
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+
+# Language switcher view - add this function
+def set_language(request):
+    """Set the user's preferred language."""
+    if request.method == 'POST':
+        language = request.POST.get('language')
+        if language:
+            translation.activate(language)
+            request.session[translation.LANGUAGE_SESSION_KEY] = language
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('home')))
