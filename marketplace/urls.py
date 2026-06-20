@@ -59,4 +59,14 @@ urlpatterns = [
     path('dealer/send-message/', views.dealer_send_message, name='dealer_send_message'),
     path('dealer/messages/', views.dealer_messages, name='dealer_messages'),
     path('dealer/message/<int:message_id>/', views.dealer_message_detail, name='dealer_message_detail'),
+     path('i18n/', include('django.conf.urls.i18n')),
 ]
+urlpatterns += i18n_patterns(
+    path('', include('marketplace.urls')),
+)
+
+
+# Serve media files in development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
