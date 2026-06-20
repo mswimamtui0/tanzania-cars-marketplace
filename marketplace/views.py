@@ -1,893 +1,4 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, logout
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.views import LoginView
-from django.urls import reverse
-from django.http import HttpResponseRedirect
-from urllib.parse import quote
-from django.utils import timezone
-from django.db.models import Sum
-from django.contrib.auth.models import User
-from datetime import timedelta
-from .models import (
-    UserProfile, CarListing, CarYard, Wishlist, ComparisonSet, 
-    SoldRequest, Reservation, InspectionRequest, DealerCommission, 
-    FakeListingReport, YardDealerAssignment, Message
-)
-
-# ========== HOME ==========
-def home(request):
-    latest_cars = CarListing.objects.filter(status='approved').order_by('-created_at')[:30]
-    featured_cars = CarListing.objects.filter(status='approved', is_featured=True)[:6]
-    total_latest = CarListing.objects.filter(status='approved').count()
-    
-    return render(request, 'marketplace/home.html', {
-        'latest_cars': latest_cars,
-        'featured_cars': featured_cars,
-        'total_latest': total_latest,
-    })
-
-# ========== CAR LISTINGS ==========
-def car_list(request):
-    cars = CarListing.objects.filter(status='approved')
-    query = request.GET.get('q', '')
-    if query:
-        cars = cars.filter(make__icontains=query) | cars.filter(model__icontains=query)
-    return render(request, 'marketplace/car_list.html', {'cars': cars})
-
-def car_detail(request, car_id):
-    car = get_object_or_404(CarListing, id=car_id, status='approved')
-    car.views_count += 1
-    car.save()
-    return render(request, 'marketplace/car_detail.html', {'car': car})
-
-# ========== AUTHENTICATION ==========
-def register(request):
-    if request.method == 'POST':
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            role = request.POST.get('role', 'buyer')
-            profile = UserProfile.objects.get(user=user)
-            profile.role = role
-            profile.save()
-            login(request, user)
-            messages.success(request, 'Registration successful!')
-            return redirect('dashboard')
-    else:
-        form = UserCreationForm()
-    return render(request, 'marketplace/register.html', {'form': form})
-
-def logout_view(request):
-    logout(request)
-    return redirect('home')
-
-# ========== DASHBOARDS ==========
-@login_required
-def dashboard(request):
-    role = request.user.userprofile.role
-    if role == 'admin' or request.user.is_superuser:
-        return redirect('admin_dashboard')
-    elif role == 'dealer':
-        return redirect('dealer_dashboard')
-    elif role == 'yard_manager':
-        return redirect('yard_manager_dashboard')
-    else:
-        return redirect('buyer_dashboard')
-
-@login_required
-def admin_dashboard(request):
-    context = {
-        'total_users': User.objects.count(),
-        'total_cars': CarListing.objects.count(),
-        'pending_approvals': CarListing.objects.filter(status='pending').count(),
-        'approved_cars': CarListing.objects.filter(status='approved').count(),
-        'pending_cars': CarListing.objects.filter(status='pending'),
-        'recent_users': User.objects.order_by('-date_joined')[:10],
-        'recent_cars': CarListing.objects.order_by('-created_at')[:10],
-        'total_yards': CarYard.objects.count(),
-        'assigned_yards': CarYard.objects.filter(manager__isnull=False).count(),
-        'pending_yards': CarYard.objects.filter(manager__isnull=True).count(),
-        'yard_managers': User.objects.filter(userprofile__role='yard_manager').count(),
-    }
-    return render(request, 'marketplace/admin_dashboard.html', context)
-
-@login_required
-def dealer_dashboard(request):
-    if request.user.userprofile.role != 'dealer':
-        messages.error(request, 'Access denied.')
-        return redirect('dashboard')
-    
-    cars = CarListing.objects.filter(seller=request.user)
-    context = {
-        'total_cars': cars.count(),
-        'approved_cars': cars.filter(status='approved').count(),
-        'pending_cars': cars.filter(status='pending').count(),
-        'sold_cars': cars.filter(status='sold').count(),
-        'total_views': sum(c.views_count for c in cars),
-        'recent_cars': cars.order_by('-created_at')[:5],
-    }
-    return render(request, 'marketplace/dealer_dashboard.html', context)
-
-@login_required
-def yard_manager_dashboard(request):
-    if request.user.userprofile.role != 'yard_manager':
-        messages.error(request, 'Access denied.')
-        return redirect('dashboard')
-    
-    yards = CarYard.objects.filter(manager=request.user)
-    cars = CarListing.objects.filter(yard__in=yards)
-    context = {
-        'total_yards': yards.count(),
-        'total_cars': cars.count(),
-        'approved_cars': cars.filter(status='approved').count(),
-        'pending_approvals': cars.filter(status='pending').count(),
-        'yards': yards,
-    }
-    return render(request, 'marketplace/yard_manager_dashboard.html', context)
-
-@login_required
-def buyer_dashboard(request):
-    wishlist = Wishlist.objects.filter(user=request.user)
-    reservations = Reservation.objects.filter(buyer=request.user)
-    inspections = InspectionRequest.objects.filter(buyer=request.user, status='pending')
-    messages_list = Message.objects.filter(receiver=request.user)
-    unread_messages = messages_list.filter(is_read=False)
-    
-    context = {
-        'wishlist_count': wishlist.count(),
-        'recent_wishlist': wishlist.order_by('-added_at')[:5],
-        'reservations_count': reservations.count(),
-        'active_reservations': reservations.filter(status='confirmed'),
-        'recent_reservations': reservations.order_by('-created_at')[:5],
-        'unread_messages': unread_messages.count(),
-        'pending_inspections': inspections.count(),
-        'recent_inspections': inspections[:3],
-        'recent_messages': messages_list.order_by('-created_at')[:3],
-    }
-    return render(request, 'marketplace/buyer_dashboard.html', context)
-
-# ========== WISHLIST ==========
-@login_required
-def save_car(request, car_id):
-    car = get_object_or_404(CarListing, id=car_id)
-    wishlist_item, created = Wishlist.objects.get_or_create(user=request.user, car=car)
-    
-    if created:
-        messages.success(request, f'{car.make} {car.model} added to your wishlist!')
-    else:
-        wishlist_item.delete()
-        messages.info(request, f'{car.make} {car.model} removed from wishlist.')
-    
-    return redirect('car_detail', car_id=car.id)
-
-# ========== DEALER CAR MANAGEMENT ==========
-@login_required
-def dealer_add_car(request):
-    if request.user.userprofile.role not in ['dealer', 'yard_manager', 'admin']:
-        messages.error(request, 'Only dealers can add cars.')
-        return redirect('dashboard')
-    
-    yards = CarYard.objects.all()
-    
-    if request.method == 'POST':
-        try:
-            yard_id = request.POST.get('yard')
-            yard = None
-            if yard_id:
-                yard = CarYard.objects.get(id=yard_id)
-            
-            car = CarListing.objects.create(
-                title=request.POST.get('title'),
-                make=request.POST.get('make'),
-                model=request.POST.get('model'),
-                year=request.POST.get('year'),
-                price=request.POST.get('price'),
-                mileage=request.POST.get('mileage'),
-                condition=request.POST.get('condition', 'used'),
-                transmission=request.POST.get('transmission', 'manual'),
-                fuel_type=request.POST.get('fuel_type', 'petrol'),
-                description=request.POST.get('description', ''),
-                package=request.POST.get('package', 'normal'),
-                seller=request.user,
-                yard=yard,
-                status='approved'
-            )
-            
-            if request.FILES.get('images'):
-                car.images = request.FILES['images']
-                car.save()
-            
-            messages.success(request, f'{car.make} {car.model} has been added!')
-            return redirect('dealer_my_cars')
-        except Exception as e:
-            messages.error(request, f'Error: {str(e)}')
-    
-    return render(request, 'marketplace/dealer_add_car.html', {'yards': yards})
-
-@login_required
-def dealer_my_cars(request):
-    cars = CarListing.objects.filter(seller=request.user).order_by('-created_at')
-    context = {
-        'cars': cars,
-        'total_cars': cars.count(),
-        'approved_cars': cars.filter(status='approved').count(),
-        'pending_cars': cars.filter(status='pending').count(),
-        'sold_cars': cars.filter(status='sold').count(),
-    }
-    return render(request, 'marketplace/dealer_my_cars.html', context)
-
-@login_required
-def dealer_edit_car(request, car_id):
-    car = get_object_or_404(CarListing, id=car_id, seller=request.user)
-    if request.method == 'POST':
-        car.title = request.POST.get('title')
-        car.make = request.POST.get('make')
-        car.model = request.POST.get('model')
-        car.year = request.POST.get('year')
-        car.price = request.POST.get('price')
-        car.mileage = request.POST.get('mileage')
-        car.condition = request.POST.get('condition')
-        car.transmission = request.POST.get('transmission')
-        car.fuel_type = request.POST.get('fuel_type')
-        car.description = request.POST.get('description')
-        car.package = request.POST.get('package')
-        car.save()
-        messages.success(request, 'Car updated!')
-        return redirect('dealer_my_cars')
-    return render(request, 'marketplace/dealer_edit_car.html', {'car': car})
-
-@login_required
-def dealer_delete_car(request, car_id):
-    car = get_object_or_404(CarListing, id=car_id, seller=request.user)
-    if request.method == 'POST':
-        car.delete()
-        messages.success(request, 'Car deleted!')
-        return redirect('dealer_my_cars')
-    return render(request, 'marketplace/dealer_delete_car.html', {'car': car})
-
-# ========== YARD MANAGER ==========
-@login_required
-def yard_add_car(request):
-    if request.user.userprofile.role != 'yard_manager':
-        messages.error(request, 'Access denied.')
-        return redirect('dashboard')
-    
-    yards = CarYard.objects.filter(manager=request.user)
-    
-    if not yards:
-        messages.error(request, 'You are not assigned to any yard.')
-        return redirect('yard_manager_dashboard')
-    
-    if request.method == 'POST':
-        try:
-            yard_id = request.POST.get('yard')
-            yard = CarYard.objects.get(id=yard_id, manager=request.user)
-            
-            car = CarListing.objects.create(
-                title=request.POST.get('title'),
-                make=request.POST.get('make'),
-                model=request.POST.get('model'),
-                year=request.POST.get('year'),
-                price=request.POST.get('price'),
-                mileage=request.POST.get('mileage'),
-                condition=request.POST.get('condition', 'used'),
-                transmission=request.POST.get('transmission', 'manual'),
-                fuel_type=request.POST.get('fuel_type', 'petrol'),
-                description=request.POST.get('description', ''),
-                package=request.POST.get('package', 'normal'),
-                seller=request.user,
-                yard=yard,
-                status='approved'
-            )
-            
-            if request.FILES.get('images'):
-                car.images = request.FILES['images']
-                car.save()
-            
-            messages.success(request, f'{car.make} {car.model} added to {yard.name}!')
-            return redirect('yard_my_cars')
-        except Exception as e:
-            messages.error(request, f'Error: {str(e)}')
-    
-    return render(request, 'marketplace/yard_add_car.html', {'yards': yards})
-
-@login_required
-def yard_my_cars(request):
-    if request.user.userprofile.role != 'yard_manager':
-        messages.error(request, 'Access denied.')
-        return redirect('dashboard')
-    
-    yards = CarYard.objects.filter(manager=request.user)
-    cars = CarListing.objects.filter(yard__in=yards).order_by('-created_at')
-    
-    context = {
-        'cars': cars,
-        'yards': yards,
-        'total_cars': cars.count(),
-        'approved_cars': cars.filter(status='approved').count(),
-        'pending_cars': cars.filter(status='pending').count(),
-        'sold_cars': cars.filter(status='sold').count(),
-    }
-    return render(request, 'marketplace/yard_my_cars.html', context)
-
-@login_required
-def yard_pending_cars(request):
-    if request.user.userprofile.role != 'yard_manager':
-        messages.error(request, 'Access denied.')
-        return redirect('dashboard')
-    
-    yards = CarYard.objects.filter(manager=request.user)
-    pending_cars = CarListing.objects.filter(yard__in=yards, status='pending')
-    total_cars = CarListing.objects.filter(yard__in=yards)
-    
-    context = {
-        'pending_cars': pending_cars,
-        'total_pending': pending_cars.count(),
-        'total_cars': total_cars.count(),
-        'approved_cars': total_cars.filter(status='approved').count(),
-        'yards': yards,
-    }
-    return render(request, 'marketplace/yard_pending_cars.html', context)
-
-@login_required
-def yard_approve_car(request, car_id):
-    car = get_object_or_404(CarListing, id=car_id)
-    car.status = 'approved'
-    car.save()
-    messages.success(request, f'{car.make} {car.model} approved!')
-    return redirect('yard_pending_cars')
-
-@login_required
-def yard_reject_car(request, car_id):
-    car = get_object_or_404(CarListing, id=car_id)
-    car.status = 'rejected'
-    car.save()
-    messages.success(request, f'{car.make} {car.model} rejected.')
-    return redirect('yard_pending_cars')
-
-@login_required
-def yard_manage_dealers(request):
-    if request.user.userprofile.role != 'yard_manager':
-        messages.error(request, 'Access denied.')
-        return redirect('dashboard')
-    
-    yards = CarYard.objects.filter(manager=request.user)
-    assigned_dealers = YardDealerAssignment.objects.filter(yard__in=yards, is_active=True)
-    assigned_dealer_ids = assigned_dealers.values_list('dealer_id', flat=True)
-    pending_dealers = User.objects.filter(
-        userprofile__role='dealer'
-    ).exclude(id__in=assigned_dealer_ids)
-    
-    context = {
-        'yards': yards,
-        'assigned_dealers': assigned_dealers,
-        'pending_dealers': pending_dealers,
-        'assigned_count': assigned_dealers.count(),
-        'pending_count': pending_dealers.count(),
-    }
-    return render(request, 'marketplace/yard_manage_dealers.html', context)
-
-@login_required
-def yard_assign_dealer(request, dealer_id):
-    if request.user.userprofile.role != 'yard_manager':
-        messages.error(request, 'Access denied.')
-        return redirect('dashboard')
-    
-    dealer = get_object_or_404(User, id=dealer_id, userprofile__role='dealer')
-    yards = CarYard.objects.filter(manager=request.user)
-    
-    if request.method == 'POST':
-        yard_id = request.POST.get('yard')
-        yard = get_object_or_404(CarYard, id=yard_id, manager=request.user)
-        
-        assignment, created = YardDealerAssignment.objects.get_or_create(
-            yard=yard,
-            dealer=dealer,
-            defaults={'assigned_by': request.user}
-        )
-        if not created:
-            assignment.is_active = True
-            assignment.save()
-        
-        messages.success(request, f'{dealer.username} assigned to {yard.name}!')
-        return redirect('yard_manage_dealers')
-    
-    return render(request, 'marketplace/yard_assign_dealer.html', {'dealer': dealer, 'yards': yards})
-
-@login_required
-def yard_remove_dealer(request, assignment_id):
-    if request.user.userprofile.role != 'yard_manager':
-        messages.error(request, 'Access denied.')
-        return redirect('dashboard')
-    
-    assignment = get_object_or_404(YardDealerAssignment, id=assignment_id, yard__manager=request.user)
-    assignment.is_active = False
-    assignment.save()
-    messages.success(request, f'{assignment.dealer.username} removed from {assignment.yard.name}')
-    return redirect('yard_manage_dealers')
-
-@login_required
-def yard_pending_dealers(request):
-    if request.user.userprofile.role != 'yard_manager':
-        messages.error(request, 'Access denied.')
-        return redirect('dashboard')
-    
-    yards = CarYard.objects.filter(manager=request.user)
-    pending_dealers = User.objects.filter(
-        userprofile__role='dealer',
-        userprofile__verification_level=1
-    )
-    
-    context = {
-        'yards': yards,
-        'pending_dealers': pending_dealers,
-        'pending_count': pending_dealers.count(),
-    }
-    return render(request, 'marketplace/yard_pending_dealers.html', context)
-
-@login_required
-def yard_verify_dealer(request, dealer_id):
-    if request.user.userprofile.role != 'yard_manager':
-        messages.error(request, 'Access denied.')
-        return redirect('dashboard')
-    
-    dealer = get_object_or_404(User, id=dealer_id, userprofile__role='dealer')
-    yards = CarYard.objects.filter(manager=request.user)
-    
-    if request.method == 'POST':
-        yard_id = request.POST.get('yard')
-        yard = get_object_or_404(CarYard, id=yard_id, manager=request.user)
-        level = int(request.POST.get('verification_level', 2))
-        
-        profile = dealer.userprofile
-        profile.verification_level = level
-        profile.verified_badge = level == 3
-        profile.save()
-        
-        messages.success(request, f'{dealer.username} verified!')
-        return redirect('yard_pending_dealers')
-    
-    return render(request, 'marketplace/yard_verify_dealer.html', {'dealer': dealer, 'yards': yards})
-
-# ========== ADMIN YARD MANAGEMENT ==========
-@login_required
-def admin_verify_yard(request):
-    if request.user.userprofile.role != 'admin' and not request.user.is_superuser:
-        messages.error(request, 'Access denied.')
-        return redirect('dashboard')
-    
-    context = {
-        'yard_managers': User.objects.filter(userprofile__role='yard_manager'),
-        'pending_yards': CarYard.objects.filter(manager__isnull=True),
-        'assigned_yards': CarYard.objects.filter(manager__isnull=False),
-        'pending_count': CarYard.objects.filter(manager__isnull=True).count(),
-        'assigned_count': CarYard.objects.filter(manager__isnull=False).count(),
-    }
-    return render(request, 'marketplace/admin_verify_yard.html', context)
-
-@login_required
-def admin_assign_yard(request):
-    if request.user.userprofile.role != 'admin' and not request.user.is_superuser:
-        messages.error(request, 'Access denied.')
-        return redirect('dashboard')
-    
-    if request.method == 'POST':
-        yard_id = request.POST.get('yard_id')
-        manager_id = request.POST.get('manager_id')
-        
-        yard = get_object_or_404(CarYard, id=yard_id)
-        manager = get_object_or_404(User, id=manager_id, userprofile__role='yard_manager')
-        yard.manager = manager
-        yard.save()
-        messages.success(request, f'{manager.username} assigned to {yard.name}!')
-        return redirect('admin_verify_yard')
-    
-    context = {
-        'yards': CarYard.objects.filter(manager__isnull=True),
-        'managers': User.objects.filter(userprofile__role='yard_manager'),
-    }
-    return render(request, 'marketplace/admin_assign_yard.html', context)
-
-@login_required
-def admin_create_yard(request):
-    if request.user.userprofile.role != 'admin' and not request.user.is_superuser:
-        messages.error(request, 'Access denied.')
-        return redirect('dashboard')
-    
-    if request.method == 'POST':
-        yard = CarYard.objects.create(
-            name=request.POST.get('name'),
-            location=request.POST.get('location'),
-            city=request.POST.get('city'),
-            phone=request.POST.get('phone', ''),
-            email=request.POST.get('email', ''),
-            description=request.POST.get('description', '')
-        )
-        messages.success(request, f'Yard "{yard.name}" created!')
-        return redirect('admin_verify_yard')
-    
-    return render(request, 'marketplace/admin_create_yard.html')
-
-# ========== WHATSAPP ==========
-def whatsapp_chat(request, car_id):
-    car = get_object_or_404(CarListing, id=car_id)
-    phone_number = "+255123456789"
-    message = f"Hello, I'm interested in {car.year} {car.make} {car.model}. Price: TZS {car.price:.0f}"
-    whatsapp_url = f"https://wa.me/{phone_number}?text={quote(message)}"
-    return HttpResponseRedirect(whatsapp_url)
-
-# ========== INSPECTION ==========
-@login_required
-def request_inspection(request, car_id):
-    car = get_object_or_404(CarListing, id=car_id)
-    if request.method == 'POST':
-        InspectionRequest.objects.create(
-            car=car,
-            buyer=request.user,
-            inspection_date=request.POST.get('inspection_date'),
-            location=request.POST.get('location'),
-            status='pending'
-        )
-        messages.success(request, 'Inspection requested!')
-        return redirect('buyer_dashboard')
-    return render(request, 'marketplace/request_inspection.html', {'car': car})
-
-@login_required
-def buyer_inspections(request):
-    inspections = InspectionRequest.objects.filter(buyer=request.user).order_by('-created_at')
-    return render(request, 'marketplace/buyer_inspections.html', {'inspections': inspections})
-
-# ========== MESSAGES ==========
-@login_required
-def send_message(request):
-    dealers = User.objects.filter(userprofile__role='dealer')
-    cars = CarListing.objects.filter(status='approved')
-    
-    if request.method == 'POST':
-        receiver_id = request.POST.get('receiver_id')
-        car_id = request.POST.get('car_id')
-        
-        receiver = get_object_or_404(User, id=receiver_id)
-        car = get_object_or_404(CarListing, id=car_id) if car_id else None
-        
-        Message.objects.create(
-            sender=request.user,
-            receiver=receiver,
-            car=car,
-            subject=request.POST.get('subject'),
-            content=request.POST.get('content')
-        )
-        messages.success(request, 'Message sent!')
-        return redirect('buyer_messages')
-    
-    return render(request, 'marketplace/send_message.html', {'dealers': dealers, 'cars': cars})
-
-@login_required
-def buyer_messages(request):
-    messages_list = Message.objects.filter(receiver=request.user).order_by('-created_at')
-    
-    for msg in messages_list.filter(is_read=False):
-        msg.is_read = True
-        msg.save()
-    
-    context = {
-        'messages': messages_list,
-        'total_messages': messages_list.count(),
-    }
-    return render(request, 'marketplace/buyer_messages.html', context)
-
-@login_required
-def message_detail(request, message_id):
-    try:
-        message = Message.objects.get(id=message_id)
-    except Message.DoesNotExist:
-        messages.error(request, 'Message not found.')
-        return redirect('buyer_messages')
-    
-    if request.user not in [message.sender, message.receiver]:
-        messages.error(request, 'Access denied.')
-        return redirect('buyer_messages')
-    
-    if request.user == message.receiver and not message.is_read:
-        message.is_read = True
-        message.save()
-    
-    return render(request, 'marketplace/message_detail.html', {'message': message})
-
-@login_required
-def reply_message(request, message_id):
-    original_message = get_object_or_404(Message, id=message_id)
-    
-    if request.user != original_message.receiver:
-        messages.error(request, 'You cannot reply to this message.')
-        return redirect('buyer_messages')
-    
-    if request.method == 'POST':
-        reply = Message.objects.create(
-            sender=request.user,
-            receiver=original_message.sender,
-            subject=request.POST.get('subject', 'RE: ' + original_message.subject),
-            content=request.POST.get('content', '')
-        )
-        messages.success(request, f'Reply sent!')
-        return redirect('buyer_messages')
-    
-    return render(request, 'marketplace/reply_message.html', {'original_message': original_message})
-
-@login_required
-def dealer_send_message(request):
-    if request.user.userprofile.role != 'dealer':
-        messages.error(request, 'Access denied.')
-        return redirect('dashboard')
-    
-    if request.method == 'POST':
-        receiver = get_object_or_404(User, id=request.POST.get('receiver_id'))
-        car = get_object_or_404(CarListing, id=request.POST.get('car_id')) if request.POST.get('car_id') else None
-        
-        Message.objects.create(
-            sender=request.user,
-            receiver=receiver,
-            car=car,
-            subject=request.POST.get('subject'),
-            content=request.POST.get('content')
-        )
-        messages.success(request, 'Message sent!')
-        return redirect('dealer_messages')
-    
-    context = {
-        'buyers': User.objects.filter(userprofile__role='buyer'),
-        'cars': CarListing.objects.filter(seller=request.user),
-    }
-    return render(request, 'marketplace/dealer_send_message.html', context)
-
-@login_required
-def dealer_messages(request):
-    if request.user.userprofile.role != 'dealer':
-        messages.error(request, 'Access denied.')
-        return redirect('dashboard')
-    
-    context = {
-        'sent_messages': Message.objects.filter(sender=request.user).order_by('-created_at'),
-        'received_messages': Message.objects.filter(receiver=request.user).order_by('-created_at'),
-        'sent_count': Message.objects.filter(sender=request.user).count(),
-        'received_count': Message.objects.filter(receiver=request.user).count(),
-    }
-    return render(request, 'marketplace/dealer_messages.html', context)
-
-# ========== COMPARE ==========
-@login_required
-def compare_cars(request):
-    comparison, _ = ComparisonSet.objects.get_or_create(user=request.user)
-    cars = comparison.cars.all()
-    return render(request, 'marketplace/compare.html', {'cars': cars})
-
-@login_required
-def add_to_comparison(request, car_id):
-    car = get_object_or_404(CarListing, id=car_id)
-    comparison, _ = ComparisonSet.objects.get_or_create(user=request.user)
-    
-    if comparison.cars.count() >= 4:
-        messages.warning(request, 'You can compare up to 4 cars.')
-    elif car in comparison.cars.all():
-        messages.info(request, 'Car already in comparison.')
-    else:
-        comparison.cars.add(car)
-        messages.success(request, f'{car.make} {car.model} added to comparison.')
-    
-    return redirect(request.META.get('HTTP_REFERER', 'car_list'))
-
-@login_required
-def remove_from_comparison(request, car_id):
-    car = get_object_or_404(CarListing, id=car_id)
-    comparison = ComparisonSet.objects.get(user=request.user)
-    comparison.cars.remove(car)
-    messages.success(request, 'Car removed from comparison.')
-    return redirect('compare_cars')
-
-# ========== SOLD ==========
-@login_required
-def mark_as_sold(request, car_id):
-    car = get_object_or_404(CarListing, id=car_id)
-    SoldRequest.objects.create(
-        car=car,
-        buyer=request.user,
-        dealer=car.seller,
-        status='pending'
-    )
-    messages.success(request, 'Purchase reported!')
-    return redirect('car_detail', car_id=car.id)
-
-@login_required
-def dealer_sold_requests(request):
-    if request.user.userprofile.role != 'dealer':
-        messages.error(request, 'Access denied.')
-        return redirect('dashboard')
-    
-    context = {
-        'pending_requests': SoldRequest.objects.filter(dealer=request.user, status='pending'),
-        'pending_count': SoldRequest.objects.filter(dealer=request.user, status='pending').count(),
-        'approved_requests': SoldRequest.objects.filter(dealer=request.user, status='approved'),
-        'rejected_requests': SoldRequest.objects.filter(dealer=request.user, status='rejected'),
-    }
-    return render(request, 'marketplace/dealer_sold_requests.html', context)
-
-@login_required
-def approve_sold(request, request_id):
-    sold_request = get_object_or_404(SoldRequest, id=request_id, dealer=request.user)
-    sold_request.status = 'approved'
-    sold_request.responded_at = timezone.now()
-    sold_request.save()
-    sold_request.car.status = 'sold'
-    sold_request.car.save()
-    messages.success(request, 'Sale confirmed!')
-    return redirect('dealer_sold_requests')
-
-@login_required
-def reject_sold(request, request_id):
-    sold_request = get_object_or_404(SoldRequest, id=request_id, dealer=request.user)
-    sold_request.status = 'rejected'
-    sold_request.responded_at = timezone.now()
-    sold_request.save()
-    messages.warning(request, 'Sale rejected.')
-    return redirect('dealer_sold_requests')
-
-# ========== COMMISSION ==========
-@login_required
-def dealer_commission_dashboard(request):
-    if request.user.userprofile.role != 'dealer':
-        messages.error(request, 'Access denied.')
-        return redirect('dashboard')
-    
-    commissions = DealerCommission.objects.filter(dealer=request.user)
-    total_earned = commissions.filter(status='paid').aggregate(Sum('commission_amount'))['commission_amount__sum'] or 0
-    total_pending = commissions.filter(status='pending').aggregate(Sum('commission_amount'))['commission_amount__sum'] or 0
-    
-    context = {
-        'commissions': commissions,
-        'total_earned': total_earned,
-        'total_pending': total_pending,
-        'pending_count': commissions.filter(status='pending').count(),
-        'paid_count': commissions.filter(status='paid').count(),
-    }
-    return render(request, 'marketplace/dealer_commission.html', context)
-
-# ========== REPORT ==========
-@login_required
-def report_fake_listing(request, car_id):
-    car = get_object_or_404(CarListing, id=car_id)
-    
-    if request.method == 'POST':
-        FakeListingReport.objects.create(
-            car=car,
-            reported_by=request.user,
-            reason=request.POST.get('reason'),
-            description=request.POST.get('description')
-        )
-        messages.success(request, 'Report submitted!')
-        return redirect('car_detail', car_id=car.id)
-    
-    return render(request, 'marketplace/report_fake_listing.html', {'car': car})
-
-@login_required
-def admin_reports_dashboard(request):
-    if request.user.userprofile.role != 'admin' and not request.user.is_superuser:
-        messages.error(request, 'Access denied.')
-        return redirect('dashboard')
-    
-    reports = FakeListingReport.objects.all().order_by('-created_at')
-    context = {
-        'reports': reports,
-        'pending_count': reports.filter(status='pending').count(),
-        'investigating_count': reports.filter(status='investigating').count(),
-        'resolved_count': reports.filter(status='resolved').count(),
-    }
-    return render(request, 'marketplace/admin_reports.html', context)
-
-@login_required
-def resolve_report(request, report_id):
-    if request.user.userprofile.role != 'admin' and not request.user.is_superuser:
-        messages.error(request, 'Access denied.')
-        return redirect('dashboard')
-    
-    report = get_object_or_404(FakeListingReport, id=report_id)
-    
-    if request.method == 'POST':
-        report.status = request.POST.get('status')
-        report.admin_notes = request.POST.get('admin_notes', '')
-        report.resolved_at = timezone.now()
-        report.save()
-        
-        if report.status == 'resolved' and request.POST.get('hide_car') == 'on':
-            report.car.status = 'rejected'
-            report.car.save()
-        
-        messages.success(request, 'Report updated!')
-        return redirect('admin_reports')
-    
-    return render(request, 'marketplace/resolve_report.html', {'report': report})
-
-# ========== RESERVATION ==========
-@login_required
-def create_reservation(request, car_id):
-    car = get_object_or_404(CarListing, id=car_id)
-    
-    if request.method == 'POST':
-        Reservation.objects.create(
-            buyer=request.user,
-            car=car,
-            status='pending',
-            expires_at=timezone.now() + timedelta(days=3)
-        )
-        messages.success(request, 'Car reserved!')
-        return redirect('buyer_dashboard')
-    
-    return render(request, 'marketplace/reserve_car.html', {'car': car})
-
-# ========== OTHER ==========
-def about_us(request):
-    context = {
-        'total_cars': CarListing.objects.filter(status='approved').count(),
-        'total_dealers': User.objects.filter(userprofile__role='dealer').count(),
-        'total_buyers': User.objects.filter(userprofile__role='buyer').count(),
-        'total_verified': User.objects.filter(userprofile__verification_level=3).count(),
-    }
-    return render(request, 'marketplace/about_us.html', context)
-
-def sell_car(request):
-    return render(request, 'marketplace/sell_car.html')
-
-def profile(request):
-    return render(request, 'marketplace/profile.html', {'user': request.user})
-
-def car_valuation(request):
-    return render(request, 'marketplace/valuation_form.html')
-
-def create_listing(request):
-    return redirect('dealer_add_car')
-
-
-@login_required
-def dealer_message_detail(request, message_id):
-    """Dealer views single message"""
-    if request.user.userprofile.role != 'dealer':
-        messages.error(request, 'Access denied.')
-        return redirect('dashboard')
-    
-    message = get_object_or_404(Message, id=message_id)
-    
-    if message.sender != request.user and message.receiver != request.user:
-        messages.error(request, 'Access denied to this message.')
-        return redirect('dealer_messages')
-    
-    if message.receiver == request.user and not message.is_read:
-        message.is_read = True
-        message.save()
-    
-    return render(request, 'marketplace/dealer_message_detail.html', {'message': message})
-
-
-# Add this at the top with other imports
-from django.utils import translation
-from django.http import HttpResponseRedirect
-from django.urls import reverse
-
-# Language switcher view - add this function
-def set_language(request):
-    """Set the user's preferred language."""
-    if request.method == 'POST':
-        language = request.POST.get('language')
-        if language:
-            translation.activate(language)
-            request.session[translation.LANGUAGE_SESSION_KEY] = language
-    return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('home')))
-
-
-
-# Add this at the top with your other imports
-from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
@@ -898,30 +9,252 @@ from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
-from .models import Car, Dealer, Yard, Report, Favorite, Message, Review, CarImage
+from django.utils import translation
+from .models import (
+    Car, CarImage, Dealer, Yard, YardDealerAssignment, DealerAssignment,
+    Favorite, Review, Report, Message, InspectionRequest, ListingPackage
+)
 from .forms import (
-    CarForm, CarImageForm, DealerForm, ReviewForm, 
-    ReportForm, MessageForm, YardForm, DealerAssignmentForm,
-    CustomUserCreationForm
+    CarForm, CarImageForm, DealerForm, ReviewForm, ReportForm, MessageForm,
+    YardForm, DealerAssignmentForm, CustomUserCreationForm
 )
 
-# ========== MISSING VIEWS TO ADD ==========
+# ========== HOME AND GENERAL PAGES ==========
 
-# Admin Views
-def admin_users(request):
-    """View for admin to manage users."""
-    users = User.objects.all().order_by('-date_joined')
-    return render(request, 'admin/users.html', {'users': users})
+def home(request):
+    """Home page view."""
+    featured_cars = Car.objects.filter(is_featured=True, status='available')[:6]
+    recent_cars = Car.objects.filter(status='available').order_by('-created_at')[:12]
+    dealers = Dealer.objects.filter(is_verified=True)[:6]
+    
+    context = {
+        'featured_cars': featured_cars,
+        'recent_cars': recent_cars,
+        'dealers': dealers,
+    }
+    return render(request, 'home.html', context)
 
-def admin_cars(request):
-    """View for admin to manage all car listings."""
-    cars = Car.objects.all().order_by('-created_at')
-    return render(request, 'admin/cars.html', {'cars': cars})
+def about_us(request):
+    """About page."""
+    return render(request, 'about.html')
 
-# Favorites Views
+def contact(request):
+    """Contact page."""
+    return render(request, 'contact.html')
+
+def terms(request):
+    """Terms and conditions page."""
+    return render(request, 'terms.html')
+
+def privacy(request):
+    """Privacy policy page."""
+    return render(request, 'privacy.html')
+
+# ========== AUTHENTICATION ==========
+
+def register(request):
+    """User registration view."""
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            auth_login(request, user)
+            messages.success(request, _('Registration successful! Welcome to Tanzania Cars Marketplace.'))
+            return redirect('home')
+    else:
+        form = CustomUserCreationForm()
+    return render(request, 'registration/register.html', {'form': form})
+
+def login(request):
+    """User login view."""
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            auth_login(request, user)
+            messages.success(request, _('Welcome back, {}!').format(user.username))
+            next_url = request.GET.get('next', 'home')
+            return redirect(next_url)
+        else:
+            messages.error(request, _('Invalid username or password.'))
+    return render(request, 'registration/login.html')
+
+def logout(request):
+    """User logout view."""
+    auth_logout(request)
+    messages.info(request, _('You have been logged out.'))
+    return redirect('home')
+
+@login_required
+def profile(request):
+    """User profile view."""
+    user = request.user
+    user_cars = Car.objects.filter(seller=user).order_by('-created_at')
+    favorites = Favorite.objects.filter(user=user).select_related('car')
+    
+    context = {
+        'user': user,
+        'user_cars': user_cars,
+        'favorites': favorites,
+    }
+    return render(request, 'profile.html', context)
+
+# ========== CAR LISTINGS ==========
+
+def car_list(request):
+    """List all available cars with filters."""
+    cars = Car.objects.filter(status='available')
+    
+    # Search
+    search_query = request.GET.get('q', '')
+    if search_query:
+        cars = cars.filter(
+            Q(title__icontains=search_query) |
+            Q(brand__icontains=search_query) |
+            Q(model__icontains=search_query) |
+            Q(description__icontains=search_query)
+        )
+    
+    # Filters
+    brand = request.GET.get('brand', '')
+    if brand:
+        cars = cars.filter(brand__icontains=brand)
+    
+    min_price = request.GET.get('min_price', '')
+    if min_price:
+        cars = cars.filter(price__gte=min_price)
+    
+    max_price = request.GET.get('max_price', '')
+    if max_price:
+        cars = cars.filter(price__lte=max_price)
+    
+    condition = request.GET.get('condition', '')
+    if condition:
+        cars = cars.filter(condition=condition)
+    
+    transmission = request.GET.get('transmission', '')
+    if transmission:
+        cars = cars.filter(transmission=transmission)
+    
+    fuel_type = request.GET.get('fuel_type', '')
+    if fuel_type:
+        cars = cars.filter(fuel_type=fuel_type)
+    
+    # Sorting
+    sort_by = request.GET.get('sort', '-created_at')
+    cars = cars.order_by(sort_by)
+    
+    # Pagination
+    paginator = Paginator(cars, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'page_obj': page_obj,
+        'search_query': search_query,
+        'brand': brand,
+        'min_price': min_price,
+        'max_price': max_price,
+        'condition': condition,
+        'transmission': transmission,
+        'fuel_type': fuel_type,
+    }
+    return render(request, 'cars/list.html', context)
+
+def car_detail(request, car_id):
+    """Car detail view."""
+    car = get_object_or_404(Car, id=car_id)
+    related_cars = Car.objects.filter(
+        Q(brand=car.brand) | Q(model=car.model)
+    ).exclude(id=car.id).filter(status='available')[:6]
+    
+    is_favorite = False
+    if request.user.is_authenticated:
+        is_favorite = Favorite.objects.filter(user=request.user, car=car).exists()
+    
+    context = {
+        'car': car,
+        'related_cars': related_cars,
+        'is_favorite': is_favorite,
+    }
+    return render(request, 'cars/detail.html', context)
+
+@login_required
+def save_car(request):
+    """Save a new car listing."""
+    if request.method == 'POST':
+        form = CarForm(request.POST, request.FILES)
+        if form.is_valid():
+            car = form.save(commit=False)
+            car.seller = request.user
+            car.save()
+            
+            # Handle images
+            images = request.FILES.getlist('images')
+            for img in images:
+                CarImage.objects.create(car=car, image=img)
+            
+            messages.success(request, _('Your car has been listed successfully!'))
+            return redirect('car_detail', car_id=car.id)
+    else:
+        form = CarForm()
+    
+    return render(request, 'cars/add.html', {'form': form})
+
+@login_required
+def edit_car(request, car_id):
+    """Edit a car listing."""
+    car = get_object_or_404(Car, id=car_id)
+    
+    # Check permission
+    if request.user != car.seller and not request.user.is_staff:
+        messages.error(request, _('You do not have permission to edit this car.'))
+        return redirect('car_detail', car_id=car.id)
+    
+    if request.method == 'POST':
+        form = CarForm(request.POST, request.FILES, instance=car)
+        if form.is_valid():
+            form.save()
+            messages.success(request, _('Car updated successfully!'))
+            return redirect('car_detail', car_id=car.id)
+    else:
+        form = CarForm(instance=car)
+    
+    return render(request, 'cars/edit.html', {'form': form, 'car': car})
+
+@login_required
+def delete_car(request, car_id):
+    """Delete a car listing."""
+    car = get_object_or_404(Car, id=car_id)
+    
+    # Check permission
+    if request.user != car.seller and not request.user.is_staff:
+        messages.error(request, _('You do not have permission to delete this car.'))
+        return redirect('car_detail', car_id=car.id)
+    
+    if request.method == 'POST':
+        car.delete()
+        messages.success(request, _('Car deleted successfully!'))
+        return redirect('car_list')
+    
+    return render(request, 'cars/delete_confirm.html', {'car': car})
+
+@login_required
+def sell_car(request):
+    """Sell car view - redirects to add car."""
+    return redirect('add_car')
+
+@login_required
+def create_listing(request):
+    """Create listing view - redirects to add car."""
+    return redirect('add_car')
+
+# ========== FAVORITES ==========
+
 @login_required
 def favorites_list(request):
-    """View for users to see their favorite cars."""
+    """View user's favorite cars."""
     favorites = Favorite.objects.filter(user=request.user).select_related('car')
     return render(request, 'favorites/list.html', {'favorites': favorites})
 
@@ -930,50 +263,253 @@ def favorite_car(request, car_id):
     """Toggle favorite status for a car."""
     car = get_object_or_404(Car, id=car_id)
     favorite, created = Favorite.objects.get_or_create(user=request.user, car=car)
+    
     if not created:
         favorite.delete()
         messages.success(request, _('Removed from favorites'))
     else:
         messages.success(request, _('Added to favorites'))
-    return redirect('car_detail', car_id=car_id)
+    
+    return redirect('car_detail', car_id=car.id)
 
-# Generic Car Management Views
-def edit_car(request, car_id):
-    """Edit a car listing (generic)."""
+# ========== DEALER DASHBOARD ==========
+
+@login_required
+def dealer_dashboard(request):
+    """Dealer dashboard view."""
+    try:
+        dealer = request.user.dealer_profile
+    except Dealer.DoesNotExist:
+        messages.warning(request, _('Please complete your dealer profile.'))
+        return redirect('profile')
+    
+    cars = Car.objects.filter(dealer=dealer).order_by('-created_at')
+    total_cars = cars.count()
+    available_cars = cars.filter(status='available').count()
+    sold_cars = cars.filter(status='sold').count()
+    
+    context = {
+        'dealer': dealer,
+        'cars': cars[:10],
+        'total_cars': total_cars,
+        'available_cars': available_cars,
+        'sold_cars': sold_cars,
+    }
+    return render(request, 'dealer/dashboard.html', context)
+
+@login_required
+def dealer_my_cars(request):
+    """Dealer's cars list."""
+    try:
+        dealer = request.user.dealer_profile
+    except Dealer.DoesNotExist:
+        messages.warning(request, _('Please complete your dealer profile.'))
+        return redirect('profile')
+    
+    cars = Car.objects.filter(dealer=dealer).order_by('-created_at')
+    paginator = Paginator(cars, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'dealer/cars.html', {'page_obj': page_obj})
+
+@login_required
+def dealer_add_car(request):
+    """Dealer add car view."""
+    try:
+        dealer = request.user.dealer_profile
+    except Dealer.DoesNotExist:
+        messages.warning(request, _('Please complete your dealer profile first.'))
+        return redirect('profile')
+    
+    if request.method == 'POST':
+        form = CarForm(request.POST, request.FILES)
+        if form.is_valid():
+            car = form.save(commit=False)
+            car.seller = request.user
+            car.dealer = dealer
+            car.save()
+            
+            images = request.FILES.getlist('images')
+            for img in images:
+                CarImage.objects.create(car=car, image=img)
+            
+            messages.success(request, _('Car added successfully!'))
+            return redirect('dealer_my_cars')
+    else:
+        form = CarForm()
+    
+    return render(request, 'dealer/add_car.html', {'form': form})
+
+@login_required
+def dealer_edit_car(request, car_id):
+    """Dealer edit car view."""
     car = get_object_or_404(Car, id=car_id)
-    if request.user != car.seller and not request.user.is_staff:
-        messages.error(request, _('You do not have permission to edit this car.'))
-        return redirect('car_detail', car_id=car_id)
+    
+    try:
+        dealer = request.user.dealer_profile
+        if car.dealer != dealer and not request.user.is_staff:
+            messages.error(request, _('You do not have permission to edit this car.'))
+            return redirect('dealer_my_cars')
+    except Dealer.DoesNotExist:
+        messages.error(request, _('Dealer profile not found.'))
+        return redirect('dealer_my_cars')
     
     if request.method == 'POST':
         form = CarForm(request.POST, request.FILES, instance=car)
         if form.is_valid():
             form.save()
             messages.success(request, _('Car updated successfully!'))
-            return redirect('car_detail', car_id=car_id)
+            return redirect('dealer_my_cars')
     else:
         form = CarForm(instance=car)
-    return render(request, 'cars/edit.html', {'form': form, 'car': car})
+    
+    return render(request, 'dealer/edit_car.html', {'form': form, 'car': car})
 
-def delete_car(request, car_id):
-    """Delete a car listing (generic)."""
+@login_required
+def dealer_delete_car(request, car_id):
+    """Dealer delete car view."""
     car = get_object_or_404(Car, id=car_id)
-    if request.user != car.seller and not request.user.is_staff:
-        messages.error(request, _('You do not have permission to delete this car.'))
-        return redirect('car_detail', car_id=car_id)
+    
+    try:
+        dealer = request.user.dealer_profile
+        if car.dealer != dealer and not request.user.is_staff:
+            messages.error(request, _('You do not have permission to delete this car.'))
+            return redirect('dealer_my_cars')
+    except Dealer.DoesNotExist:
+        messages.error(request, _('Dealer profile not found.'))
+        return redirect('dealer_my_cars')
     
     if request.method == 'POST':
         car.delete()
         messages.success(request, _('Car deleted successfully!'))
-        return redirect('car_list')
-    return render(request, 'cars/delete_confirm.html', {'car': car})
+        return redirect('dealer_my_cars')
+    
+    return render(request, 'dealer/delete_confirm.html', {'car': car})
 
-# Yard Edit and Delete Views
+@login_required
+def dealer_messages(request):
+    """Dealer messages view."""
+    try:
+        dealer = request.user.dealer_profile
+    except Dealer.DoesNotExist:
+        messages.warning(request, _('Please complete your dealer profile.'))
+        return redirect('profile')
+    
+    messages_list = Message.objects.filter(recipient=request.user).order_by('-created_at')
+    return render(request, 'dealer/messages.html', {'messages': messages_list})
+
+@login_required
+def dealer_sold_requests(request):
+    """Dealer sold requests view."""
+    try:
+        dealer = request.user.dealer_profile
+    except Dealer.DoesNotExist:
+        messages.warning(request, _('Please complete your dealer profile.'))
+        return redirect('profile')
+    
+    cars = Car.objects.filter(dealer=dealer, status='pending').order_by('-created_at')
+    return render(request, 'dealer/sold_requests.html', {'cars': cars})
+
+@login_required
+def dealer_commission_dashboard(request):
+    """Dealer commission dashboard."""
+    try:
+        dealer = request.user.dealer_profile
+    except Dealer.DoesNotExist:
+        messages.warning(request, _('Please complete your dealer profile.'))
+        return redirect('profile')
+    
+    cars = Car.objects.filter(dealer=dealer, status='sold')
+    total_commission = sum(float(car.price) * (dealer.commission_rate / 100) for car in cars)
+    
+    context = {
+        'dealer': dealer,
+        'cars': cars,
+        'total_commission': total_commission,
+        'total_cars_sold': cars.count(),
+    }
+    return render(request, 'dealer/commission.html', context)
+
+# ========== YARD MANAGER DASHBOARD ==========
+
+@login_required
+def yard_manager_dashboard(request):
+    """Yard manager dashboard."""
+    yards = Yard.objects.filter(manager=request.user)
+    if not yards.exists():
+        messages.warning(request, _('You are not assigned to any yard.'))
+        return redirect('home')
+    
+    yard = yards.first()
+    cars = Car.objects.filter(yard=yard).order_by('-created_at')
+    
+    context = {
+        'yard': yard,
+        'cars': cars[:10],
+        'total_cars': cars.count(),
+        'available_cars': cars.filter(status='available').count(),
+        'pending_cars': cars.filter(status='pending').count(),
+    }
+    return render(request, 'yard/dashboard.html', context)
+
+@login_required
+def yard_my_cars(request):
+    """Yard cars list."""
+    yards = Yard.objects.filter(manager=request.user)
+    if not yards.exists():
+        messages.warning(request, _('You are not assigned to any yard.'))
+        return redirect('home')
+    
+    yard = yards.first()
+    cars = Car.objects.filter(yard=yard).order_by('-created_at')
+    
+    paginator = Paginator(cars, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'yard/cars.html', {'page_obj': page_obj, 'yard': yard})
+
+@login_required
+def yard_add_car(request):
+    """Yard add car view."""
+    yards = Yard.objects.filter(manager=request.user)
+    if not yards.exists():
+        messages.warning(request, _('You are not assigned to any yard.'))
+        return redirect('home')
+    
+    yard = yards.first()
+    
+    if request.method == 'POST':
+        form = CarForm(request.POST, request.FILES)
+        if form.is_valid():
+            car = form.save(commit=False)
+            car.seller = request.user
+            car.yard = yard
+            car.status = 'pending'
+            car.save()
+            
+            images = request.FILES.getlist('images')
+            for img in images:
+                CarImage.objects.create(car=car, image=img)
+            
+            messages.success(request, _('Car added and pending approval!'))
+            return redirect('yard_my_cars')
+    else:
+        form = CarForm()
+    
+    return render(request, 'yard/add_car.html', {'form': form, 'yard': yard})
+
 @login_required
 def yard_edit_car(request, car_id):
-    """Yard manager edit car view."""
+    """Yard edit car view."""
     car = get_object_or_404(Car, id=car_id)
-    # Check if user is a yard manager for this car
+    yards = Yard.objects.filter(manager=request.user)
+    
+    if not yards.exists() or car.yard not in yards:
+        messages.error(request, _('You do not have permission to edit this car.'))
+        return redirect('yard_my_cars')
+    
     if request.method == 'POST':
         form = CarForm(request.POST, request.FILES, instance=car)
         if form.is_valid():
@@ -982,14 +518,595 @@ def yard_edit_car(request, car_id):
             return redirect('yard_my_cars')
     else:
         form = CarForm(instance=car)
+    
     return render(request, 'yard/edit_car.html', {'form': form, 'car': car})
 
 @login_required
 def yard_delete_car(request, car_id):
-    """Yard manager delete car view."""
+    """Yard delete car view."""
     car = get_object_or_404(Car, id=car_id)
+    yards = Yard.objects.filter(manager=request.user)
+    
+    if not yards.exists() or car.yard not in yards:
+        messages.error(request, _('You do not have permission to delete this car.'))
+        return redirect('yard_my_cars')
+    
     if request.method == 'POST':
         car.delete()
         messages.success(request, _('Car deleted successfully!'))
         return redirect('yard_my_cars')
+    
     return render(request, 'yard/delete_confirm.html', {'car': car})
+
+@login_required
+def yard_pending_cars(request):
+    """Yard pending cars view."""
+    yards = Yard.objects.filter(manager=request.user)
+    if not yards.exists():
+        messages.warning(request, _('You are not assigned to any yard.'))
+        return redirect('home')
+    
+    yard = yards.first()
+    cars = Car.objects.filter(yard=yard, status='pending').order_by('-created_at')
+    
+    return render(request, 'yard/pending.html', {'cars': cars, 'yard': yard})
+
+@login_required
+def yard_approve_car(request, car_id):
+    """Yard approve car view."""
+    car = get_object_or_404(Car, id=car_id)
+    yards = Yard.objects.filter(manager=request.user)
+    
+    if not yards.exists() or car.yard not in yards:
+        messages.error(request, _('You do not have permission to approve this car.'))
+        return redirect('yard_pending_cars')
+    
+    car.status = 'available'
+    car.is_verified = True
+    car.save()
+    messages.success(request, _('Car approved and listed!'))
+    return redirect('yard_pending_cars')
+
+@login_required
+def yard_reject_car(request, car_id):
+    """Yard reject car view."""
+    car = get_object_or_404(Car, id=car_id)
+    yards = Yard.objects.filter(manager=request.user)
+    
+    if not yards.exists() or car.yard not in yards:
+        messages.error(request, _('You do not have permission to reject this car.'))
+        return redirect('yard_pending_cars')
+    
+    car.status = 'rejected'
+    car.save()
+    messages.warning(request, _('Car rejected.'))
+    return redirect('yard_pending_cars')
+
+@login_required
+def yard_manage_dealers(request):
+    """Yard manage dealers view."""
+    yards = Yard.objects.filter(manager=request.user)
+    if not yards.exists():
+        messages.warning(request, _('You are not assigned to any yard.'))
+        return redirect('home')
+    
+    yard = yards.first()
+    assignments = YardDealerAssignment.objects.filter(yard=yard).select_related('dealer')
+    
+    context = {
+        'yard': yard,
+        'assignments': assignments,
+    }
+    return render(request, 'yard/dealers.html', context)
+
+@login_required
+def yard_assign_dealer(request):
+    """Yard assign dealer view."""
+    yards = Yard.objects.filter(manager=request.user)
+    if not yards.exists():
+        messages.warning(request, _('You are not assigned to any yard.'))
+        return redirect('home')
+    
+    yard = yards.first()
+    
+    if request.method == 'POST':
+        dealer_id = request.POST.get('dealer_id')
+        dealer = get_object_or_404(Dealer, id=dealer_id)
+        
+        assignment, created = YardDealerAssignment.objects.get_or_create(
+            dealer=dealer,
+            yard=yard,
+            defaults={'assigned_by': request.user}
+        )
+        
+        if created:
+            messages.success(request, _('Dealer assigned successfully!'))
+        else:
+            messages.info(request, _('Dealer already assigned to this yard.'))
+        
+        return redirect('yard_manage_dealers')
+    
+    dealers = Dealer.objects.filter(is_verified=True).exclude(
+        yard_assignments__yard=yard
+    )
+    return render(request, 'yard/assign_dealer.html', {'yard': yard, 'dealers': dealers})
+
+@login_required
+def yard_remove_dealer(request, dealer_id):
+    """Yard remove dealer view."""
+    yards = Yard.objects.filter(manager=request.user)
+    if not yards.exists():
+        messages.warning(request, _('You are not assigned to any yard.'))
+        return redirect('home')
+    
+    yard = yards.first()
+    assignment = get_object_or_404(YardDealerAssignment, dealer_id=dealer_id, yard=yard)
+    assignment.delete()
+    messages.success(request, _('Dealer removed from yard.'))
+    return redirect('yard_manage_dealers')
+
+@login_required
+def yard_verify_dealer(request, dealer_id):
+    """Yard verify dealer view."""
+    yards = Yard.objects.filter(manager=request.user)
+    if not yards.exists():
+        messages.warning(request, _('You are not assigned to any yard.'))
+        return redirect('home')
+    
+    dealer = get_object_or_404(Dealer, id=dealer_id)
+    dealer.is_verified = True
+    dealer.verification_level = '2'
+    dealer.save()
+    messages.success(request, _('Dealer verified!'))
+    return redirect('yard_manage_dealers')
+
+# ========== ADMIN DASHBOARD ==========
+
+@login_required
+def admin_dashboard(request):
+    """Admin dashboard view."""
+    if not request.user.is_staff:
+        messages.error(request, _('Access denied. Admin only.'))
+        return redirect('home')
+    
+    total_cars = Car.objects.count()
+    total_users = User.objects.count()
+    total_dealers = Dealer.objects.count()
+    total_reports = Report.objects.filter(status='pending').count()
+    
+    context = {
+        'total_cars': total_cars,
+        'total_users': total_users,
+        'total_dealers': total_dealers,
+        'total_reports': total_reports,
+        'recent_cars': Car.objects.order_by('-created_at')[:10],
+        'recent_users': User.objects.order_by('-date_joined')[:10],
+    }
+    return render(request, 'admin/dashboard.html', context)
+
+@login_required
+def admin_users(request):
+    """Admin users management view."""
+    if not request.user.is_staff:
+        messages.error(request, _('Access denied. Admin only.'))
+        return redirect('home')
+    
+    users = User.objects.all().order_by('-date_joined')
+    paginator = Paginator(users, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'admin/users.html', {'page_obj': page_obj})
+
+@login_required
+def admin_cars(request):
+    """Admin cars management view."""
+    if not request.user.is_staff:
+        messages.error(request, _('Access denied. Admin only.'))
+        return redirect('home')
+    
+    cars = Car.objects.all().order_by('-created_at')
+    paginator = Paginator(cars, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'admin/cars.html', {'page_obj': page_obj})
+
+@login_required
+def admin_dealers(request):
+    """Admin dealers management view."""
+    if not request.user.is_staff:
+        messages.error(request, _('Access denied. Admin only.'))
+        return redirect('home')
+    
+    dealers = Dealer.objects.all().order_by('business_name')
+    return render(request, 'admin/dealers.html', {'dealers': dealers})
+
+@login_required
+def admin_yards(request):
+    """Admin yards management view."""
+    if not request.user.is_staff:
+        messages.error(request, _('Access denied. Admin only.'))
+        return redirect('home')
+    
+    yards = Yard.objects.all().order_by('name')
+    return render(request, 'admin/yards.html', {'yards': yards})
+
+@login_required
+def admin_reports_dashboard(request):
+    """Admin reports management view."""
+    if not request.user.is_staff:
+        messages.error(request, _('Access denied. Admin only.'))
+        return redirect('home')
+    
+    reports = Report.objects.all().order_by('-created_at')
+    paginator = Paginator(reports, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'admin/reports.html', {'page_obj': page_obj})
+
+@login_required
+def resolve_report(request, report_id):
+    """Admin resolve report view."""
+    if not request.user.is_staff:
+        messages.error(request, _('Access denied. Admin only.'))
+        return redirect('home')
+    
+    report = get_object_or_404(Report, id=report_id)
+    
+    if request.method == 'POST':
+        report.status = 'resolved'
+        report.resolved_by = request.user
+        report.resolution_notes = request.POST.get('notes', '')
+        report.save()
+        messages.success(request, _('Report resolved!'))
+        return redirect('admin_reports')
+    
+    return render(request, 'admin/resolve_report.html', {'report': report})
+
+@login_required
+def admin_create_yard(request):
+    """Admin create yard view."""
+    if not request.user.is_staff:
+        messages.error(request, _('Access denied. Admin only.'))
+        return redirect('home')
+    
+    if request.method == 'POST':
+        form = YardForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, _('Yard created successfully!'))
+            return redirect('admin_yards')
+    else:
+        form = YardForm()
+    
+    return render(request, 'admin/create_yard.html', {'form': form})
+
+@login_required
+def admin_assign_yard(request):
+    """Admin assign yard to dealer view."""
+    if not request.user.is_staff:
+        messages.error(request, _('Access denied. Admin only.'))
+        return redirect('home')
+    
+    if request.method == 'POST':
+        dealer_id = request.POST.get('dealer_id')
+        yard_id = request.POST.get('yard_id')
+        
+        dealer = get_object_or_404(Dealer, id=dealer_id)
+        yard = get_object_or_404(Yard, id=yard_id)
+        
+        assignment, created = YardDealerAssignment.objects.get_or_create(
+            dealer=dealer,
+            yard=yard,
+            defaults={'assigned_by': request.user}
+        )
+        
+        if created:
+            messages.success(request, _('Yard assigned to dealer successfully!'))
+        else:
+            messages.info(request, _('Dealer already assigned to this yard.'))
+        
+        return redirect('admin_yards')
+    
+    dealers = Dealer.objects.filter(is_verified=True)
+    yards = Yard.objects.filter(is_active=True)
+    
+    context = {
+        'dealers': dealers,
+        'yards': yards,
+    }
+    return render(request, 'admin/assign_yard.html', context)
+
+@login_required
+def admin_verify_yard(request, yard_id):
+    """Admin verify yard view."""
+    if not request.user.is_staff:
+        messages.error(request, _('Access denied. Admin only.'))
+        return redirect('home')
+    
+    yard = get_object_or_404(Yard, id=yard_id)
+    yard.is_active = not yard.is_active
+    yard.save()
+    
+    status = 'activated' if yard.is_active else 'deactivated'
+    messages.success(request, _('Yard {} successfully!').format(status))
+    return redirect('admin_yards')
+
+# ========== BUYER DASHBOARD ==========
+
+@login_required
+def buyer_dashboard(request):
+    """Buyer dashboard view."""
+    favorites = Favorite.objects.filter(user=request.user).select_related('car')
+    inspection_requests = InspectionRequest.objects.filter(requested_by=request.user).order_by('-created_at')
+    messages_list = Message.objects.filter(recipient=request.user, is_read=False).count()
+    
+    context = {
+        'favorites': favorites[:5],
+        'inspection_requests': inspection_requests[:5],
+        'unread_messages': messages_list,
+    }
+    return render(request, 'buyer/dashboard.html', context)
+
+@login_required
+def buyer_inspections(request):
+    """Buyer inspections view."""
+    inspections = InspectionRequest.objects.filter(requested_by=request.user).order_by('-created_at')
+    return render(request, 'buyer/inspections.html', {'inspections': inspections})
+
+@login_required
+def buyer_messages(request):
+    """Buyer messages view."""
+    messages_list = Message.objects.filter(recipient=request.user).order_by('-created_at')
+    return render(request, 'buyer/messages.html', {'messages': messages_list})
+
+# ========== INSPECTIONS ==========
+
+@login_required
+def request_inspection(request):
+    """Request vehicle inspection."""
+    if request.method == 'POST':
+        car_id = request.POST.get('car_id')
+        scheduled_date = request.POST.get('scheduled_date')
+        notes = request.POST.get('notes', '')
+        
+        car = get_object_or_404(Car, id=car_id)
+        
+        inspection = InspectionRequest.objects.create(
+            car=car,
+            requested_by=request.user,
+            scheduled_date=scheduled_date,
+            notes=notes,
+            status='pending'
+        )
+        
+        messages.success(request, _('Inspection requested successfully!'))
+        return redirect('buyer_inspections')
+    
+    car_id = request.GET.get('car_id')
+    car = get_object_or_404(Car, id=car_id) if car_id else None
+    
+    return render(request, 'buyer/request_inspection.html', {'car': car})
+
+# ========== CAR COMPARISON ==========
+
+def compare_cars(request):
+    """Car comparison view."""
+    car_ids = request.GET.getlist('car_ids')
+    cars = Car.objects.filter(id__in=car_ids)
+    
+    return render(request, 'compare.html', {'cars': cars})
+
+@login_required
+def add_to_comparison(request, car_id):
+    """Add car to comparison."""
+    car = get_object_or_404(Car, id=car_id)
+    
+    # Store comparison list in session
+    comparison_list = request.session.get('comparison_list', [])
+    if car_id not in comparison_list:
+        comparison_list.append(car_id)
+        if len(comparison_list) > 4:  # Max 4 cars to compare
+            comparison_list.pop(0)
+        request.session['comparison_list'] = comparison_list
+        messages.success(request, _('Car added to comparison!'))
+    else:
+        messages.info(request, _('Car already in comparison list.'))
+    
+    return redirect('car_detail', car_id=car.id)
+
+@login_required
+def remove_from_comparison(request, car_id):
+    """Remove car from comparison."""
+    comparison_list = request.session.get('comparison_list', [])
+    if car_id in comparison_list:
+        comparison_list.remove(car_id)
+        request.session['comparison_list'] = comparison_list
+        messages.success(request, _('Car removed from comparison.'))
+    
+    return redirect('compare_cars')
+
+# ========== CAR VALUATION ==========
+
+def car_valuation(request):
+    """Car valuation tool view."""
+    if request.method == 'POST':
+        brand = request.POST.get('brand')
+        model = request.POST.get('model')
+        year = int(request.POST.get('year', 0))
+        mileage = int(request.POST.get('mileage', 0))
+        
+        # Simple valuation logic (you can make this more sophisticated)
+        base_price = 10000  # Base price
+        age = 2026 - year
+        depreciation = age * 500  # Depreciation per year
+        mileage_deduction = (mileage // 10000) * 500
+        
+        estimated_price = max(1000, base_price - depreciation - mileage_deduction)
+        
+        context = {
+            'brand': brand,
+            'model': model,
+            'year': year,
+            'mileage': mileage,
+            'estimated_price': estimated_price,
+            'valuation_done': True,
+        }
+        return render(request, 'valuation.html', context)
+    
+    return render(request, 'valuation.html')
+
+# ========== MESSAGES ==========
+
+@login_required
+def message_detail(request, message_id):
+    """View message detail."""
+    message = get_object_or_404(Message, id=message_id)
+    
+    if request.user != message.recipient and request.user != message.sender:
+        messages.error(request, _('Access denied.'))
+        return redirect('home')
+    
+    message.is_read = True
+    message.save()
+    
+    return render(request, 'messages/detail.html', {'message': message})
+
+@login_required
+def send_message(request):
+    """Send a message."""
+    if request.method == 'POST':
+        recipient_id = request.POST.get('recipient_id')
+        content = request.POST.get('content')
+        car_id = request.POST.get('car_id')
+        
+        recipient = get_object_or_404(User, id=recipient_id)
+        car = get_object_or_404(Car, id=car_id) if car_id else None
+        
+        message = Message.objects.create(
+            sender=request.user,
+            recipient=recipient,
+            car=car,
+            content=content
+        )
+        
+        messages.success(request, _('Message sent!'))
+        return redirect('message_detail', message_id=message.id)
+    
+    return render(request, 'messages/send.html')
+
+@login_required
+def reply_message(request, message_id):
+    """Reply to a message."""
+    parent_message = get_object_or_404(Message, id=message_id)
+    
+    if request.method == 'POST':
+        content = request.POST.get('content')
+        
+        message = Message.objects.create(
+            sender=request.user,
+            recipient=parent_message.sender,
+            car=parent_message.car,
+            content=content,
+            parent_message=parent_message
+        )
+        
+        messages.success(request, _('Reply sent!'))
+        return redirect('message_detail', message_id=message.id)
+    
+    return render(request, 'messages/reply.html', {'parent_message': parent_message})
+
+# ========== ADDITIONAL FEATURES ==========
+
+@login_required
+def report_fake_listing(request):
+    """Report a fake listing."""
+    if request.method == 'POST':
+        form = ReportForm(request.POST)
+        if form.is_valid():
+            report = form.save(commit=False)
+            report.reported_by = request.user
+            report.save()
+            messages.success(request, _('Report submitted! We will review it.'))
+            return redirect('home')
+    else:
+        form = ReportForm()
+        car_id = request.GET.get('car_id')
+        if car_id:
+            car = get_object_or_404(Car, id=car_id)
+            form.fields['car'].initial = car
+    
+    return render(request, 'report.html', {'form': form})
+
+def whatsapp_chat(request, car_id):
+    """WhatsApp chat integration."""
+    car = get_object_or_404(Car, id=car_id)
+    dealer = car.dealer
+    
+    if dealer and dealer.phone:
+        phone = dealer.phone.replace('+', '').replace('-', '').replace(' ', '')
+        message = f"Hello, I'm interested in your {car.brand} {car.model} ({car.year}) listed on Tanzania Cars Marketplace."
+        whatsapp_url = f"https://wa.me/{phone}?text={message}"
+        return redirect(whatsapp_url)
+    
+    messages.error(request, _('Dealer contact not available.'))
+    return redirect('car_detail', car_id=car.id)
+
+@login_required
+def mark_as_sold(request, car_id):
+    """Mark a car as sold."""
+    car = get_object_or_404(Car, id=car_id)
+    
+    if request.user != car.seller and not request.user.is_staff:
+        messages.error(request, _('You do not have permission to mark this car as sold.'))
+        return redirect('car_detail', car_id=car.id)
+    
+    if request.method == 'POST':
+        car.status = 'pending'
+        car.save()
+        messages.success(request, _('Car marked as pending sale. Waiting for approval.'))
+        return redirect('dealer_sold_requests' if hasattr(request.user, 'dealer_profile') else 'car_detail', car_id=car.id)
+    
+    return render(request, 'cars/mark_sold.html', {'car': car})
+
+@login_required
+def approve_sold(request, car_id):
+    """Approve a car as sold (admin/dealer)."""
+    car = get_object_or_404(Car, id=car_id)
+    
+    if not request.user.is_staff:
+        messages.error(request, _('Access denied.'))
+        return redirect('home')
+    
+    car.status = 'sold'
+    car.save()
+    messages.success(request, _('Sale approved!'))
+    return redirect('admin_cars' if request.user.is_staff else 'dealer_sold_requests')
+
+@login_required
+def reject_sold(request, car_id):
+    """Reject a car sale."""
+    car = get_object_or_404(Car, id=car_id)
+    
+    if not request.user.is_staff:
+        messages.error(request, _('Access denied.'))
+        return redirect('home')
+    
+    car.status = 'available'
+    car.save()
+    messages.warning(request, _('Sale rejected.'))
+    return redirect('admin_cars' if request.user.is_staff else 'dealer_sold_requests')
+
+# ========== LANGUAGE SWITCHER ==========
+
+def set_language(request):
+    """Set user's preferred language."""
+    if request.method == 'POST':
+        language = request.POST.get('language')
+        if language:
+            translation.activate(language)
+            request.session[translation.LANGUAGE_SESSION_KEY] = language
+            messages.success(request, _('Language changed successfully!'))
+    return redirect(request.META.get('HTTP_REFERER', 'home'))
