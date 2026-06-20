@@ -8,10 +8,10 @@ urlpatterns = [
     # Home
     path('', views.home, name='home'),
     
-    # Authentication
+    # Authentication - Using standard view names
     path('register/', views.register, name='register'),
-    path('login/', views.user_login, name='login'),
-    path('logout/', views.user_logout, name='logout'),
+    path('login/', views.login, name='login'),          # <-- Changed from user_login
+    path('logout/', views.logout, name='logout'),       # <-- Changed from user_logout
     path('profile/', views.profile, name='profile'),
     
     # Car listings
@@ -59,7 +59,7 @@ urlpatterns = [
     path('set-language/', views.set_language, name='set_language'),
 ]
 
-# Language-prefixed URLs (optional - for multi-language support)
+# Language-prefixed URLs
 urlpatterns += i18n_patterns(
     path('', include('marketplace.urls')),
 )
