@@ -1,13 +1,6 @@
 import os
-from dotenv import load_dotenv
 from pathlib import Path
-
-# Load environment variables from .env file
-load_dotenv()
-
-
-import os
-from pathlib import Path
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -19,13 +12,6 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '127.0.0.1,localhost,.onrender.com').split(',')
 
-# Cloudinary Configuration
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.getenv('CLOUD_NAME'),
-    'API_KEY': os.getenv('API_KEY'),
-    'API_SECRET': os.getenv('API_SECRET'),
-}
-
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -34,6 +20,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'cloudinary',  # ADD THIS
+    'cloudinary_storage',  # ADD THIS
     'marketplace',
 ]
 
@@ -68,9 +56,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'tanzania_car_marketplace.wsgi.application'
 
-# Database - supports both SQLite (local) and PostgreSQL (Render)
-import dj_database_url
-
+# Database
 DATABASES = {
     'default': dj_database_url.config(
         default='sqlite:///db.sqlite3',
@@ -92,15 +78,29 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
+# Static files
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Media files (User uploaded files)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# ========== CLOUDINARY CONFIGURATION ==========
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+
+# Cloudinary Configuration
+cloudinary.config(
+    cloud_name=os.environ.get('CLOUD_NAME', 'dnr7zfsdy'),
+    api_key=os.environ.get('API_KEY', '177473167615218'),
+    api_secret=os.environ.get('API_SECRET', 'r8eukAH0rO0_LHP5mF_1OnAZ2d8')
+)
+
+# Use Cloudinary for media storage
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+# Media URL (Cloudinary will serve images)
+MEDIA_URL = '/media/'  # This will be overridden by Cloudinary
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
