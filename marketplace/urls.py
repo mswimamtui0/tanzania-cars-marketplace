@@ -59,6 +59,7 @@ urlpatterns = [
     # Language switcher
     path('i18n/', include('django.conf.urls.i18n')),
     path('set-language/', views.set_language, name='set_language'),
+    path('blog/<slug:slug>/', views.blog_detail, name='blog_detail'),
 ]
 
 # Serve media and static files in development
