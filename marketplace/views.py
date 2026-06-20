@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate, login as auth_login, logout as aut
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.db.models import Q
+from .models import CarListing
 from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
 from django.utils import timezone
@@ -18,6 +19,8 @@ from .forms import (
     CarForm, CarImageForm, DealerForm, ReviewForm, ReportForm, MessageForm,
     YardForm, DealerAssignmentForm, CustomUserCreationForm
 )
+
+from .models import UserProfile, CarListing, CarYard, Wishlist, ComparisonSet, SoldRequest, Reservation, InspectionRequest, DealerCommission, FakeListingReport, YardDealerAssignment, Message
 
 # ========== HOME AND GENERAL PAGES ==========
 
@@ -41,11 +44,7 @@ def home(request):
     total_sold = CarListing.objects.filter(status='sold').count()
     
     # Blog/News posts (if you have blog module)
-    try:
-        from blog_module.models import BlogPost
-        recent_blog_posts = BlogPost.objects.filter(is_published=True).order_by('-published_at')[:3]
-    except:
-        recent_blog_posts = []
+    recent_blog_posts = []
     
     context = {
         'featured_cars': featured_cars,
@@ -57,7 +56,6 @@ def home(request):
         'recent_blog_posts': recent_blog_posts,
     }
     return render(request, 'marketplace/home.html', context)
-
 
 def about_us(request):
     """About page."""
