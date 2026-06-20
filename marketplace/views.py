@@ -32,15 +32,15 @@ def home(request):
         'recent_cars': recent_cars,
         'dealers': dealers,
     }
-    return render(request, 'home.html', context)
+    return render(request, 'marketplace/home.html', context)
 
 def about_us(request):
     """About page."""
-    return render(request, 'about.html')
+    return render(request, 'marketplace/about.html')
 
 def contact(request):
     """Contact page."""
-    return render(request, 'contact.html')
+    return render(request, 'marketplace/contact.html')
 
 def terms(request):
     """Terms and conditions page."""
