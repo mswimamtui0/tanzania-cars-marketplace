@@ -1,278 +1,187 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.db.models.signals import post_save
-from django.dispatch import receiver
+from django.utils import timezone
+from django.urls import reverse
+from cloudinary.models import CloudinaryField
 
-# ========== USER PROFILE ==========
-class UserProfile(models.Model):
-    ROLE_CHOICES = (
-        ('buyer', 'Buyer'),
-        ('dealer', 'Dealer'),
-        ('yard_manager', 'Yard Manager'),
-        ('agent', 'Agent/Broker'),
-        ('admin', 'Admin'),
-    )
-    
-    VERIFICATION_LEVELS = (
-        (1, 'Level 1 - Unverified (Phone only)'),
-        (2, 'Level 2 - Partially Verified (ID uploaded)'),
-        (3, 'Level 3 - Fully Verified (ID + Location verified)'),
-    )
-    
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='buyer')
-    phone = models.CharField(max_length=15, blank=True, null=True)
-    email_verified = models.BooleanField(default=False)
-    verification_level = models.IntegerField(choices=VERIFICATION_LEVELS, default=1)
-    id_uploaded = models.FileField(upload_to='ids/', blank=True, null=True)
-    location_verified = models.BooleanField(default=False)
-    verified_badge = models.BooleanField(default=False)
-    company_name = models.CharField(max_length=100, blank=True)
-    whatsapp_number = models.CharField(max_length=20, blank=True, null=True)
-    commission_rate = models.DecimalField(max_digits=5, decimal_places=2, default=2.0)
-    total_sales = models.IntegerField(default=0)
-    total_commission = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    is_active_agent = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    def __str__(self):
-        return f"{self.user.username} - {self.role}"
+# ========== CORE MODELS ==========
 
-@receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        UserProfile.objects.create(user=instance)
-
-# ========== CAR YARD ==========
-class CarYard(models.Model):
-    name = models.CharField(max_length=100)
-    manager = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='managed_yards')
-    location = models.CharField(max_length=200)
-    city = models.CharField(max_length=100)
-    description = models.TextField(blank=True)
-    phone = models.CharField(max_length=15, blank=True)
-    email = models.EmailField(blank=True)
-    rating = models.DecimalField(max_digits=3, decimal_places=2, default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
+class Car(models.Model):
+    """Main Car model for listings."""
+    CONDITION_CHOICES = [
+        ('new', 'New'),
+        ('used', 'Used'),
+        ('certified', 'Certified Pre-Owned'),
+    ]
     
-    def __str__(self):
-        return f"{self.name} - {self.city}"
-
-# ========== CAR LISTING ==========
-class CarListing(models.Model):
-    LISTING_PACKAGES = (
-        ('normal', 'Normal - TZS 10,000'),
-        ('featured', 'Featured - TZS 50,000'),
-        ('premium', 'Premium - TZS 100,000'),
-    )
-    CONDITION_CHOICES = (('new', 'New'), ('used', 'Used'))
-    TRANSMISSION_CHOICES = (('manual', 'Manual'), ('automatic', 'Automatic'))
-    STATUS_CHOICES = (('pending', 'Pending'), ('approved', 'Approved'), ('sold', 'Sold'), ('rejected', 'Rejected'))
-    FUEL_CHOICES = (('petrol', 'Petrol'), ('diesel', 'Diesel'), ('electric', 'Electric'), ('hybrid', 'Hybrid'))
+    FUEL_CHOICES = [
+        ('petrol', 'Petrol'),
+        ('diesel', 'Diesel'),
+        ('electric', 'Electric'),
+        ('hybrid', 'Hybrid'),
+        ('cng', 'CNG'),
+    ]
     
+    TRANSMISSION_CHOICES = [
+        ('manual', 'Manual'),
+        ('automatic', 'Automatic'),
+        ('cvt', 'CVT'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('available', 'Available'),
+        ('sold', 'Sold'),
+        ('pending', 'Pending'),
+        ('reserved', 'Reserved'),
+    ]
+    
+    # Basic Info
     title = models.CharField(max_length=200)
-    make = models.CharField(max_length=50)
-    model = models.CharField(max_length=50)
+    brand = models.CharField(max_length=100)
+    model = models.CharField(max_length=100)
     year = models.IntegerField()
-    price = models.DecimalField(max_digits=12, decimal_places=2)
-    mileage = models.IntegerField()
-    condition = models.CharField(max_length=10, choices=CONDITION_CHOICES, default='used')
-    transmission = models.CharField(max_length=10, choices=TRANSMISSION_CHOICES, default='manual')
-    fuel_type = models.CharField(max_length=20, choices=FUEL_CHOICES, default='petrol')
-    description = models.TextField(blank=True)
-    images = models.ImageField(upload_to='cars/', blank=True, null=True)
-    seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name='listings', null=True, blank=True)
-    yard = models.ForeignKey(CarYard, on_delete=models.SET_NULL, null=True, blank=True, related_name='cars')
-    package = models.CharField(max_length=20, choices=LISTING_PACKAGES, default='normal')
-    payment_made = models.BooleanField(default=False)
-    payment_confirmed = models.BooleanField(default=False)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    is_featured = models.BooleanField(default=False)
-    views_count = models.IntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-    approved_at = models.DateTimeField(null=True, blank=True)
+    price = models.DecimalField(max_digits=15, decimal_places=2)
+    mileage = models.IntegerField(help_text="Mileage in kilometers")
     
-    def __str__(self):
-        return f"{self.year} {self.make} {self.model}"
-
-# ========== WISHLIST ==========
-class Wishlist(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wishlist_items')
-    car = models.ForeignKey(CarListing, on_delete=models.CASCADE, related_name='wishlisted_by')
-    added_at = models.DateTimeField(auto_now_add=True)
+    # Details
+    fuel_type = models.CharField(max_length=20, choices=FUEL_CHOICES)
+    transmission = models.CharField(max_length=20, choices=TRANSMISSION_CHOICES)
+    color = models.CharField(max_length=50)
+    description = models.TextField()
+    condition = models.CharField(max_length=20, choices=CONDITION_CHOICES, default='used')
+    location = models.CharField(max_length=200)
+    
+    # Images
+    image = CloudinaryField('image', null=True, blank=True)
+    
+    # Status
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available')
+    is_featured = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False)
+    
+    # Relationships
+    seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cars')
+    dealer = models.ForeignKey('Dealer', on_delete=models.SET_NULL, null=True, blank=True, related_name='cars')
+    yard = models.ForeignKey('Yard', on_delete=models.SET_NULL, null=True, blank=True, related_name='cars')
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        unique_together = ('user', 'car')
+        ordering = ['-created_at']
     
     def __str__(self):
-        return f"{self.user.username} - {self.car}"
+        return f"{self.brand} {self.model} ({self.year})"
+    
+    def get_absolute_url(self):
+        return reverse('car_detail', args=[str(self.id)])
+    
+    @property
+    def is_sold(self):
+        return self.status == 'sold'
 
-# ========== COMPARISON SET ==========
-class ComparisonSet(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='comparison_set')
-    cars = models.ManyToManyField(CarListing, related_name='in_comparisons')
+
+class CarImage(models.Model):
+    """Additional images for cars."""
+    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name='images')
+    image = CloudinaryField('image')
+    caption = models.CharField(max_length=200, blank=True)
+    is_primary = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     
-    def __str__(self):
-        return f"{self.user.username}'s comparison"
-
-# ========== SOLD REQUEST ==========
-class SoldRequest(models.Model):
-    STATUS_CHOICES = (
-        ('pending', 'Pending Dealer Approval'),
-        ('approved', 'Approved - Car Sold'),
-        ('rejected', 'Rejected'),
-    )
+    class Meta:
+        ordering = ['-is_primary', 'created_at']
     
-    car = models.ForeignKey(CarListing, on_delete=models.CASCADE, related_name='sold_requests')
-    buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sold_requests')
-    dealer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='dealer_sold_requests')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    buyer_message = models.TextField(blank=True)
+    def __str__(self):
+        return f"Image for {self.car.title}"
+
+
+class Dealer(models.Model):
+    """Dealer model for car sellers."""
+    VERIFICATION_LEVELS = [
+        ('1', 'Level 1 - Basic'),
+        ('2', 'Level 2 - Verified'),
+        ('3', 'Level 3 - Premium'),
+    ]
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='dealer_profile')
+    business_name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    phone = models.CharField(max_length=20)
+    location = models.CharField(max_length=200)
+    website = models.URLField(blank=True)
+    verification_level = models.CharField(max_length=1, choices=VERIFICATION_LEVELS, default='1')
+    is_verified = models.BooleanField(default=False)
+    commission_rate = models.DecimalField(max_digits=5, decimal_places=2, default=5.00)
     created_at = models.DateTimeField(auto_now_add=True)
-    responded_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['business_name']
     
     def __str__(self):
-        return f"{self.buyer.username} bought {self.car.make} {self.car.model} - {self.status}"
+        return self.business_name
 
-# ========== RESERVATION ==========
-class Reservation(models.Model):
-    STATUS_CHOICES = (
-        ('pending', 'Pending'),
-        ('confirmed', 'Confirmed'),
-        ('cancelled', 'Cancelled'),
-        ('completed', 'Completed'),
-    )
-    
-    buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reservations')
-    car = models.ForeignKey(CarListing, on_delete=models.CASCADE, related_name='reservations')
-    reservation_fee = models.DecimalField(max_digits=10, decimal_places=2, default=50000)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+
+class Yard(models.Model):
+    """Physical yard location for car storage."""
+    name = models.CharField(max_length=200)
+    location = models.CharField(max_length=200)
+    capacity = models.IntegerField()
+    is_active = models.BooleanField(default=True)
+    manager = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='managed_yards')
     created_at = models.DateTimeField(auto_now_add=True)
-    expires_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['name']
     
     def __str__(self):
-        return f"{self.buyer.username} - {self.car.make} {self.car.model}"
+        return self.name
 
-# ========== INSPECTION REQUEST ==========
-class InspectionRequest(models.Model):
-    STATUS_CHOICES = (
-        ('pending', 'Pending'),
-        ('scheduled', 'Scheduled'),
-        ('completed', 'Completed'),
-        ('cancelled', 'Cancelled'),
-    )
-    
-    car = models.ForeignKey(CarListing, on_delete=models.CASCADE, related_name='inspections')
-    buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='inspections')
-    inspection_date = models.DateTimeField(null=True, blank=True)
-    location = models.CharField(max_length=200, blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    fee = models.DecimalField(max_digits=10, decimal_places=2, default=50000)
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    def __str__(self):
-        return f"Inspection for {self.car.make} {self.car.model} by {self.buyer.username}"
 
-# ========== YARD DEALER ASSIGNMENT ==========
-# ONLY ONE DEFINITION - KEEP THIS ONE
 class YardDealerAssignment(models.Model):
-    """Yard manager assigns dealers to their yard"""
-    yard = models.ForeignKey(CarYard, on_delete=models.CASCADE, related_name='assigned_dealers')
-    dealer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='assigned_yards')
-    assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='dealer_assignments')
+    """Assignment of dealers to yards."""
+    dealer = models.ForeignKey(Dealer, on_delete=models.CASCADE, related_name='yard_assignments')
+    yard = models.ForeignKey(Yard, on_delete=models.CASCADE, related_name='dealer_assignments')
+    assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='assigned_dealers')
+    is_active = models.BooleanField(default=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ('dealer', 'yard')
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.dealer.business_name} @ {self.yard.name}"
+
+
+class DealerAssignment(models.Model):
+    """Assignment of cars to dealers."""
+    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name='dealer_assignments')
+    dealer = models.ForeignKey(Dealer, on_delete=models.CASCADE, related_name='car_assignments')
+    commission_rate = models.DecimalField(max_digits=5, decimal_places=2, default=5.00)
     is_active = models.BooleanField(default=True)
     assigned_at = models.DateTimeField(auto_now_add=True)
-    notes = models.TextField(blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        unique_together = ('yard', 'dealer')
+        unique_together = ('car', 'dealer')
+        ordering = ['-assigned_at']
     
     def __str__(self):
-        return f"{self.dealer.username} assigned to {self.yard.name}"
-
-# ========== DEALER COMMISSION ==========
-class DealerCommission(models.Model):
-    """Track dealer commissions"""
-    STATUS_CHOICES = (
-        ('pending', 'Pending'),
-        ('paid', 'Paid'),
-        ('cancelled', 'Cancelled'),
-    )
-    
-    dealer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='commissions')
-    car = models.ForeignKey(CarListing, on_delete=models.CASCADE)
-    sale_amount = models.DecimalField(max_digits=12, decimal_places=2)
-    commission_rate = models.DecimalField(max_digits=5, decimal_places=2, default=2.0)
-    commission_amount = models.DecimalField(max_digits=12, decimal_places=2)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    notes = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    paid_at = models.DateTimeField(null=True, blank=True)
-    
-    def __str__(self):
-        return f"{self.dealer.username} - {self.commission_amount} - {self.status}"
-
-# ========== FAKE LISTING REPORT ==========
-class FakeListingReport(models.Model):
-    """Report fake or suspicious listings"""
-    STATUS_CHOICES = (
-        ('pending', 'Pending Review'),
-        ('investigating', 'Under Investigation'),
-        ('resolved', 'Resolved'),
-        ('dismissed', 'Dismissed'),
-    )
-    
-    REASON_CHOICES = (
-        ('fake_car', 'Fake/Non-existent car'),
-        ('wrong_price', 'Misleading price'),
-        ('stolen_car', 'Suspected stolen vehicle'),
-        ('scam', 'Scam attempt'),
-        ('other', 'Other'),
-    )
-    
-    car = models.ForeignKey(CarListing, on_delete=models.CASCADE, related_name='reports')
-    reported_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reports')
-    reason = models.CharField(max_length=20, choices=REASON_CHOICES)
-    description = models.TextField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    admin_notes = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    resolved_at = models.DateTimeField(null=True, blank=True)
-    
-    def __str__(self):
-        return f"Report on {self.car} by {self.reported_by.username}"
+        return f"{self.car.title} - {self.dealer.business_name}"
 
 
-
-
-# ========== MESSAGE ==========
-class Message(models.Model):
-    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
-    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
-    car = models.ForeignKey('CarListing', on_delete=models.CASCADE, null=True, blank=True)
-    subject = models.CharField(max_length=200)
-    content = models.TextField()
-    is_read = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    def __str__(self):
-        return f"{self.sender.username} → {self.receiver.username}: {self.subject[:30]}"
-    
-
-
-
-
-    from django.db import models
-from django.contrib.auth.models import User
-from django.utils import timezone
-
-# Add these if they don't exist
+# ========== FAVORITES ==========
 
 class Favorite(models.Model):
     """Model for user favorites."""
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorites')
-    car = models.ForeignKey('Car', on_delete=models.CASCADE, related_name='favorited_by')
+    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name='favorited_by')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -281,6 +190,30 @@ class Favorite(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.car.title}"
+
+
+# ========== REVIEWS ==========
+
+class Review(models.Model):
+    """Reviews for cars and dealers."""
+    RATING_CHOICES = [(i, f"{i} Stars") for i in range(1, 6)]
+    
+    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name='reviews', null=True, blank=True)
+    dealer = models.ForeignKey(Dealer, on_delete=models.CASCADE, related_name='reviews', null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
+    rating = models.IntegerField(choices=RATING_CHOICES)
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.rating} stars"
+
+
+# ========== REPORTS ==========
 
 class Report(models.Model):
     """Model for reporting issues with listings."""
@@ -298,7 +231,7 @@ class Report(models.Model):
         ('dismissed', 'Dismissed'),
     ]
     
-    car = models.ForeignKey('Car', on_delete=models.CASCADE, related_name='reports')
+    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name='reports')
     reported_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reports')
     reason = models.CharField(max_length=50, choices=REASON_CHOICES)
     description = models.TextField(blank=True)
@@ -314,11 +247,14 @@ class Report(models.Model):
     def __str__(self):
         return f"{self.reason} - {self.car.title}"
 
+
+# ========== MESSAGES ==========
+
 class Message(models.Model):
     """Model for user-to-user messages."""
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
     recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
-    car = models.ForeignKey('Car', on_delete=models.CASCADE, null=True, blank=True, related_name='messages')
+    car = models.ForeignKey(Car, on_delete=models.CASCADE, null=True, blank=True, related_name='messages')
     content = models.TextField()
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -329,3 +265,51 @@ class Message(models.Model):
 
     def __str__(self):
         return f"{self.sender.username} -> {self.recipient.username}: {self.content[:30]}..."
+
+
+# ========== INSPECTIONS ==========
+
+class InspectionRequest(models.Model):
+    """Vehicle inspection requests."""
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    car = models.ForeignKey(Car, on_delete=models.CASCADE, related_name='inspections')
+    requested_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='inspection_requests')
+    scheduled_date = models.DateTimeField()
+    notes = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    inspection_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    completed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='completed_inspections')
+    inspection_report = models.TextField(blank=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Inspection for {self.car.title} - {self.status}"
+
+
+# ========== LISTING PACKAGES ==========
+
+class ListingPackage(models.Model):
+    """Listing packages for car advertisements."""
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    duration_days = models.IntegerField()
+    is_featured = models.BooleanField(default=False)
+    is_premium = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['price']
+    
+    def __str__(self):
+        return self.name

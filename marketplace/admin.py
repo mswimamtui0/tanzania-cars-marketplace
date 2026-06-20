@@ -1,5 +1,24 @@
 from django.contrib import admin
-from .models import UserProfile, CarYard, CarListing, Wishlist, ComparisonSet
+from .models import (
+    Car, CarImage, Dealer, Yard, YardDealerAssignment, DealerAssignment,
+    Favorite, Review, Report, Message, InspectionRequest, ListingPackage
+)
+
+admin.site.register(Car)
+admin.site.register(CarImage)
+admin.site.register(Dealer)
+admin.site.register(Yard)
+admin.site.register(YardDealerAssignment)
+admin.site.register(DealerAssignment)
+admin.site.register(Favorite)
+admin.site.register(Review)
+admin.site.register(Report)
+admin.site.register(Message)
+admin.site.register(InspectionRequest)
+admin.site.register(ListingPackage)
+
+
+
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
