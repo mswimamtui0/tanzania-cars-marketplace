@@ -10,6 +10,8 @@
         box-shadow: 0 10px 40px rgba(0,0,0,0.08);
         overflow: hidden;
         background: white;
+        max-width: 450px;
+        margin: 0 auto;
     }
     
     .login-card .card-header {
@@ -128,6 +130,9 @@
         padding: 15px 20px;
         background: #f8f9fa;
         margin-top: 15px;
+        max-width: 450px;
+        margin-left: auto;
+        margin-right: auto;
     }
     
     .demo-accounts .badge {
@@ -157,6 +162,10 @@
         color: white;
     }
     
+    .demo-accounts small i {
+        color: #0d6efd;
+    }
+    
     @media (max-width: 576px) {
         .login-card .card-body {
             padding: 25px 20px;
@@ -167,6 +176,9 @@
         .demo-accounts .badge {
             font-size: 0.65rem;
             padding: 4px 8px;
+        }
+        .login-card {
+            margin: 0 15px;
         }
     }
 </style>
@@ -240,7 +252,7 @@
                 <div class="d-flex flex-wrap justify-content-center gap-1">
                     <span class="badge badge-admin"><i class="fas fa-user-shield me-1"></i> Admin: admin / admin123</span>
                     <span class="badge badge-dealer"><i class="fas fa-store me-1"></i> Dealer: dealer1 / dealer123</span>
-                    <span class="badge badge-yard"><i class="fas fa-warehouse me-1"></i> Yard Manager: yardmanager / yard123</span>
+                    <span class="badge badge-yard"><i class="fas fa-warehouse me-1"></i> Yard: yardmanager / yard123</span>
                     <span class="badge badge-buyer"><i class="fas fa-user me-1"></i> Buyer: buyer1 / buyer123</span>
                 </div>
             </div>

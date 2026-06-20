@@ -72,8 +72,9 @@ def register(request):
                     is_verified=False
                 )
             elif role == 'yard_manager':
-                # Create yard manager - they need to be assigned to a yard by admin
-                pass  # Yard managers are assigned by admin
+                # Create yard manager profile (you may need a YardManager model)
+                # For now, we'll just set a flag or create a simple profile
+                pass
             
             auth_login(request, user)
             messages.success(request, _('Registration successful! Welcome to Tanzania Cars Marketplace.'))
@@ -83,13 +84,14 @@ def register(request):
                 return redirect('dealer_dashboard')
             elif role == 'yard_manager':
                 return redirect('yard_dashboard')
+            elif user.is_staff:
+                return redirect('admin_dashboard')
             else:
                 return redirect('home')
     else:
         form = CustomUserCreationForm()
     
     return render(request, 'marketplace/register.html', {'form': form})
-
 def login(request):
     """User login view."""
     if request.method == 'POST':
@@ -99,11 +101,25 @@ def login(request):
         if user is not None:
             auth_login(request, user)
             messages.success(request, _('Welcome back, {}!').format(user.username))
-            next_url = request.GET.get('next', 'home')
-            return redirect(next_url)
+            
+            # Redirect based on user role
+            next_url = request.GET.get('next', '')
+            if next_url:
+                return redirect(next_url)
+            
+            # Check user role and redirect accordingly
+            if user.is_staff:
+                return redirect('admin_dashboard')
+            elif hasattr(user, 'dealer_profile'):
+                return redirect('dealer_dashboard')
+            elif hasattr(user, 'yard_manager_profile'):
+                return redirect('yard_dashboard')
+            else:
+                return redirect('home')
         else:
             messages.error(request, _('Invalid username or password.'))
-    return render(request, 'registration/login.html')
+    return render(request, 'marketplace/login.html')
+
 
 def logout(request):
     """User logout view."""
