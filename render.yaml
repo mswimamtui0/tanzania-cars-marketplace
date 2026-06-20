@@ -3,10 +3,9 @@ services:
     name: tanzania-cars-marketplace
     runtime: python
     buildCommand: |
-      pip install -r requirements.txt
-      python manage.py collectstatic --noinput
-      python manage.py migrate
-      python manage.py loaddata data.json
+  pip install -r requirements.txt
+  python manage.py collectstatic --noinput
+  python manage.py migrate
     startCommand: gunicorn tanzania_car_marketplace.wsgi:application"    envVars:" 
 "      - key: PYTHON_VERSION" 
 "        value: 3.11.9" 
