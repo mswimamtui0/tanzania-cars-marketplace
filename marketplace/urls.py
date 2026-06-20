@@ -25,11 +25,10 @@ urlpatterns = [
     path('favorites/', views.favorites_list, name='favorites_list'),
     path('favorites/<int:car_id>/toggle/', views.favorite_car, name='favorite_car'),
     
-    # Dealer dashboard - Using only views that exist
+    # Dealer dashboard
     path('dealer/dashboard/', views.dealer_dashboard, name='dealer_dashboard'),
     path('dealer/cars/', views.dealer_my_cars, name='dealer_cars'),
     path('dealer/cars/add/', views.dealer_add_car, name='dealer_add_car'),
-    # REMOVED: dealer_edit_car and dealer_delete_car (use generic edit/delete)
     path('dealer/messages/', views.dealer_messages, name='dealer_messages'),
     path('dealer/commission/', views.dealer_commission_dashboard, name='dealer_commission_dashboard'),
     
@@ -38,8 +37,7 @@ urlpatterns = [
     path('yard/cars/', views.yard_my_cars, name='yard_cars'),
     path('yard/cars/add/', views.yard_add_car, name='yard_add_car'),
     path('yard/pending/', views.yard_pending_cars, name='yard_pending_cars'),
-    path('yard/approve/<int:car_id>/', views.yard_approve_car, name='yard_approve_car'),
-    path('yard/reject/<int:car_id>/', views.yard_reject_car, name='yard_reject_car'),
+    # REMOVED: yard_approve_car and yard_reject_car (views don't exist)
     
     # Admin dashboard
     path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
