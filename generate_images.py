@@ -1,54 +1,101 @@
 import os
 import django
+from django.conf import settings
+from django.core.files import File
+from PIL import Image, ImageDraw, ImageFont
+from io import BytesIO
+import random
+
+# Setup Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tanzania_car_marketplace.settings')
 django.setup()
 
-from marketplace.models import CarListing
-from django.core.files.base import ContentFile
-from PIL import Image, ImageDraw
-import io
+from marketplace.models import Car
 
-def create_car_image(car):
-    """Create a professional car image"""
-    img = Image.new('RGB', (600, 400), color=(30, 30, 46))
+
+def generate_car_image(car):
+    """Generate a simple placeholder image for a car."""
+    # Create a new image
+    img = Image.new('RGB', (800, 600), color=(random.randint(50, 200), random.randint(50, 200), random.randint(50, 200)))
     draw = ImageDraw.Draw(img)
     
-    # Car body
-    draw.rectangle([100, 200, 500, 280], fill=(78, 115, 223), outline=(255,255,255), width=3)
-    draw.ellipse([150, 270, 220, 330], fill=(50,50,50), outline=(255,255,255), width=2)
-    draw.ellipse([380, 270, 450, 330], fill=(50,50,50), outline=(255,255,255), width=2)
+    # Add car text
+    text = f"{car.brand} {car.model}"
+    try:
+        font = ImageFont.truetype("arial.ttf", 60)
+    except:
+        font = ImageFont.load_default()
     
-    # Windows
-    draw.rectangle([120, 210, 200, 260], fill=(100,100,150))
-    draw.rectangle([210, 210, 290, 260], fill=(100,100,150))
-    draw.rectangle([300, 210, 380, 260], fill=(100,100,150))
-    draw.rectangle([390, 210, 470, 260], fill=(100,100,150))
+    # Get text size
+    bbox = draw.textbbox((0, 0), text, font=font)
+    text_width = bbox[2] - bbox[0]
+    text_height = bbox[3] - bbox[1]
     
-    # Text
-    draw.text((180, 80), car.make.upper(), fill=(255,255,255))
-    draw.text((180, 115), car.model.upper(), fill=(78,115,223))
-    draw.text((180, 320), f"TSh {int(car.price):,}", fill=(0,255,136))
-    draw.text((180, 355), f"{car.year} | {int(car.mileage):,} km", fill=(170,170,170))
+    # Center the text
+    x = (800 - text_width) // 2
+    y = (600 - text_height) // 2
     
-    buffer = io.BytesIO()
-    img.save(buffer, format='JPEG', quality=95)
-    buffer.seek(0)
-    return buffer
+    # Draw white background for text
+    draw.rectangle([x-20, y-20, x+text_width+20, y+text_height+20], fill='white')
+    draw.text((x, y), text, fill='black', font=font)
+    
+    # Add price
+    price_text = f"TSh {car.price:,.0f}"
+    try:
+        font_small = ImageFont.truetype("arial.ttf", 40)
+    except:
+        font_small = ImageFont.load_default()
+    
+    price_bbox = draw.textbbox((0, 0), price_text, font=font_small)
+    price_width = price_bbox[2] - price_bbox[0]
+    price_x = (800 - price_width) // 2
+    price_y = y + text_height + 30
+    
+    draw.rectangle([price_x-20, price_y-20, price_x+price_width+20, price_y+price_height+20], fill='white')
+    draw.text((price_x, price_y), price_text, fill='green', font=font_small)
+    
+    # Convert to bytes
+    img_byte_arr = BytesIO()
+    img.save(img_byte_arr, format='JPEG', quality=85)
+    img_byte_arr.seek(0)
+    
+    return img_byte_arr
 
-print("Generating images for all cars...")
-cars = CarListing.objects.all()
-count = 0
 
-for car in cars:
-    # Delete old image if exists
-    if car.images:
-        car.images.delete(save=False)
+def generate_images_for_cars():
+    """Generate images for all cars that don't have images."""
+    cars = Car.objects.all()
+    print(f"Generating images for {cars.count()} cars...")
     
-    # Create and save new image
-    img_buffer = create_car_image(car)
-    filename = f"car_{car.id}_{car.make}_{car.model}.jpg"
-    car.images.save(filename, ContentFile(img_buffer.getvalue()), save=True)
-    count += 1
-    print(f"✓ {car.make} {car.model}")
+    for car in cars:
+        # Check if car already has an image (if your Car model has an image field)
+        if hasattr(car, 'image') and car.image:
+            print(f"Car {car.id} already has an image, skipping...")
+            continue
+        
+        try:
+            # Generate image
+            img_byte_arr = generate_car_image(car)
+            
+            # Save to Cloudinary or local media
+            # If using Cloudinary
+            from cloudinary.uploader import upload
+            result = upload(img_byte_arr, 
+                           folder='cars/',
+                           public_id=f'car_{car.id}',
+                           overwrite=True)
+            
+            # Save the URL to the car's image field
+            if hasattr(car, 'image'):
+                car.image = result['secure_url']
+                car.save()
+                print(f"✓ Generated image for {car.brand} {car.model}")
+            
+        except Exception as e:
+            print(f"✗ Error generating image for car {car.id}: {e}")
 
-print(f"\n✅ Added images to {count} cars!")
+    print("Done generating images!")
+
+
+if __name__ == "__main__":
+    generate_images_for_cars()
