@@ -1,264 +1,381 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% load static %}
-
-{% block extra_css %}
-<style>
-    .hero-section {
-        background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
-                          url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1600');
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
-        min-height: 80vh;
-        display: flex;
-        align-items: center;
-    }
-    
-    .hero-section h1, 
-    .hero-section p {
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-    }
-    
-    .search-box {
-        background: white;
-        border-radius: 50px;
-        padding: 10px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-    }
-    
-    .search-box input {
-        border: none;
-        padding: 12px 20px;
-        border-radius: 50px;
-    }
-    
-    .search-box button {
-        border-radius: 50px;
-        padding: 12px 30px;
-    }
-    
-    .featured-card {
-        border: 2px solid #ffc107;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        transition: transform 0.3s;
-    }
-    
-    .featured-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    }
-    
-    .featured-badge {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: #ffc107;
-        color: #000;
-        padding: 5px 10px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: bold;
-        z-index: 10;
-    }
-    
-    .new-badge {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        background: #007bff;
-        color: white;
-        padding: 5px 10px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: bold;
-        z-index: 10;
-    }
-    
-    .car-card {
-        transition: transform 0.3s, box-shadow 0.3s;
-    }
-    
-    .car-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    }
-</style>
-{% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
-<div class="hero-section">
+<section class="hero-section">
     <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6 mb-4">
-                <h1 class="display-4 fw-bold text-white">Find Your Dream Car in Tanzania</h1>
-                <p class="lead text-white">Browse thousands of new and used cars from trusted dealers across Tanzania. Best prices, guaranteed quality.</p>
+        <div class="row align-items-center min-vh-75">
+            <div class="col-lg-7 text-white">
+                <h1 class="display-3 fw-bold mb-3">{% trans "Find Your Dream Car in Tanzania" %}</h1>
+                <p class="lead mb-4 opacity-75">{% trans "Browse thousands of new and used cars from trusted dealers across Tanzania. Best prices, guaranteed quality." %}</p>
                 
-                <!-- Search Box -->
-                <div class="search-box bg-white mt-4">
-                    <form action="{% url 'car_list' %}" method="get" class="row g-2">
-                        <div class="col-md-8">
-                            <input type="text" name="q" class="form-control" placeholder="Search by make, model, or keyword...">
-                        </div>
-                        <div class="col-md-4">
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="fas fa-search"></i> Search Cars
-                            </button>
-                        </div>
-                    </form>
+                <!-- Search Bar -->
+                <div class="search-box bg-white rounded-pill p-2 shadow-lg d-flex">
+                    <input type="text" class="form-control border-0 rounded-pill me-2" placeholder="{% trans 'Search by make, model, or keyword...' %}" style="padding: 15px 20px;">
+                    <button class="btn btn-primary rounded-pill px-4" style="white-space: nowrap;">
+                        <i class="fas fa-search me-2"></i> {% trans "Search" %}
+                    </button>
                 </div>
                 
-                <div class="row mt-4">
-                    <div class="col-4 text-center">
-                        <h3 class="text-white">10,000+</h3>
-                        <small class="text-white">Cars Available</small>
+                <!-- Stats -->
+                <div class="row g-4 mt-4">
+                    <div class="col-4">
+                        <div class="stat-item">
+                            <h3 class="fw-bold text-white mb-0">10,000+</h3>
+                            <small class="opacity-75">{% trans "Cars Available" %}</small>
+                        </div>
                     </div>
-                    <div class="col-4 text-center">
-                        <h3 class="text-white">500+</h3>
-                        <small class="text-white">Trusted Dealers</small>
+                    <div class="col-4">
+                        <div class="stat-item">
+                            <h3 class="fw-bold text-white mb-0">500+</h3>
+                            <small class="opacity-75">{% trans "Trusted Dealers" %}</small>
+                        </div>
                     </div>
-                    <div class="col-4 text-center">
-                        <h3 class="text-white">50,000+</h3>
-                        <small class="text-white">Happy Buyers</small>
+                    <div class="col-4">
+                        <div class="stat-item">
+                            <h3 class="fw-bold text-white mb-0">50,000+</h3>
+                            <small class="opacity-75">{% trans "Happy Buyers" %}</small>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-lg-6">
-                <img src="https://via.placeholder.com/600x400?text=Luxury+Cars" alt="Luxury Cars" class="img-fluid rounded shadow">
+            <div class="col-lg-5 d-none d-lg-block">
+                <div class="hero-image">
+                    <img src="{% static 'images/hero-car.png' %}" alt="Car" class="img-fluid" style="filter: drop-shadow(0 20px 40px rgba(0,0,0,0.3));">
+                </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 
-<div class="container mt-5">
-    <!-- Featured Cars Section -->
-    {% if featured_cars %}
-    <div class="row mb-4">
-        <div class="col-12 text-center">
-            <h2 class="mb-0">⭐ Featured Cars</h2>
-            <p class="text-muted mb-2">Hand-picked premium vehicles from trusted dealers</p>
-            <span class="badge bg-warning text-dark p-2">Premium Listings</span>
+<!-- Luxury Cars / Featured Cars -->
+<section class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <span class="badge bg-primary bg-opacity-10 text-primary mb-2 px-3 py-2">⭐ {% trans "Luxury Cars" %}</span>
+            <h2 class="fw-bold mb-0">{% trans "Featured Cars" %}</h2>
+            <p class="text-muted">{% trans "Hand-picked premium vehicles from trusted dealers" %}</p>
         </div>
-    </div>
-    <div class="row">
-        {% for car in featured_cars %}
-        <div class="col-md-4 mb-4">
-            <div class="card shadow h-100 position-relative featured-card">
-                <span class="featured-badge">
-                    <i class="fas fa-star"></i> FEATURED
-                </span>
-                {% if car.images and car.images.url %}
-                    <img src="{{ car.images.url }}" class="card-img-top" alt="{{ car.title }}" style="height: 200px; object-fit: cover; width: 100%;">
-                {% else %}
-                    <div class="bg-warning text-white text-center py-4" style="height: 200px; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-star fa-3x"></i>
-                    </div>
-                {% endif %}
-                <div class="card-body">
-                    <h5 class="card-title">{{ car.year }} {{ car.make }} {{ car.model }}</h5>
-                    <p class="card-text text-muted">
-                        <i class="fas fa-tachometer-alt"></i> {{ car.mileage|floatformat:0 }} km<br>
-                        <i class="fas fa-cog"></i> {{ car.transmission|title }}
-                    </p>
-                    <h4 class="text-success">TSh {{ car.price|floatformat:0 }}</h4>
-                    <a href="{% url 'car_detail' car.id %}" class="btn btn-warning w-100">View Details</a>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-
-    <!-- Latest Cars Section -->
-    <div class="row mt-5 mb-4">
-        <div class="col-12 text-center">
-            <h2 class="mb-0">🔥 Latest Arrivals</h2>
-            <p class="text-muted mb-2">Most recently listed cars on our platform ({{ total_latest }} total)</p>
-            <a href="{% url 'car_list' %}" class="btn btn-outline-primary">View All Cars →</a>
-        </div>
-    </div>
-    <div class="row">
-        {% for car in latest_cars %}
-        <div class="col-md-4 col-lg-3 mb-4">
-            <div class="card shadow h-100 position-relative car-card">
-                <span class="new-badge">
-                    <i class="fas fa-clock"></i> NEW
-                </span>
-                {% if car.images and car.images.url %}
-                    <img src="{{ car.images.url }}" class="card-img-top" alt="{{ car.title }}" style="height: 180px; object-fit: cover; width: 100%;">
-                {% else %}
-                    <div class="bg-primary text-white text-center py-4" style="height: 180px; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-car fa-3x"></i>
-                    </div>
-                {% endif %}
-                <div class="card-body">
-                    <h6 class="card-title">{{ car.year }} {{ car.make }} {{ car.model }}</h6>
-                    <p class="card-text text-muted small">
-                        <i class="fas fa-tachometer-alt"></i> {{ car.mileage|floatformat:0 }} km<br>
-                        <i class="fas fa-cog"></i> {{ car.transmission|title }} | 
-                        <i class="fas fa-gas-pump"></i> {{ car.fuel_type|title }}
-                    </p>
-                    <h5 class="text-success">TSh {{ car.price|floatformat:0 }}</h5>
-                    <a href="{% url 'car_detail' car.id %}" class="btn btn-primary btn-sm w-100">View Details</a>
-                </div>
-            </div>
-        </div>
-        {% empty %}
-        <div class="col-12 text-center">
-            <p class="text-muted">No cars available yet.</p>
-        </div>
-        {% endfor %}
-    </div>
-    
-    <!-- Load More / View All -->
-    {% if latest_cars|length >= 30 %}
-    <div class="text-center mt-4">
-        <a href="{% url 'car_list' %}" class="btn btn-primary btn-lg">
-            <i class="fas fa-car"></i> View All {{ total_latest }} Cars
+        <a href="{% url 'car_list' %}" class="btn btn-outline-primary rounded-pill">
+            {% trans "View All" %} <i class="fas fa-arrow-right ms-2"></i>
         </a>
     </div>
-    {% endif %}
-</div>
+    
+    <div class="row g-4">
+        {% if featured_cars %}
+            {% for car in featured_cars|slice:":6" %}
+                <div class="col-md-4 col-lg-4">
+                    <div class="card car-card h-100">
+                        <div class="position-relative">
+                            {% if car.image %}
+                                <img src="{{ car.image.url }}" class="card-img-top" alt="{{ car.title }}">
+                            {% else %}
+                                <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 220px;">
+                                    <i class="fas fa-car fa-4x"></i>
+                                </div>
+                            {% endif %}
+                            <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-3 px-3 py-2 rounded-pill">
+                                <i class="fas fa-star me-1"></i> {% trans "FEATURED" %}
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="card-title fw-bold">{{ car.brand }} {{ car.model }}</h5>
+                            </div>
+                            <div class="car-specs d-flex gap-3 text-muted small mb-2">
+                                <span><i class="fas fa-calendar-alt me-1"></i> {{ car.year }}</span>
+                                <span><i class="fas fa-tachometer-alt me-1"></i> {{ car.mileage|default:"0" }} km</span>
+                                <span><i class="fas fa-cog me-1"></i> {{ car.transmission|default:"Automatic" }}</span>
+                            </div>
+                            <h5 class="text-primary fw-bold mb-3">TSh {{ car.price|floatformat:0 }}</h5>
+                            <a href="{% url 'car_detail' car.id %}" class="btn btn-primary w-100 rounded-pill">
+                                {% trans "View Details" %} <i class="fas fa-arrow-right ms-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <!-- Sample featured cars if no data -->
+            <div class="col-md-4">
+                <div class="card car-card h-100">
+                    <div class="position-relative">
+                        <div class="card-img-top bg-dark text-white d-flex align-items-center justify-content-center" style="height: 220px;">
+                            <i class="fas fa-car fa-4x"></i>
+                        </div>
+                        <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-3 px-3 py-2 rounded-pill">
+                            <i class="fas fa-star me-1"></i> FEATURED
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold">2022 Toyota Rav4</h5>
+                        <div class="car-specs d-flex gap-3 text-muted small mb-2">
+                            <span><i class="fas fa-calendar-alt me-1"></i> 2022</span>
+                            <span><i class="fas fa-tachometer-alt me-1"></i> 7,890 km</span>
+                            <span><i class="fas fa-cog me-1"></i> Automatic</span>
+                        </div>
+                        <h5 class="text-primary fw-bold mb-3">TSh 30,000,000</h5>
+                        <a href="#" class="btn btn-primary w-100 rounded-pill">View Details <i class="fas fa-arrow-right ms-2"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card car-card h-100">
+                    <div class="position-relative">
+                        <div class="card-img-top bg-dark text-white d-flex align-items-center justify-content-center" style="height: 220px;">
+                            <i class="fas fa-car fa-4x"></i>
+                        </div>
+                        <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-3 px-3 py-2 rounded-pill">
+                            <i class="fas fa-star me-1"></i> FEATURED
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold">2024 Ford Mustang</h5>
+                        <div class="car-specs d-flex gap-3 text-muted small mb-2">
+                            <span><i class="fas fa-calendar-alt me-1"></i> 2024</span>
+                            <span><i class="fas fa-tachometer-alt me-1"></i> 21,222 km</span>
+                            <span><i class="fas fa-cog me-1"></i> Automatic</span>
+                        </div>
+                        <h5 class="text-primary fw-bold mb-3">TSh 56,777,777</h5>
+                        <a href="#" class="btn btn-primary w-100 rounded-pill">View Details <i class="fas fa-arrow-right ms-2"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card car-card h-100">
+                    <div class="position-relative">
+                        <div class="card-img-top bg-dark text-white d-flex align-items-center justify-content-center" style="height: 220px;">
+                            <i class="fas fa-car fa-4x"></i>
+                        </div>
+                        <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-3 px-3 py-2 rounded-pill">
+                            <i class="fas fa-star me-1"></i> FEATURED
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold">2022 Honda CR-V</h5>
+                        <div class="car-specs d-flex gap-3 text-muted small mb-2">
+                            <span><i class="fas fa-calendar-alt me-1"></i> 2022</span>
+                            <span><i class="fas fa-tachometer-alt me-1"></i> 7 km</span>
+                            <span><i class="fas fa-cog me-1"></i> Manual</span>
+                        </div>
+                        <h5 class="text-primary fw-bold mb-3">TSh 40,000,000</h5>
+                        <a href="#" class="btn btn-primary w-100 rounded-pill">View Details <i class="fas fa-arrow-right ms-2"></i></a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
 
-<!-- Features Section -->
-<div class="container mt-5">
-    <div class="row text-center">
-        <div class="col-md-3 col-6 mb-3">
-            <i class="fas fa-check-circle fa-3x text-success"></i>
-            <h5 class="mt-2">Verified Cars</h5>
-            <small class="text-muted">All cars inspected</small>
+<!-- Latest Arrivals -->
+<section class="bg-light py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <span class="badge bg-danger bg-opacity-10 text-danger mb-2 px-3 py-2">🔥 {% trans "Latest Arrivals" %}</span>
+                <h2 class="fw-bold mb-0">{% trans "Latest Arrivals" %}</h2>
+                <p class="text-muted">{% trans "Most recently listed cars on our platform" %}</p>
+            </div>
+            <a href="{% url 'car_list' %}" class="btn btn-outline-primary rounded-pill">
+                {% trans "View All" %} <i class="fas fa-arrow-right ms-2"></i>
+            </a>
         </div>
-        <div class="col-md-3 col-6 mb-3">
-            <i class="fas fa-shield-alt fa-3x text-primary"></i>
-            <h5 class="mt-2">Secure Payment</h5>
-            <small class="text-muted">Safe transactions</small>
-        </div>
-        <div class="col-md-3 col-6 mb-3">
-            <i class="fas fa-headset fa-3x text-info"></i>
-            <h5 class="mt-2">24/7 Support</h5>
-            <small class="text-muted">Always here to help</small>
-        </div>
-        <div class="col-md-3 col-6 mb-3">
-            <i class="fas fa-truck fa-3x text-warning"></i>
-            <h5 class="mt-2">Free Delivery</h5>
-            <small class="text-muted">Within Dar es Salaam</small>
+        
+        <div class="row g-4">
+            {% if recent_cars %}
+                {% for car in recent_cars|slice:":8" %}
+                    <div class="col-md-3 col-6">
+                        <div class="card car-card h-100">
+                            <div class="position-relative">
+                                {% if car.image %}
+                                    <img src="{{ car.image.url }}" class="card-img-top" alt="{{ car.title }}" style="height: 150px;">
+                                {% else %}
+                                    <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 150px;">
+                                        <i class="fas fa-car fa-2x"></i>
+                                    </div>
+                                {% endif %}
+                                <span class="badge bg-success position-absolute top-0 start-0 m-2 px-2 py-1 rounded-pill small">NEW</span>
+                            </div>
+                            <div class="card-body p-3">
+                                <h6 class="card-title fw-bold mb-1">{{ car.brand }} {{ car.model }}</h6>
+                                <div class="car-specs small text-muted mb-2">
+                                    <span><i class="fas fa-calendar-alt me-1"></i> {{ car.year }}</span>
+                                    <span class="ms-2"><i class="fas fa-tachometer-alt me-1"></i> {{ car.mileage|default:"0" }} km</span>
+                                </div>
+                                <div class="car-specs small text-muted mb-2">
+                                    <span><i class="fas fa-cog me-1"></i> {{ car.transmission|default:"Automatic" }}</span>
+                                    <span class="ms-2"><i class="fas fa-gas-pump me-1"></i> {{ car.fuel_type|default:"Petrol" }}</span>
+                                </div>
+                                <h6 class="text-primary fw-bold mb-2">TSh {{ car.price|floatformat:0 }}</h6>
+                                <a href="{% url 'car_detail' car.id %}" class="btn btn-sm btn-outline-primary w-100 rounded-pill">{% trans "View" %}</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <!-- Sample latest arrivals -->
+                <div class="col-md-3 col-6">
+                    <div class="card car-card h-100">
+                        <div class="position-relative">
+                            <div class="card-img-top bg-dark text-white d-flex align-items-center justify-content-center" style="height: 150px;">
+                                <i class="fas fa-car fa-2x"></i>
+                            </div>
+                            <span class="badge bg-success position-absolute top-0 start-0 m-2 px-2 py-1 rounded-pill small">NEW</span>
+                        </div>
+                        <div class="card-body p-3">
+                            <h6 class="card-title fw-bold mb-1">2022 Suzuki Swift</h6>
+                            <div class="car-specs small text-muted mb-2">
+                                <span><i class="fas fa-calendar-alt me-1"></i> 2022</span>
+                                <span class="ms-2"><i class="fas fa-tachometer-alt me-1"></i> 21,222 km</span>
+                            </div>
+                            <div class="car-specs small text-muted mb-2">
+                                <span><i class="fas fa-cog me-1"></i> Automatic</span>
+                                <span class="ms-2"><i class="fas fa-gas-pump me-1"></i> Diesel</span>
+                            </div>
+                            <h6 class="text-primary fw-bold mb-2">TSh 30,000,000</h6>
+                            <a href="#" class="btn btn-sm btn-outline-primary w-100 rounded-pill">View</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="card car-card h-100">
+                        <div class="position-relative">
+                            <div class="card-img-top bg-dark text-white d-flex align-items-center justify-content-center" style="height: 150px;">
+                                <i class="fas fa-car fa-2x"></i>
+                            </div>
+                            <span class="badge bg-success position-absolute top-0 start-0 m-2 px-2 py-1 rounded-pill small">NEW</span>
+                        </div>
+                        <div class="card-body p-3">
+                            <h6 class="card-title fw-bold mb-1">2024 Toyota Harrier</h6>
+                            <div class="car-specs small text-muted mb-2">
+                                <span><i class="fas fa-calendar-alt me-1"></i> 2024</span>
+                                <span class="ms-2"><i class="fas fa-tachometer-alt me-1"></i> 7,890 km</span>
+                            </div>
+                            <div class="car-specs small text-muted mb-2">
+                                <span><i class="fas fa-cog me-1"></i> Manual</span>
+                                <span class="ms-2"><i class="fas fa-gas-pump me-1"></i> Petrol</span>
+                            </div>
+                            <h6 class="text-primary fw-bold mb-2">TSh 30,000,000</h6>
+                            <a href="#" class="btn btn-sm btn-outline-primary w-100 rounded-pill">View</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="card car-card h-100">
+                        <div class="position-relative">
+                            <div class="card-img-top bg-dark text-white d-flex align-items-center justify-content-center" style="height: 150px;">
+                                <i class="fas fa-car fa-2x"></i>
+                            </div>
+                            <span class="badge bg-success position-absolute top-0 start-0 m-2 px-2 py-1 rounded-pill small">NEW</span>
+                        </div>
+                        <div class="card-body p-3">
+                            <h6 class="card-title fw-bold mb-1">2022 Toyota Noah</h6>
+                            <div class="car-specs small text-muted mb-2">
+                                <span><i class="fas fa-calendar-alt me-1"></i> 2022</span>
+                                <span class="ms-2"><i class="fas fa-tachometer-alt me-1"></i> 0 km</span>
+                            </div>
+                            <div class="car-specs small text-muted mb-2">
+                                <span><i class="fas fa-cog me-1"></i> Automatic</span>
+                                <span class="ms-2"><i class="fas fa-gas-pump me-1"></i> Electric</span>
+                            </div>
+                            <h6 class="text-primary fw-bold mb-2">TSh 30,000,000</h6>
+                            <a href="#" class="btn btn-sm btn-outline-primary w-100 rounded-pill">View</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="card car-card h-100">
+                        <div class="position-relative">
+                            <div class="card-img-top bg-dark text-white d-flex align-items-center justify-content-center" style="height: 150px;">
+                                <i class="fas fa-car fa-2x"></i>
+                            </div>
+                            <span class="badge bg-success position-absolute top-0 start-0 m-2 px-2 py-1 rounded-pill small">NEW</span>
+                        </div>
+                        <div class="card-body p-3">
+                            <h6 class="card-title fw-bold mb-1">2022 BMW X5</h6>
+                            <div class="car-specs small text-muted mb-2">
+                                <span><i class="fas fa-calendar-alt me-1"></i> 2022</span>
+                                <span class="ms-2"><i class="fas fa-tachometer-alt me-1"></i> 21,222 km</span>
+                            </div>
+                            <div class="car-specs small text-muted mb-2">
+                                <span><i class="fas fa-cog me-1"></i> Automatic</span>
+                                <span class="ms-2"><i class="fas fa-gas-pump me-1"></i> Diesel</span>
+                            </div>
+                            <h6 class="text-primary fw-bold mb-2">TSh 30,000,000</h6>
+                            <a href="#" class="btn btn-sm btn-outline-primary w-100 rounded-pill">View</a>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
         </div>
     </div>
-</div>
+</section>
 
-<!-- CTA Banner -->
-<div class="container mt-5 mb-5">
+<!-- Features / Why Choose Us -->
+<section class="container py-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold">{% trans "Why Choose Tanzania Car Market?" %}</h2>
+        <p class="text-muted">{% trans "We make car buying and selling easy and secure" %}</p>
+    </div>
+    <div class="row g-4">
+        <div class="col-md-3 col-6">
+            <div class="feature-card text-center p-4">
+                <div class="feature-icon bg-primary bg-opacity-10 text-primary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                    <i class="fas fa-check-circle fa-2x"></i>
+                </div>
+                <h5 class="fw-bold">{% trans "Verified Cars" %}</h5>
+                <p class="text-muted small">{% trans "All cars inspected and verified" %}</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="feature-card text-center p-4">
+                <div class="feature-icon bg-success bg-opacity-10 text-success rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                    <i class="fas fa-lock fa-2x"></i>
+                </div>
+                <h5 class="fw-bold">{% trans "Secure Payment" %}</h5>
+                <p class="text-muted small">{% trans "Safe and secure transactions" %}</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="feature-card text-center p-4">
+                <div class="feature-icon bg-info bg-opacity-10 text-info rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                    <i class="fas fa-headset fa-2x"></i>
+                </div>
+                <h5 class="fw-bold">{% trans "24/7 Support" %}</h5>
+                <p class="text-muted small">{% trans "Always here to help you" %}</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="feature-card text-center p-4">
+                <div class="feature-icon bg-warning bg-opacity-10 text-warning rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                    <i class="fas fa-truck fa-2x"></i>
+                </div>
+                <h5 class="fw-bold">{% trans "Free Delivery" %}</h5>
+                <p class="text-muted small">{% trans "Within Dar es Salaam" %}</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Sell Your Car CTA -->
+<section class="container mb-5">
     <div class="row">
         <div class="col-12">
-            <div class="bg-primary text-white rounded p-5 text-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                <h3>Sell Your Car Today!</h3>
-                <p class="lead">Get instant valuation and reach thousands of potential buyers</p>
-                <div>
-                    <a href="{% url 'car_valuation' %}" class="btn btn-light btn-lg me-2">Get Free Valuation</a>
-                    <a href="{% url 'sell_car' %}" class="btn btn-outline-light btn-lg">Sell Your Car</a>
+            <div class="sell-cta bg-primary text-white p-5 rounded-4 text-center position-relative overflow-hidden">
+                <div class="position-absolute top-0 end-0 opacity-10" style="font-size: 200px; right: -50px; top: -50px;">
+                    <i class="fas fa-car"></i>
+                </div>
+                <div class="position-relative" style="z-index: 1;">
+                    <h2 class="fw-bold display-5">{% trans "Sell Your Car Today!" %}</h2>
+                    <p class="lead opacity-75 mb-4">{% trans "Get instant valuation and reach thousands of potential buyers" %}</p>
+                    <a href="{% url 'add_car' %}" class="btn btn-light btn-lg rounded-pill px-5">
+                        <i class="fas fa-plus-circle me-2"></i> {% trans "Sell Your Car" %}
+                    </a>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 {% endblock %}

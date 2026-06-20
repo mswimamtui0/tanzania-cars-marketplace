@@ -5,126 +5,197 @@
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE }}">
 <head>
-    <!-- Custom CSS -->
-<link rel="stylesheet" href="{% static 'css/style.css' %}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% trans "Tanzania Cars Marketplace" %}</title>
-    <!-- In base.html, inside <head> -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Bootstrap CSS -->
+    
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
+    <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
     
     <style>
-        .language-switcher .dropdown-toggle {
+        /* Additional inline styles for critical elements */
+        .hero-section {
+            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 50%, #084298 100%);
+            padding: 80px 0;
+            border-radius: 16px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 500px;
+            height: 500px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+        }
+        .hero-section h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+        }
+        .card-hover {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+        }
+        .btn-rounded {
+            border-radius: 50px;
+            padding: 12px 30px;
+            font-weight: 600;
+        }
+        .price-tag {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0d6efd;
+        }
+        .feature-badge {
+            background: rgba(13, 110, 253, 0.1);
+            color: #0d6efd;
+            padding: 4px 12px;
             border-radius: 20px;
-            padding: 6px 15px;
-            font-size: 14px;
-        }
-        .language-switcher .dropdown-item.active {
-            background-color: #0d6efd;
-            color: white;
-        }
-        .language-switcher .dropdown-item.active:hover {
-            background-color: #0d6efd;
-            color: white;
-        }
-        .language-switcher .dropdown-item:hover {
-            background-color: #f8f9fa;
+            font-size: 0.8rem;
         }
         @media (max-width: 768px) {
-            .language-switcher {
-                margin-top: 10px;
-                width: 100%;
+            .hero-section h1 {
+                font-size: 2.2rem;
             }
-            .language-switcher .dropdown-toggle {
-                width: 100%;
+            .hero-section {
+                padding: 50px 0;
             }
         }
-        .navbar-brand {
-            font-weight: bold;
+        
+        /* Footer Styles */
+        footer {
+            background: #1a1a2e !important;
+            color: #f8f9fa;
+            padding: 60px 0 30px;
         }
-        .btn-register {
-            border-radius: 20px;
-            padding: 5px 20px;
+        footer h5, footer h6 {
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #ffffff;
+        }
+        footer a {
+            color: #adb5bd;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+        footer a:hover {
+            color: #0d6efd;
+            transform: translateX(5px);
+        }
+        footer .social-links a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            color: #adb5bd;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+        footer .social-links a:hover {
+            background: #0d6efd;
+            color: white;
+            transform: translateY(-3px);
+        }
+        footer .footer-divider {
+            border-color: rgba(255,255,255,0.08);
+            margin: 30px 0;
+        }
+        footer .contact-info i {
+            width: 25px;
+            color: #0d6efd;
+        }
+        footer .contact-info p {
+            margin-bottom: 12px;
+        }
+        .footer-brand {
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+        .footer-brand i {
+            color: #0d6efd;
+            margin-right: 8px;
         }
     </style>
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm sticky-top">
         <div class="container">
-            <!-- Brand -->
-            <a class="navbar-brand" href="{% url 'home' %}">
-                🚗 {% trans "Tanzania Cars" %}
+            <a class="navbar-brand fw-bold fs-4" href="{% url 'home' %}">
+                <i class="fas fa-car"></i> {% trans "Tanzania Cars" %}
             </a>
-            
-            <!-- Toggler for mobile -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
-                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            
-            <!-- Navbar items -->
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'home' %}">
+                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'home' %}">
                             <i class="fas fa-home"></i> {% trans "Home" %}
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'car_list' %}">
+                        <a class="nav-link {% if 'cars' in request.path %}active{% endif %}" href="{% url 'car_list' %}">
                             <i class="fas fa-car"></i> {% trans "Cars" %}
                         </a>
                     </li>
-                    {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="fas fa-plus-circle"></i> {% trans "Sell Car" %}
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="fas fa-list"></i> {% trans "My Listings" %}
-                            </a>
-                        </li>
-                    {% endif %}
-                </ul>
-                
-                <!-- Right side items -->
-                <ul class="navbar-nav ms-auto">
-                    <!-- Language Switcher -->
                     <li class="nav-item">
+                        <a class="nav-link" href="{% url 'about' %}">
+                            <i class="fas fa-info-circle"></i> {% trans "About" %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'contact' %}">
+                            <i class="fas fa-envelope"></i> {% trans "Contact" %}
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <!-- Language Switcher -->
+                    <li class="nav-item me-2">
                         {% include 'includes/language_switcher.html' %}
                     </li>
                     
-                    <!-- User authentication -->
                     {% if user.is_authenticated %}
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" 
-                               data-bs-toggle="dropdown" aria-expanded="false">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
                                 <i class="fas fa-user-circle"></i> {{ user.username }}
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                <li>
-                                    <a class="dropdown-item" href="{% url 'profile' %}">
-                                        <i class="fas fa-user"></i> {% trans "Profile" %}
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="#">
-                                        <i class="fas fa-heart"></i> {% trans "Favorites" %}
-                                    </a>
-                                </li>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{% url 'profile' %}">
+                                    <i class="fas fa-user"></i> {% trans "Profile" %}
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'favorites_list' %}">
+                                    <i class="fas fa-heart"></i> {% trans "Favorites" %}
+                                </a></li>
+                                {% if user.is_staff %}
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{% url 'admin_dashboard' %}">
+                                        <i class="fas fa-tachometer-alt"></i> {% trans "Admin" %}
+                                    </a></li>
+                                {% endif %}
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
-                                    <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                                    <form action="{% url 'logout' %}" method="post">
                                         {% csrf_token %}
-                                        <button type="submit" class="dropdown-item" style="border: none; background: none; width: 100%; text-align: left;">
+                                        <button type="submit" class="dropdown-item">
                                             <i class="fas fa-sign-out-alt"></i> {% trans "Logout" %}
                                         </button>
                                     </form>
@@ -138,7 +209,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link btn btn-primary text-white btn-register" href="{% url 'register' %}">
+                            <a class="nav-link btn btn-primary text-white btn-rounded px-4" href="{% url 'register' %}">
                                 <i class="fas fa-user-plus"></i> {% trans "Register" %}
                             </a>
                         </li>
@@ -152,50 +223,115 @@
     {% if messages %}
         <div class="container mt-3">
             {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-pill" role="alert">
+                    <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
                     {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             {% endfor %}
         </div>
     {% endif %}
 
     <!-- Main Content -->
-    <main class="container py-4">
+    <main>
         {% block content %}
         {% endblock %}
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-light mt-5 py-3">
-        <div class="container text-center">
-            <p class="mb-0">© 2026 {% trans "Tanzania Cars Marketplace" %}. {% trans "All rights reserved." %}</p>
+    <!-- ======================================== -->
+    <!-- COMPLETE FOOTER -->
+    <!-- ======================================== -->
+    <footer>
+        <div class="container">
+            <div class="row g-4">
+                <!-- Brand Column -->
+                <div class="col-lg-4 col-md-6">
+                    <h5 class="footer-brand">
+                        <i class="fas fa-car"></i> {% trans "Tanzania Car Market" %}
+                    </h5>
+                    <p class="text-muted" style="color: #adb5bd !important;">
+                        {% trans "Your trusted marketplace for buying and selling quality cars in Tanzania. Thousands of cars from verified dealers." %}
+                    </p>
+                    <div class="social-links mt-3">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                        <a href="#"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6">
+                    <h6>{% trans "Quick Links" %}</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="{% url 'home' %}">{% trans "Home" %}</a></li>
+                        <li class="mb-2"><a href="{% url 'car_list' %}">{% trans "Browse Cars" %}</a></li>
+                        <li class="mb-2"><a href="{% url 'about' %}">{% trans "About Us" %}</a></li>
+                        <li class="mb-2"><a href="{% url 'contact' %}">{% trans "Contact" %}</a></li>
+                    </ul>
+                </div>
+
+                <!-- Support -->
+                <div class="col-lg-2 col-md-6">
+                    <h6>{% trans "Support" %}</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#">{% trans "Help Center" %}</a></li>
+                        <li class="mb-2"><a href="#">{% trans "Safety Tips" %}</a></li>
+                        <li class="mb-2"><a href="{% url 'terms' %}">{% trans "Terms & Conditions" %}</a></li>
+                        <li class="mb-2"><a href="{% url 'privacy' %}">{% trans "Privacy Policy" %}</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact -->
+                <div class="col-lg-3 col-md-6">
+                    <h6>{% trans "Contact Us" %}</h6>
+                    <div class="contact-info">
+                        <p><i class="fas fa-phone"></i> +255 757170544</p>
+                        <p><i class="fas fa-envelope"></i> info@tanzaniacarmarket.com</p>
+                        <p><i class="fas fa-map-marker-alt"></i> {% trans "Dar es Salaam, Tanzania" %}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <hr class="footer-divider">
+
+            <!-- Bottom Bar -->
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="mb-0 text-muted small">
+                        © 2026 {% trans "Tanzania Car Marketplace" %}. {% trans "All rights reserved." %}
+                    </p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <p class="mb-0 text-muted small">
+                        <i class="fas fa-shield-alt text-primary me-1"></i> 
+                        {% trans "Secure Payment" %} 
+                        <span class="mx-2">|</span>
+                        <i class="fas fa-check-circle text-success me-1"></i>
+                        {% trans "Verified Cars" %}
+                    </p>
+                </div>
+            </div>
         </div>
     </footer>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Optional: Auto-submit language form -->
     <script>
+        // Auto-hide alerts after 5 seconds
         document.addEventListener('DOMContentLoaded', function() {
-            // Language switcher dropdown items
-            const languageItems = document.querySelectorAll('.language-switcher .dropdown-item');
-            languageItems.forEach(item => {
-                item.addEventListener('click', function(e) {
-                    const form = this.closest('form');
-                    if (form) {
-                        // Show loading state
-                        const dropdownToggle = document.querySelector('.language-switcher .dropdown-toggle');
-                        if (dropdownToggle) {
-                            const originalText = dropdownToggle.innerHTML;
-                            dropdownToggle.innerHTML = '⏳ Loading...';
-                            dropdownToggle.disabled = true;
-                        }
-                        form.submit();
-                    }
+            setTimeout(function() {
+                document.querySelectorAll('.alert').forEach(function(alert) {
+                    alert.style.transition = 'opacity 0.5s';
+                    alert.style.opacity = '0';
+                    setTimeout(function() {
+                        alert.remove();
+                    }, 500);
                 });
-            });
+            }, 5000);
         });
     </script>
 </body>
