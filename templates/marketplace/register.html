@@ -1,24 +1,206 @@
 {% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-5">
-        <div class="card">
-            <div class="card-header">Register</div>
-            <div class="card-body">
-                <form method="post">
-                    {% csrf_token %}
-                    {{ form.as_p }}
-                    <div class="mb-3">
-                        <label>I want to register as:</label>
-                        <select name="role" class="form-control" required>
-                            <option value="buyer">Buyer</option>
-                            <option value="dealer">Dealer</option>
-                            <option value="yard_manager">Yard Manager</option>
-                        </select>
+<style>
+    .register-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+    
+    .register-card .card-header {
+        background: linear-gradient(135deg, #0d6efd, #0a58ca);
+        padding: 25px 30px;
+        border: none;
+    }
+    
+    .register-card .card-header h3 {
+        font-weight: 700;
+        margin: 0;
+        color: white;
+    }
+    
+    .register-card .card-header i {
+        margin-right: 10px;
+    }
+    
+    .register-card .card-body {
+        padding: 35px 30px;
+    }
+    
+    .register-card .form-control {
+        border-radius: 12px;
+        padding: 12px 16px;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    
+    .register-card .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+    }
+    
+    .register-card .form-label {
+        font-weight: 600;
+        color: #212529;
+        margin-bottom: 8px;
+    }
+    
+    .register-card .btn-register {
+        background: linear-gradient(135deg, #0d6efd, #0a58ca);
+        border: none;
+        padding: 14px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1.05rem;
+        transition: all 0.3s ease;
+        color: white;
+    }
+    
+    .register-card .btn-register:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(13, 110, 253, 0.3);
+    }
+    
+    .register-card .role-select {
+        border-radius: 12px;
+        padding: 12px 16px;
+        border: 2px solid #e9ecef;
+        background-color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 15px center;
+    }
+    
+    .register-card .role-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+    }
+    
+    .register-card .divider {
+        display: flex;
+        align-items: center;
+        margin: 20px 0;
+        color: #adb5bd;
+    }
+    
+    .register-card .divider::before,
+    .register-card .divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .register-card .divider span {
+        padding: 0 15px;
+        font-size: 0.85rem;
+    }
+    
+    .register-card .login-link {
+        color: #0d6efd;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    
+    .register-card .login-link:hover {
+        text-decoration: underline;
+    }
+    
+    @media (max-width: 576px) {
+        .register-card .card-body {
+            padding: 25px 20px;
+        }
+        .register-card .card-header h3 {
+            font-size: 1.3rem;
+        }
+    }
+</style>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="register-card card">
+                <div class="card-header text-center">
+                    <h3><i class="fas fa-user-plus"></i> {% trans "Create Account" %}</h3>
+                    <p class="text-white-50 mb-0 small">{% trans "Join thousands of car buyers and sellers" %}</p>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Username -->
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-user text-primary me-1"></i> {% trans "Username" %}
+                            </label>
+                            <input type="text" name="username" class="form-control" placeholder="{% trans 'Choose a username' %}" required>
+                        </div>
+                        
+                        <!-- Email -->
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-envelope text-primary me-1"></i> {% trans "Email Address" %}
+                            </label>
+                            <input type="email" name="email" class="form-control" placeholder="{% trans 'Enter your email address' %}" required>
+                        </div>
+                        
+                        <!-- Password -->
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-lock text-primary me-1"></i> {% trans "Password" %}
+                            </label>
+                            <input type="password" name="password1" class="form-control" placeholder="{% trans 'Choose a password (min 4 characters)' %}" required>
+                        </div>
+                        
+                        <!-- Confirm Password -->
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-check-circle text-primary me-1"></i> {% trans "Confirm Password" %}
+                            </label>
+                            <input type="password" name="password2" class="form-control" placeholder="{% trans 'Confirm your password' %}" required>
+                        </div>
+                        
+                        <!-- Role Selection -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="fas fa-user-tag text-primary me-1"></i> {% trans "I want to register as:" %}
+                            </label>
+                            <select name="role" class="role-select form-control" required>
+                                <option value="" disabled selected>{% trans "Select your role" %}</option>
+                                <option value="buyer"><i class="fas fa-user"></i> {% trans "Buyer" %}</option>
+                                <option value="dealer"><i class="fas fa-store"></i> {% trans "Dealer" %}</option>
+                                <option value="yard_manager"><i class="fas fa-warehouse"></i> {% trans "Yard Manager" %}</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Terms -->
+                        <div class="mb-4 form-check">
+                            <input type="checkbox" class="form-check-input" id="terms" required>
+                            <label class="form-check-label small" for="terms">
+                                {% trans "I agree to the" %} <a href="{% url 'terms' %}" class="text-primary">{% trans "Terms & Conditions" %}</a>
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-register w-100">
+                            <i class="fas fa-user-plus me-2"></i> {% trans "Create Account" %}
+                        </button>
+                    </form>
+                    
+                    <div class="divider"><span>{% trans "OR" %}</span></div>
+                    
+                    <div class="text-center">
+                        <p class="mb-0">
+                            {% trans "Already have an account?" %} 
+                            <a href="{% url 'login' %}" class="login-link">{% trans "Login here" %}</a>
+                        </p>
                     </div>
-                    <button type="submit" class="btn btn-success w-100">Register</button>
-                </form>
-                <p class="mt-3 text-center">Already have an account? <a href="{% url 'login' %}">Login</a></p>
+                </div>
             </div>
         </div>
     </div>

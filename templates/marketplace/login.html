@@ -1,41 +1,226 @@
 {% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
 
 {% block content %}
-<div class="container mt-5">
+<style>
+    .login-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+    
+    .login-card .card-header {
+        background: linear-gradient(135deg, #0d6efd, #0a58ca);
+        padding: 30px;
+        border: none;
+        text-align: center;
+    }
+    
+    .login-card .card-header h3 {
+        font-weight: 700;
+        margin: 0;
+        color: white;
+    }
+    
+    .login-card .card-header i {
+        margin-right: 10px;
+    }
+    
+    .login-card .card-header p {
+        color: rgba(255,255,255,0.7);
+        margin-bottom: 0;
+        font-size: 0.9rem;
+    }
+    
+    .login-card .card-body {
+        padding: 35px 30px;
+    }
+    
+    .login-card .form-control {
+        border-radius: 12px;
+        padding: 12px 16px;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    
+    .login-card .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+    }
+    
+    .login-card .form-label {
+        font-weight: 600;
+        color: #212529;
+        margin-bottom: 8px;
+    }
+    
+    .login-card .btn-login {
+        background: linear-gradient(135deg, #0d6efd, #0a58ca);
+        border: none;
+        padding: 14px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1.05rem;
+        transition: all 0.3s ease;
+        color: white;
+    }
+    
+    .login-card .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(13, 110, 253, 0.3);
+    }
+    
+    .login-card .divider {
+        display: flex;
+        align-items: center;
+        margin: 25px 0;
+        color: #adb5bd;
+    }
+    
+    .login-card .divider::before,
+    .login-card .divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .login-card .divider span {
+        padding: 0 15px;
+        font-size: 0.85rem;
+    }
+    
+    .login-card .register-link {
+        color: #0d6efd;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    
+    .login-card .register-link:hover {
+        text-decoration: underline;
+    }
+    
+    .login-card .forgot-link {
+        color: #6c757d;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+    
+    .login-card .forgot-link:hover {
+        color: #0d6efd;
+        text-decoration: underline;
+    }
+    
+    .demo-accounts {
+        border: 2px dashed #e9ecef;
+        border-radius: 12px;
+        padding: 15px 20px;
+        background: #f8f9fa;
+    }
+    
+    .demo-accounts .badge {
+        font-size: 0.75rem;
+        padding: 6px 12px;
+        margin: 3px;
+        font-weight: 500;
+    }
+    
+    .demo-accounts .badge-admin {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .demo-accounts .badge-dealer {
+        background: #198754;
+        color: white;
+    }
+    
+    .demo-accounts .badge-yard {
+        background: #ffc107;
+        color: #000;
+    }
+    
+    .demo-accounts .badge-buyer {
+        background: #0d6efd;
+        color: white;
+    }
+    
+    @media (max-width: 576px) {
+        .login-card .card-body {
+            padding: 25px 20px;
+        }
+        .login-card .card-header h3 {
+            font-size: 1.3rem;
+        }
+        .demo-accounts .badge {
+            font-size: 0.65rem;
+            padding: 4px 8px;
+        }
+    }
+</style>
+
+<div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white text-center">
-                    <h3><i class="fas fa-sign-in-alt"></i> Login</h3>
+        <div class="col-md-6 col-lg-5">
+            <div class="login-card card">
+                <div class="card-header">
+                    <h3><i class="fas fa-sign-in-alt"></i> {% trans "Welcome Back" %}</h3>
+                    <p>{% trans "Login to your account" %}</p>
                 </div>
                 <div class="card-body">
                     <form method="post">
                         {% csrf_token %}
+                        
+                        <!-- Username -->
                         <div class="mb-3">
-                            <label class="form-label">Username</label>
-                            <input type="text" name="username" class="form-control" required>
+                            <label class="form-label">
+                                <i class="fas fa-user text-primary me-1"></i> {% trans "Username" %}
+                            </label>
+                            <input type="text" name="username" class="form-control" placeholder="{% trans 'Enter your username' %}" required autofocus>
                         </div>
+                        
+                        <!-- Password -->
                         <div class="mb-3">
-                            <label class="form-label">Password</label>
-                            <input type="password" name="password" class="form-control" required>
+                            <div class="d-flex justify-content-between">
+                                <label class="form-label">
+                                    <i class="fas fa-lock text-primary me-1"></i> {% trans "Password" %}
+                                </label>
+                                <a href="#" class="forgot-link">{% trans "Forgot Password?" %}</a>
+                            </div>
+                            <input type="password" name="password" class="form-control" placeholder="{% trans 'Enter your password' %}" required>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100">Login</button>
+                        
+                        <!-- Remember Me -->
+                        <div class="mb-4 form-check">
+                            <input type="checkbox" class="form-check-input" id="remember">
+                            <label class="form-check-label small" for="remember">{% trans "Remember me" %}</label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-login w-100">
+                            <i class="fas fa-sign-in-alt me-2"></i> {% trans "Login" %}
+                        </button>
                     </form>
-                    <hr>
+                    
+                    <div class="divider"><span>{% trans "OR" %}</span></div>
+                    
                     <div class="text-center">
-                        <a href="{% url 'register' %}">Don't have an account? Register</a>
+                        <p class="mb-0">
+                            {% trans "Don't have an account?" %} 
+                            <a href="{% url 'register' %}" class="register-link">{% trans "Create one now" %}</a>
+                        </p>
                     </div>
                 </div>
             </div>
             
             <!-- Demo Accounts -->
-            <div class="card mt-3">
-                <div class="card-body text-center">
-                    <small class="text-muted">Demo Accounts:</small><br>
-                    <span class="badge bg-danger">Admin: admin/admin123</span>
-                    <span class="badge bg-success">Dealer: dealer1/dealer123</span>
-                    <span class="badge bg-info">Yard Manager: yardmanager/yard123</span>
-                    <span class="badge bg-secondary">Buyer: buyer1/buyer123</span>
+            <div class="demo-accounts mt-3 text-center">
+                <small class="text-muted d-block mb-2"><i class="fas fa-info-circle"></i> {% trans "Demo Accounts" %}</small>
+                <div class="d-flex flex-wrap justify-content-center gap-1">
+                    <span class="badge badge-admin"><i class="fas fa-user-shield me-1"></i> Admin: admin / admin123</span>
+                    <span class="badge badge-dealer"><i class="fas fa-store me-1"></i> Dealer: dealer1 / dealer123</span>
+                    <span class="badge badge-yard"><i class="fas fa-warehouse me-1"></i> Yard Manager: yardmanager / yard123</span>
+                    <span class="badge badge-buyer"><i class="fas fa-user me-1"></i> Buyer: buyer1 / buyer123</span>
                 </div>
             </div>
         </div>
