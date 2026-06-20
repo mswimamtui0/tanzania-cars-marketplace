@@ -1194,6 +1194,11 @@ def create_reservation(request):
     
     return render(request, 'marketplace/reserve_car.html')
 
+
+def blog_detail(request, slug):
+    """Simple blog detail view"""
+    return render(request, 'marketplace/blog_detail.html', {'slug': slug})
+
 # ========== SEARCH ==========
 
 def search_cars(request):
