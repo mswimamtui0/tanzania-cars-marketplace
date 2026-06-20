@@ -10,6 +10,8 @@
         box-shadow: 0 10px 40px rgba(0,0,0,0.08);
         overflow: hidden;
         background: white;
+        max-width: 500px;
+        margin: 0 auto;
     }
     
     .register-card .card-header {
@@ -101,14 +103,6 @@
         box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
     }
     
-    .register-card .role-option {
-        padding: 8px 12px;
-    }
-    
-    .register-card .role-option i {
-        margin-right: 10px;
-    }
-    
     .register-card .divider {
         display: flex;
         align-items: center;
@@ -158,12 +152,15 @@
         .register-card .card-header h3 {
             font-size: 1.3rem;
         }
+        .register-card {
+            margin: 0 15px;
+        }
     }
 </style>
 
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
+        <div class="col-md-8 col-lg-6">
             <div class="register-card card">
                 <div class="card-header">
                     <h3><i class="fas fa-user-plus"></i> {% trans "Create Account" %}</h3>
@@ -172,6 +169,16 @@
                 <div class="card-body">
                     <form method="post" id="registerForm">
                         {% csrf_token %}
+                        
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-pill" role="alert">
+                                    <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
                         
                         <!-- Username -->
                         <div class="mb-3">
@@ -195,6 +202,7 @@
                                 <i class="fas fa-lock"></i> {% trans "Password" %}
                             </label>
                             <input type="password" name="password1" class="form-control" placeholder="{% trans 'Choose a password (min 4 characters)' %}" required minlength="4">
+                            <small class="text-muted">{% trans "Minimum 4 characters" %}</small>
                         </div>
                         
                         <!-- Confirm Password -->
@@ -211,9 +219,15 @@
                                 <i class="fas fa-user-tag"></i> {% trans "I want to register as:" %}
                             </label>
                             <select name="role" id="roleSelect" class="role-select form-control" required>
-                                <option value="buyer" selected>{% trans "Buyer" %} - {% trans "Browse and purchase cars" %}</option>
-                                <option value="dealer">{% trans "Dealer" %} - {% trans "List and sell cars" %}</option>
-                                <option value="yard_manager">{% trans "Yard Manager" %} - {% trans "Manage car yards" %}</option>
+                                <option value="buyer" selected>
+                                    <i class="fas fa-user"></i> {% trans "Buyer" %} - {% trans "Browse and purchase cars" %}
+                                </option>
+                                <option value="dealer">
+                                    <i class="fas fa-store"></i> {% trans "Dealer" %} - {% trans "List and sell cars" %}
+                                </option>
+                                <option value="yard_manager">
+                                    <i class="fas fa-warehouse"></i> {% trans "Yard Manager" %} - {% trans "Manage car yards" %}
+                                </option>
                             </select>
                         </div>
                         
@@ -270,8 +284,16 @@
         function toggleDealerFields() {
             if (roleSelect.value === 'dealer') {
                 dealerFields.classList.add('show');
+                // Make fields required
+                dealerFields.querySelectorAll('input').forEach(input => {
+                    input.setAttribute('required', 'required');
+                });
             } else {
                 dealerFields.classList.remove('show');
+                // Remove required attribute
+                dealerFields.querySelectorAll('input').forEach(input => {
+                    input.removeAttribute('required');
+                });
             }
         }
         

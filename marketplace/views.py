@@ -71,27 +71,28 @@ def register(request):
                     location=request.POST.get('location', ''),
                     is_verified=False
                 )
-            elif role == 'yard_manager':
-                # Create yard manager profile (you may need a YardManager model)
-                # For now, we'll just set a flag or create a simple profile
-                pass
-            
-            auth_login(request, user)
-            messages.success(request, _('Registration successful! Welcome to Tanzania Cars Marketplace.'))
-            
-            # Redirect based on role
-            if role == 'dealer':
+                auth_login(request, user)
+                messages.success(request, _('Registration successful! Welcome to your Dealer Dashboard.'))
                 return redirect('dealer_dashboard')
+                
             elif role == 'yard_manager':
+                # Create yard manager (you may need a YardManager model)
+                # For now, redirect to yard dashboard
+                auth_login(request, user)
+                messages.success(request, _('Registration successful! Welcome to your Yard Dashboard.'))
                 return redirect('yard_dashboard')
-            elif user.is_staff:
-                return redirect('admin_dashboard')
-            else:
+                
+            else:  # buyer or default
+                auth_login(request, user)
+                messages.success(request, _('Registration successful! Welcome to Tanzania Cars Marketplace.'))
                 return redirect('home')
     else:
         form = CustomUserCreationForm()
     
     return render(request, 'marketplace/register.html', {'form': form})
+
+
+
 def login(request):
     """User login view."""
     if request.method == 'POST':
@@ -100,26 +101,23 @@ def login(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             auth_login(request, user)
-            messages.success(request, _('Welcome back, {}!').format(user.username))
-            
-            # Redirect based on user role
-            next_url = request.GET.get('next', '')
-            if next_url:
-                return redirect(next_url)
             
             # Check user role and redirect accordingly
             if user.is_staff:
+                messages.success(request, _('Welcome back, Admin!'))
                 return redirect('admin_dashboard')
             elif hasattr(user, 'dealer_profile'):
+                messages.success(request, _('Welcome back to your Dealer Dashboard!'))
                 return redirect('dealer_dashboard')
-            elif hasattr(user, 'yard_manager_profile'):
+            elif hasattr(user, 'yard_manager_profile') or user.groups.filter(name='Yard Managers').exists():
+                messages.success(request, _('Welcome back to your Yard Dashboard!'))
                 return redirect('yard_dashboard')
             else:
+                messages.success(request, _('Welcome back, {}!').format(user.username))
                 return redirect('home')
         else:
             messages.error(request, _('Invalid username or password.'))
     return render(request, 'marketplace/login.html')
-
 
 def logout(request):
     """User logout view."""
