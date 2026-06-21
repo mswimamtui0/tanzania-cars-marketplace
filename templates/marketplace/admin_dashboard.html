@@ -1,88 +1,117 @@
 {% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
 
 {% block content %}
-<div class="container-fluid mt-4">
-    <!-- Welcome Banner -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                <div class="card-body">
-                    <h2 class="mb-0">Welcome back, {{ user.username }}!</h2>
-                    <p class="mb-0 mt-2">Here's what's happening with your marketplace today.</p>
-                </div>
-            </div>
+<style>
+    .dashboard-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.06);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    .stat-card {
+        border-radius: 16px;
+        padding: 20px;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+    
+    .stat-card .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+    
+    .stat-card .stat-number {
+        font-size: 2rem;
+        font-weight: 800;
+    }
+    
+    .stat-card .stat-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+</style>
+
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-bold">{% trans "Admin Dashboard" %}</h1>
+            <p class="text-muted">{% trans "Welcome back, Admin!" %}</p>
+        </div>
+        <div>
+            <span class="badge bg-primary p-2">{% trans "Super Admin" %}</span>
         </div>
     </div>
 
-    <!-- Statistics Cards -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                <i class="fas fa-users"></i> Total Users
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_users|default:"0" }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-users fa-2x text-gray-300"></i>
-                        </div>
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50">{% trans "Total Cars" %}</h6>
+                        <h2 class="mb-0">{{ total_cars|default:"0" }}</h2>
+                    </div>
+                    <div class="stat-icon bg-white bg-opacity-25">
+                        <i class="fas fa-car text-white"></i>
                     </div>
                 </div>
             </div>
         </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                <i class="fas fa-car"></i> Total Cars
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_cars|default:"0" }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-car fa-2x text-gray-300"></i>
-                        </div>
+        <div class="col-md-3">
+            <div class="stat-card bg-success text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50">{% trans "Total Users" %}</h6>
+                        <h2 class="mb-0">{{ total_users|default:"0" }}</h2>
+                    </div>
+                    <div class="stat-icon bg-white bg-opacity-25">
+                        <i class="fas fa-users text-white"></i>
                     </div>
                 </div>
             </div>
         </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                <i class="fas fa-clock"></i> Pending Approvals
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_approvals|default:"0" }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-clock fa-2x text-gray-300"></i>
-                        </div>
+        <div class="col-md-3">
+            <div class="stat-card bg-warning text-dark">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-dark-50">{% trans "Total Dealers" %}</h6>
+                        <h2 class="mb-0">{{ total_dealers|default:"0" }}</h2>
+                    </div>
+                    <div class="stat-icon bg-white bg-opacity-25">
+                        <i class="fas fa-store text-dark"></i>
                     </div>
                 </div>
             </div>
         </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                <i class="fas fa-check-circle"></i> Approved Cars
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ approved_cars|default:"0" }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
-                        </div>
+        <div class="col-md-3">
+            <div class="stat-card bg-danger text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50">{% trans "Pending Reports" %}</h6>
+                        <h2 class="mb-0">{{ total_reports|default:"0" }}</h2>
+                    </div>
+                    <div class="stat-icon bg-white bg-opacity-25">
+                        <i class="fas fa-flag text-white"></i>
                     </div>
                 </div>
             </div>
@@ -90,196 +119,140 @@
     </div>
 
     <!-- Quick Actions -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-bolt"></i> Quick Actions</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-2 col-6 mb-2">
-                            <a href="/admin/" class="btn btn-outline-primary w-100">
-                                <i class="fas fa-cog"></i> Admin Panel
-                            </a>
-                        </div>
-                        <div class="col-md-2 col-6 mb-2">
-                            <a href="{% url 'car_list' %}" class="btn btn-outline-success w-100">
-                                <i class="fas fa-car"></i> Manage Cars
-                            </a>
-                        </div>
-                        <div class="col-md-2 col-6 mb-2">
-                            <a href="/admin/auth/user/" class="btn btn-outline-info w-100">
-                                <i class="fas fa-users"></i> Manage Users
-                            </a>
-                        </div>
-                        <div class="col-md-2 col-6 mb-2">
-                            <a href="{% url 'admin_verify_yard' %}" class="btn btn-outline-warning w-100">
-                                <i class="fas fa-check-circle"></i> Verify Yards
-                            </a>
-                        </div>
-                        <div class="col-md-2 col-6 mb-2">
-                            <a href="{% url 'admin_reports' %}" class="btn btn-outline-danger w-100">
-                                <i class="fas fa-flag"></i> View Reports
-                            </a>
-                        </div>
-                        <div class="col-md-2 col-6 mb-2">
-                            <a href="{% url 'car_valuation' %}" class="btn btn-outline-secondary w-100">
-                                <i class="fas fa-chart-line"></i> Car Valuation
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div class="card dashboard-card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0 fw-bold">{% trans "Quick Actions" %}</h5>
         </div>
-    </div>
-
-    <!-- Pending Approvals Section -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow">
-                <div class="card-header bg-warning text-white">
-                    <h5 class="mb-0"><i class="fas fa-clock"></i> Pending Car Approvals ({{ pending_cars|length }})</h5>
+        <div class="card-body">
+            <div class="row g-2">
+                <div class="col-md-2 col-6 mb-2">
+                    <a href="{% url 'car_list' %}" class="btn btn-outline-success w-100 py-3">
+                        <i class="fas fa-car"></i><br>
+                        <small>{% trans "Manage Cars" %}</small>
+                    </a>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Car</th>
-                                    <th>Seller</th>
-                                    <th>Price</th>
-                                    <th>Package</th>
-                                    <th>Date</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for car in pending_cars %}
-                                <tr>
-                                    <td>{{ car.year }} {{ car.make }} {{ car.model }}</td>
-                                    <td>{{ car.seller.username|default:"Unknown" }}</td>
-                                    <td>TSh {{ car.price|floatformat:0 }}</td>
-                                    <td>{{ car.package|title }}</td>
-                                    <td>{{ car.created_at|date:"M d, Y" }}</td>
-                                    <td>
-                                        <form method="post" action="{% url 'yard_approve_car' car.id %}" style="display:inline;">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-sm btn-success">
-                                                <i class="fas fa-check"></i> Approve
-                                            </button>
-                                        </form>
-                                        <form method="post" action="{% url 'yard_reject_car' car.id %}" style="display:inline;">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-sm btn-danger">
-                                                <i class="fas fa-times"></i> Reject
-                                            </button>
-                                        </form>
-                                        <a href="{% url 'car_detail' car.id %}" class="btn btn-sm btn-info">View</a>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr><td colspan="6" class="text-center">No pending approvals</td></tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="col-md-2 col-6 mb-2">
+                    <a href="/admin/auth/user/" class="btn btn-outline-info w-100 py-3">
+                        <i class="fas fa-users"></i><br>
+                        <small>{% trans "Manage Users" %}</small>
+                    </a>
+                </div>
+                <div class="col-md-2 col-6 mb-2">
+                    <a href="{% url 'admin_yards' %}" class="btn btn-outline-warning w-100 py-3">
+                        <i class="fas fa-warehouse"></i><br>
+                        <small>{% trans "Manage Yards" %}</small>
+                    </a>
+                </div>
+                <div class="col-md-2 col-6 mb-2">
+                    <a href="{% url 'admin_reports' %}" class="btn btn-outline-danger w-100 py-3">
+                        <i class="fas fa-flag"></i><br>
+                        <small>{% trans "View Reports" %}</small>
+                    </a>
+                </div>
+                <div class="col-md-2 col-6 mb-2">
+                    <a href="{% url 'car_valuation' %}" class="btn btn-outline-secondary w-100 py-3">
+                        <i class="fas fa-chart-line"></i><br>
+                        <small>{% trans "Valuation" %}</small>
+                    </a>
+                </div>
+                <div class="col-md-2 col-6 mb-2">
+                    <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-primary w-100 py-3">
+                        <i class="fas fa-tachometer-alt"></i><br>
+                        <small>{% trans "Dashboard" %}</small>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Recent Activity -->
-    <div class="row">
+    <div class="row g-4">
         <div class="col-md-6">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-users"></i> Recent Users</h5>
+            <div class="card dashboard-card">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0 fw-bold">{% trans "Recent Cars" %}</h6>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr><th>Username</th><th>Role</th><th>Joined</th></tr>
-                            </thead>
-                            <tbody>
-                                {% for user in recent_users %}
-                                <tr>
-                                    <td>{{ user.username }}</td>
-                                    <td><span class="badge bg-info">{{ user.userprofile.role|title }}</span></td>
-                                    <td>{{ user.date_joined|date:"M d, Y" }}</td>
-                                </tr>
-                                {% empty %}
-                                <tr><td colspan="3" class="text-center">No users yet</td></tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="card-body p-0">
+                    {% if recent_cars %}
+                        <div class="list-group list-group-flush">
+                            {% for car in recent_cars|slice:":5" %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="fw-bold">{{ car.title }}</span>
+                                        <br>
+                                        <small class="text-muted">{{ car.created_at|date:"Y-m-d H:i" }}</small>
+                                    </div>
+                                    <span class="badge bg-{% if car.is_approved %}success{% else %}warning{% endif %}">
+                                        {% if car.is_approved %}{% trans "Approved" %}{% else %}{% trans "Pending" %}{% endif %}
+                                    </span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="p-3 text-center text-muted">
+                            {% trans "No recent cars" %}
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
-        
         <div class="col-md-6">
-            <div class="card shadow">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0"><i class="fas fa-car"></i> Recent Car Listings</h5>
+            <div class="card dashboard-card">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0 fw-bold">{% trans "Recent Users" %}</h6>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr><th>Car</th><th>Price</th><th>Status</th></tr>
-                            </thead>
-                            <tbody>
-                                {% for car in recent_cars %}
-                                <tr>
-                                    <td>{{ car.year }} {{ car.make }} {{ car.model }}</td>
-                                    <td>TSh {{ car.price|floatformat:0 }}</td>
-                                    <td>
-                                        {% if car.status == 'approved' %}
-                                            <span class="badge bg-success">Approved</span>
-                                        {% elif car.status == 'pending' %}
-                                            <span class="badge bg-warning">Pending</span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">{{ car.status }}</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr><td colspan="3" class="text-center">No cars yet</td></tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="card-body p-0">
+                    {% if recent_users %}
+                        <div class="list-group list-group-flush">
+                            {% for user in recent_users|slice:":5" %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="fw-bold">{{ user.username }}</span>
+                                        <br>
+                                        <small class="text-muted">{{ user.date_joined|date:"Y-m-d H:i" }}</small>
+                                    </div>
+                                    <span class="badge bg-{% if user.is_active %}success{% else %}secondary{% endif %}">
+                                        {% if user.is_active %}{% trans "Active" %}{% else %}{% trans "Inactive" %}{% endif %}
+                                    </span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="p-3 text-center text-muted">
+                            {% trans "No recent users" %}
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Yard Statistics -->
+    <!-- Pending Approvals -->
     <div class="row mt-4">
         <div class="col-12">
-            <div class="card shadow">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0"><i class="fas fa-warehouse"></i> Yard Statistics</h5>
+            <div class="card dashboard-card">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0 fw-bold">{% trans "Pending Approvals" %}</h6>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3 text-center">
-                            <h3>{{ total_yards|default:"0" }}</h3>
-                            <p>Total Yards</p>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                                <span>{% trans "Cars Pending Approval" %}</span>
+                                <span class="badge bg-warning fs-5">{{ pending_cars|default:"0" }}</span>
+                            </div>
                         </div>
-                        <div class="col-md-3 text-center">
-                            <h3>{{ assigned_yards|default:"0" }}</h3>
-                            <p>Assigned Yards</p>
+                        <div class="col-md-4">
+                            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                                <span>{% trans "Reports Pending Review" %}</span>
+                                <span class="badge bg-danger fs-5">{{ total_reports|default:"0" }}</span>
+                            </div>
                         </div>
-                        <div class="col-md-3 text-center">
-                            <h3>{{ pending_yards|default:"0" }}</h3>
-                            <p>Pending Yards</p>
-                        </div>
-                        <div class="col-md-3 text-center">
-                            <h3>{{ yard_managers|default:"0" }}</h3>
-                            <p>Yard Managers</p>
+                        <div class="col-md-4">
+                            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                                <span>{% trans "Dealers Pending Verification" %}</span>
+                                <span class="badge bg-info fs-5">0</span>
+                            </div>
                         </div>
                     </div>
                 </div>

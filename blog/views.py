@@ -1,4 +1,4 @@
-from django.shortcuts import render, get_object_or_404
+﻿from django.shortcuts import render, get_object_or_404
 from .models import BlogPost, CarReview
 
 def blog_home(request):

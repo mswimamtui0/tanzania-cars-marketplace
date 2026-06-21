@@ -1,4 +1,4 @@
-from django.urls import path
+﻿from django.urls import path
 from django.http import HttpResponse
 
 def temp_view(request):

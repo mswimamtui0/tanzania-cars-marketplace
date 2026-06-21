@@ -68,19 +68,27 @@ def register(request):
         form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
+            
+            # Get the role
             role = form.cleaned_data.get('role', 'buyer')
             
-            messages.success(request, _('Registration successful! Welcome to Tanzania Cars Marketplace.'))
+            # Log the user in
+            auth_login(request, user)
+            
+            messages.success(request, _('Registration successful!'))
             
             # Redirect based on role
             if role == 'dealer':
                 return redirect('dealer_dashboard')
             elif role == 'yard_manager':
+                # IMPORTANT: Use the correct URL name for yard dashboard
                 return redirect('yard_dashboard')
-            elif user.is_staff:
-                return redirect('admin_dashboard')
             else:
                 return redirect('buyer_dashboard')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
     else:
         form = RegisterForm()
     
@@ -95,27 +103,39 @@ def login(request):
         if user is not None:
             auth_login(request, user)
             
-            # Get user profile
+            # Check if user is admin
+            if user.is_staff:
+                messages.success(request, _('Welcome back, Admin!'))
+                return redirect('admin_dashboard')
+            
+            # Check user role from UserProfile
             try:
                 profile = user.userprofile
                 role = profile.role
+                
+                if role == 'dealer':
+                    messages.success(request, _('Welcome back to your Dealer Dashboard!'))
+                    return redirect('dealer_dashboard')
+                elif role == 'yard_manager':
+                    messages.success(request, _('Welcome back to your Yard Dashboard!'))
+                    return redirect('yard_dashboard')
+                else:
+                    messages.success(request, _('Welcome back, {}!').format(user.username))
+                    return redirect('buyer_dashboard')
             except UserProfile.DoesNotExist:
-                role = 'buyer'
-            
-            messages.success(request, _('Welcome back, {}!').format(user.username))
-            
-            # Redirect based on role
-            if user.is_staff:
-                return redirect('admin_dashboard')
-            elif role == 'dealer':
-                return redirect('dealer_dashboard')
-            elif role == 'yard_manager':
-                return redirect('yard_dashboard')
-            else:
-                return redirect('buyer_dashboard')
+                # If no profile, create one as buyer
+                UserProfile.objects.create(
+                    user=user,
+                    role='buyer',
+                    phone='',
+                    company_name='',
+                    location='',
+                    verification_level=1
+                )
+                messages.success(request, _('Welcome back, {}!').format(user.username))
+                return redirect('home')
         else:
             messages.error(request, _('Invalid username or password.'))
-    
     return render(request, 'marketplace/login.html')
 
 def logout(request):
@@ -414,34 +434,48 @@ def dealer_commission_dashboard(request):
 # ========== YARD MANAGER DASHBOARD ==========
 
 @login_required
+@login_required
 def yard_manager_dashboard(request):
     """Yard manager dashboard."""
     try:
+        # Check if user has a profile with yard_manager role
         profile = request.user.userprofile
         if profile.role != 'yard_manager':
-            messages.warning(request, _('You are not registered as a yard manager.'))
+            messages.error(request, _('You are not registered as a yard manager.'))
             return redirect('home')
     except UserProfile.DoesNotExist:
-        messages.warning(request, _('Please complete your profile.'))
-        return redirect('profile')
-    
-    yards = Yard.objects.filter(manager=request.user)
-    if not yards.exists():
-        messages.warning(request, _('You are not assigned to any yard.'))
+        messages.error(request, _('Profile not found. Please contact support.'))
         return redirect('home')
     
-    yard = yards.first()
-    cars = Car.objects.filter(seller=request.user).order_by('-created_at')
+    # Check if user is assigned to a yard
+    yards = Yard.objects.filter(manager=request.user)
+    if not yards.exists():
+        messages.warning(request, _('You are not assigned to any yard. Please contact admin.'))
+        # Still show dashboard with empty data
+        yard = None
+        cars = []
+        total_cars = 0
+        available_cars = 0
+        pending_cars = 0
+    else:
+        yard = yards.first()
+        cars = Car.objects.filter(yard=yard).order_by('-created_at')
+        total_cars = cars.count()
+        available_cars = cars.filter(is_approved=True, is_sold=False).count()
+        pending_cars = cars.filter(is_approved=False).count()
     
     context = {
-        'profile': profile,
         'yard': yard,
         'cars': cars[:10],
-        'total_cars': cars.count(),
-        'available_cars': cars.filter(is_sold=False, is_approved=True).count(),
-        'pending_cars': cars.filter(is_approved=False).count(),
+        'total_cars': total_cars,
+        'available_cars': available_cars,
+        'pending_cars': pending_cars,
+        'dealer_count': YardDealerAssignment.objects.filter(yard=yard).count() if yard else 0,
     }
     return render(request, 'marketplace/yard_manager_dashboard.html', context)
+
+
+
 
 @login_required
 def yard_my_cars(request):

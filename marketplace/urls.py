@@ -28,13 +28,14 @@ urlpatterns = [
     
     # Dealer dashboard
     path('dealer/dashboard/', views.dealer_dashboard, name='dealer_dashboard'),
-    path('dealer/cars/', views.dealer_my_cars, name='dealer_cars'),
+    path('dealer/cars/', views.dealer_my_cars, name='dealer_my_cars'),
     path('dealer/cars/add/', views.dealer_add_car, name='dealer_add_car'),
     path('dealer/cars/<int:car_id>/edit/', views.dealer_edit_car, name='dealer_edit_car'),
     path('dealer/cars/<int:car_id>/delete/', views.dealer_delete_car, name='dealer_delete_car'),
     path('dealer/messages/', views.dealer_messages, name='dealer_messages'),
     path('dealer/sold-requests/', views.dealer_sold_requests, name='dealer_sold_requests'),
-    path('dealer/commission/', views.dealer_commission_dashboard, name='dealer_commission_dashboard'),
+    path('dealer/commission/', views.dealer_commission_dashboard, name='dealer_commission'),
+    path('dealer/send-message/', views.send_message, name='dealer_send_message'),
     
     # Yard Manager dashboard
     path('yard/dashboard/', views.yard_manager_dashboard, name='yard_dashboard'),
@@ -99,6 +100,7 @@ urlpatterns = [
     # Language switcher
     path('i18n/', include('django.conf.urls.i18n')),
     path('set-language/', views.set_language, name='set_language'),
+    path('yard/dashboard/', views.yard_manager_dashboard, name='yard_dashboard'),
 ]
 
 # Serve media and static files in development

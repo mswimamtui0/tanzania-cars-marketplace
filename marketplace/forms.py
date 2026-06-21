@@ -33,12 +33,14 @@ class RegisterForm(UserCreationForm):
         })
     )
     
+    ROLE_CHOICES = [
+        ('buyer', 'Buyer - Browse and purchase cars'),
+        ('dealer', 'Dealer - List and sell cars'),
+        ('yard_manager', 'Yard Manager - Manage car yards'),
+    ]
+    
     role = forms.ChoiceField(
-        choices=[
-            ('buyer', 'Buyer - Browse and purchase cars'),
-            ('dealer', 'Dealer - List and sell cars'),
-            ('yard_manager', 'Yard Manager - Manage car yards')
-        ],
+        choices=ROLE_CHOICES,
         required=True,
         widget=forms.Select(attrs={
             'class': 'form-control role-select',
@@ -119,32 +121,26 @@ class RegisterForm(UserCreationForm):
         
         return password2
     
-    def clean_phone(self):
-        phone = self.cleaned_data.get('phone')
-        role = self.cleaned_data.get('role')
+    def clean(self):
+        """Additional validation for specific roles."""
+        cleaned_data = super().clean()
+        role = cleaned_data.get('role')
         
-        if role in ['dealer', 'yard_manager'] and not phone:
-            raise ValidationError('Phone number is required for Dealers and Yard Managers.')
+        # For Yard Managers, require business_name, phone, and location
+        if role == 'yard_manager':
+            if not cleaned_data.get('business_name'):
+                self.add_error('business_name', 'Business name is required for Yard Managers.')
+            if not cleaned_data.get('phone'):
+                self.add_error('phone', 'Phone number is required for Yard Managers.')
+            if not cleaned_data.get('location'):
+                self.add_error('location', 'Location is required for Yard Managers.')
         
-        return phone
-    
-    def clean_business_name(self):
-        business_name = self.cleaned_data.get('business_name')
-        role = self.cleaned_data.get('role')
+        # For Dealers, require phone
+        if role == 'dealer':
+            if not cleaned_data.get('phone'):
+                self.add_error('phone', 'Phone number is required for Dealers.')
         
-        if role == 'yard_manager' and not business_name:
-            raise ValidationError('Business name is required for Yard Managers.')
-        
-        return business_name
-    
-    def clean_location(self):
-        location = self.cleaned_data.get('location')
-        role = self.cleaned_data.get('role')
-        
-        if role == 'yard_manager' and not location:
-            raise ValidationError('Location is required for Yard Managers.')
-        
-        return location
+        return cleaned_data
     
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -153,10 +149,11 @@ class RegisterForm(UserCreationForm):
         if commit:
             user.save()
             
-            # Create UserProfile
-            role = self.cleaned_data.get('role')
+            # Get the role
+            role = self.cleaned_data.get('role', 'buyer')
             phone = self.cleaned_data.get('phone', '')
             
+            # Create UserProfile with the role
             UserProfile.objects.create(
                 user=user,
                 role=role,
@@ -166,16 +163,19 @@ class RegisterForm(UserCreationForm):
                 verification_level=1
             )
             
-            # If role is dealer, create Dealer profile
+            # If role is dealer, also create Dealer profile
             if role == 'dealer':
                 Dealer.objects.create(
                     user=user,
-                    business_name=f"{user.username}'s Dealership",
+                    business_name=self.cleaned_data.get('business_name', f"{user.username}'s Dealership"),
                     phone=phone,
-                    location='',
+                    location=self.cleaned_data.get('location', ''),
                     is_verified=False,
                     verification_level='1'
                 )
+            
+            # If role is yard_manager, we just create UserProfile with role='yard_manager'
+            # The yard manager will be assigned to a yard by admin later
         
         return user
 

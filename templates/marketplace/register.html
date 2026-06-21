@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% load i18n %}
 {% load static %}
 
@@ -161,13 +161,8 @@
         text-decoration: underline;
     }
     
-    .register-card .role-description {
-        font-size: 0.8rem;
-        color: #6c757d;
-        margin-top: 5px;
-        padding: 8px 12px;
-        background: #f8f9fa;
-        border-radius: 8px;
+    .register-card .alert {
+        border-radius: 12px;
     }
     
     @media (max-width: 576px) {
@@ -195,14 +190,12 @@
                     <form method="post" id="registerForm">
                         {% csrf_token %}
                         
-                        {% if messages %}
-                            {% for message in messages %}
-                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-pill" role="alert">
-                                    <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %} me-2"></i>
-                                    {{ message }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                </div>
-                            {% endfor %}
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
                         {% endif %}
                         
                         <!-- Username -->
@@ -210,7 +203,11 @@
                             <label class="form-label">
                                 <i class="fas fa-user"></i> {% trans "Username" %}
                             </label>
-                            <input type="text" name="username" class="form-control" placeholder="{% trans 'Choose a username' %}" required>
+                            <input type="text" name="username" class="form-control" placeholder="{% trans 'Choose a username' %}" required 
+                                   value="{{ form.username.value|default:'' }}">
+                            {% if form.username.errors %}
+                                <div class="text-danger small">{{ form.username.errors.0 }}</div>
+                            {% endif %}
                         </div>
                         
                         <!-- Email -->
@@ -218,7 +215,11 @@
                             <label class="form-label">
                                 <i class="fas fa-envelope"></i> {% trans "Email Address" %}
                             </label>
-                            <input type="email" name="email" class="form-control" placeholder="{% trans 'Enter your email address' %}" required>
+                            <input type="email" name="email" class="form-control" placeholder="{% trans 'Enter your email address' %}" required
+                                   value="{{ form.email.value|default:'' }}">
+                            {% if form.email.errors %}
+                                <div class="text-danger small">{{ form.email.errors.0 }}</div>
+                            {% endif %}
                         </div>
                         
                         <!-- Password -->
@@ -227,6 +228,9 @@
                                 <i class="fas fa-lock"></i> {% trans "Password" %}
                             </label>
                             <input type="password" name="password1" class="form-control" placeholder="{% trans 'Choose a password (min 4 characters)' %}" required minlength="4">
+                            {% if form.password1.errors %}
+                                <div class="text-danger small">{{ form.password1.errors.0 }}</div>
+                            {% endif %}
                             <small class="text-muted">{% trans "Minimum 4 characters" %}</small>
                         </div>
                         
@@ -236,6 +240,9 @@
                                 <i class="fas fa-check-circle"></i> {% trans "Confirm Password" %}
                             </label>
                             <input type="password" name="password2" class="form-control" placeholder="{% trans 'Confirm your password' %}" required>
+                            {% if form.password2.errors %}
+                                <div class="text-danger small">{{ form.password2.errors.0 }}</div>
+                            {% endif %}
                         </div>
                         
                         <!-- Role Selection -->
@@ -244,49 +251,64 @@
                                 <i class="fas fa-user-tag"></i> {% trans "I want to register as:" %}
                             </label>
                             <select name="role" id="roleSelect" class="role-select form-control" required>
-                                <option value="buyer" selected>
-                                    <i class="fas fa-user"></i> {% trans "Buyer" %}
+                                <option value="buyer" {% if form.role.value == 'buyer' %}selected{% endif %}>
+                                    {% trans "Buyer" %} - {% trans "Browse and purchase cars" %}
                                 </option>
-                                <option value="dealer">
-                                    <i class="fas fa-store"></i> {% trans "Dealer" %}
+                                <option value="dealer" {% if form.role.value == 'dealer' %}selected{% endif %}>
+                                    {% trans "Dealer" %} - {% trans "List and sell cars" %}
                                 </option>
-                                <option value="yard_manager">
-                                    <i class="fas fa-warehouse"></i> {% trans "Yard Manager" %}
+                                <option value="yard_manager" {% if form.role.value == 'yard_manager' %}selected{% endif %}>
+                                    {% trans "Yard Manager" %} - {% trans "Manage car yards" %}
                                 </option>
                             </select>
-                            <div id="roleDescription" class="role-description">
-                                <i class="fas fa-info-circle"></i> 
-                                {% trans "Browse and purchase cars from trusted dealers" %}
-                            </div>
+                            {% if form.role.errors %}
+                                <div class="text-danger small">{{ form.role.errors.0 }}</div>
+                            {% endif %}
                         </div>
                         
                         <!-- Extra Fields Container -->
                         <div id="extraFieldsContainer">
-                            <!-- Dealer Fields (Phone Only) -->
-                            <div id="dealerFields" class="extra-fields">
-                                <h6><i class="fas fa-phone text-success"></i> {% trans "Dealer Information" %}</h6>
+                            <!-- Dealer Fields -->
+                            <div id="dealerFields" class="extra-fields {% if form.role.value == 'dealer' %}show{% endif %}">
+                                <h6><i class="fas fa-store text-success"></i> {% trans "Dealer Information" %}</h6>
                                 <div class="mb-3">
-                                    <label class="form-label">{% trans "Phone Number" %} <span class="text-danger">*</span></label>
-                                    <input type="tel" name="phone" class="form-control" placeholder="{% trans 'Enter your phone number' %}">
+                                    <label class="form-label">{% trans "Phone Number" %}</label>
+                                    <input type="tel" name="phone" class="form-control" placeholder="{% trans 'Enter your phone number' %}"
+                                           value="{{ form.phone.value|default:'' }}">
+                                    {% if form.phone.errors %}
+                                        <div class="text-danger small">{{ form.phone.errors.0 }}</div>
+                                    {% endif %}
                                     <small class="text-muted">{% trans "Example: 0712345678" %}</small>
                                 </div>
                             </div>
                             
-                            <!-- Yard Manager Fields (Business Name, Phone, Location) -->
-                            <div id="yardManagerFields" class="extra-fields">
+                            <!-- Yard Manager Fields -->
+                            <div id="yardManagerFields" class="extra-fields {% if form.role.value == 'yard_manager' %}show{% endif %}">
                                 <h6><i class="fas fa-building text-info"></i> {% trans "Yard Manager Information" %}</h6>
                                 <div class="mb-3">
-                                    <label class="form-label">{% trans "Business Name" %} <span class="text-danger">*</span></label>
-                                    <input type="text" name="business_name" class="form-control" placeholder="{% trans 'Enter your business name' %}">
+                                    <label class="form-label">{% trans "Business Name" %}</label>
+                                    <input type="text" name="business_name" class="form-control" placeholder="{% trans 'Enter your business name' %}"
+                                           value="{{ form.business_name.value|default:'' }}">
+                                    {% if form.business_name.errors %}
+                                        <div class="text-danger small">{{ form.business_name.errors.0 }}</div>
+                                    {% endif %}
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">{% trans "Phone Number" %} <span class="text-danger">*</span></label>
-                                    <input type="tel" name="phone" class="form-control" placeholder="{% trans 'Enter your phone number' %}">
+                                    <label class="form-label">{% trans "Phone Number" %}</label>
+                                    <input type="tel" name="phone" class="form-control" placeholder="{% trans 'Enter your phone number' %}"
+                                           value="{{ form.phone.value|default:'' }}">
+                                    {% if form.phone.errors %}
+                                        <div class="text-danger small">{{ form.phone.errors.0 }}</div>
+                                    {% endif %}
                                     <small class="text-muted">{% trans "Example: 0712345678" %}</small>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">{% trans "Location" %} <span class="text-danger">*</span></label>
-                                    <input type="text" name="location" class="form-control" placeholder="{% trans 'Enter your yard location' %}">
+                                    <label class="form-label">{% trans "Location" %}</label>
+                                    <input type="text" name="location" class="form-control" placeholder="{% trans 'Enter your yard location' %}"
+                                           value="{{ form.location.value|default:'' }}">
+                                    {% if form.location.errors %}
+                                        <div class="text-danger small">{{ form.location.errors.0 }}</div>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -324,14 +346,6 @@
         const roleSelect = document.getElementById('roleSelect');
         const dealerFields = document.getElementById('dealerFields');
         const yardManagerFields = document.getElementById('yardManagerFields');
-        const roleDescription = document.getElementById('roleDescription');
-        
-        // Role descriptions
-        const descriptions = {
-            'buyer': '<i class="fas fa-info-circle"></i> Browse and purchase cars from trusted dealers',
-            'dealer': '<i class="fas fa-info-circle"></i> List and sell cars, manage your inventory',
-            'yard_manager': '<i class="fas fa-info-circle"></i> Manage car yards, approve listings, oversee dealers'
-        };
         
         function toggleFields() {
             const role = roleSelect.value;
@@ -344,7 +358,7 @@
             dealerFields.querySelectorAll('input').forEach(input => input.removeAttribute('required'));
             yardManagerFields.querySelectorAll('input').forEach(input => input.removeAttribute('required'));
             
-            // Show relevant fields based on role
+            // Show relevant fields
             if (role === 'dealer') {
                 dealerFields.classList.add('show');
                 dealerFields.querySelectorAll('input').forEach(input => input.setAttribute('required', 'required'));
@@ -352,9 +366,6 @@
                 yardManagerFields.classList.add('show');
                 yardManagerFields.querySelectorAll('input').forEach(input => input.setAttribute('required', 'required'));
             }
-            
-            // Update description
-            roleDescription.innerHTML = descriptions[role] || '';
         }
         
         roleSelect.addEventListener('change', toggleFields);

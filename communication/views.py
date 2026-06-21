@@ -1,4 +1,4 @@
-# Add these to existing communication/views.py
+﻿# Add these to existing communication/views.py
 
 from django.utils import timezone
 from datetime import timedelta
@@ -114,7 +114,7 @@ def yard_resolve_escalation(request, escalation_id):
         if action == 'contact_dealer':
             # Send warning to dealer
             send_mail(
-                subject=f'⚠️ Escalation #{escalation.id} - Action Required',
+                subject=f' Escalation #{escalation.id} - Action Required',
                 message=f"""
                 Dear {escalation.dealer.username},
                 
@@ -183,7 +183,7 @@ def yard_resolve_escalation(request, escalation_id):
             
             # Notify buyer
             send_mail(
-                subject=f'✅ Escalation #{escalation.id} Resolved',
+                subject=f' Escalation #{escalation.id} Resolved',
                 message=f"""
                 Dear {escalation.buyer.username},
                 
