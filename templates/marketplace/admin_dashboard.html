@@ -48,13 +48,38 @@
         color: #6c757d;
         font-size: 0.9rem;
     }
+    
+    .btn-action {
+        border-radius: 12px;
+        padding: 15px 10px;
+        transition: all 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    
+    .btn-action:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+    
+    .btn-action i {
+        font-size: 1.8rem;
+    }
+    
+    .btn-action small {
+        font-size: 0.75rem;
+    }
 </style>
 
 <div class="container py-4">
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="fw-bold">{% trans "Admin Dashboard" %}</h1>
+            <h1 class="fw-bold"><i class="fas fa-tachometer-alt text-primary"></i> {% trans "Admin Dashboard" %}</h1>
             <p class="text-muted">{% trans "Welcome back, Admin!" %}</p>
         </div>
         <div>
@@ -69,7 +94,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="text-white-50">{% trans "Total Cars" %}</h6>
-                        <h2 class="mb-0">{{ total_cars|default:"0" }}</h2>
+                        <h2 class="mb-0 stat-number">{{ total_cars|default:"0" }}</h2>
                     </div>
                     <div class="stat-icon bg-white bg-opacity-25">
                         <i class="fas fa-car text-white"></i>
@@ -82,7 +107,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="text-white-50">{% trans "Total Users" %}</h6>
-                        <h2 class="mb-0">{{ total_users|default:"0" }}</h2>
+                        <h2 class="mb-0 stat-number">{{ total_users|default:"0" }}</h2>
                     </div>
                     <div class="stat-icon bg-white bg-opacity-25">
                         <i class="fas fa-users text-white"></i>
@@ -95,7 +120,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="text-dark-50">{% trans "Total Dealers" %}</h6>
-                        <h2 class="mb-0">{{ total_dealers|default:"0" }}</h2>
+                        <h2 class="mb-0 stat-number">{{ total_dealers|default:"0" }}</h2>
                     </div>
                     <div class="stat-icon bg-white bg-opacity-25">
                         <i class="fas fa-store text-dark"></i>
@@ -108,7 +133,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="text-white-50">{% trans "Pending Reports" %}</h6>
-                        <h2 class="mb-0">{{ total_reports|default:"0" }}</h2>
+                        <h2 class="mb-0 stat-number">{{ total_reports|default:"0" }}</h2>
                     </div>
                     <div class="stat-icon bg-white bg-opacity-25">
                         <i class="fas fa-flag text-white"></i>
@@ -121,44 +146,44 @@
     <!-- Quick Actions -->
     <div class="card dashboard-card mb-4">
         <div class="card-header bg-light">
-            <h5 class="mb-0 fw-bold">{% trans "Quick Actions" %}</h5>
+            <h5 class="mb-0 fw-bold"><i class="fas fa-bolt text-primary"></i> {% trans "Quick Actions" %}</h5>
         </div>
         <div class="card-body">
             <div class="row g-2">
-                <div class="col-md-2 col-6 mb-2">
-                    <a href="{% url 'car_list' %}" class="btn btn-outline-success w-100 py-3">
-                        <i class="fas fa-car"></i><br>
+                <div class="col-md-2 col-4 mb-2">
+                    <a href="{% url 'admin_cars' %}" class="btn btn-outline-success btn-action w-100">
+                        <i class="fas fa-car"></i>
                         <small>{% trans "Manage Cars" %}</small>
                     </a>
                 </div>
-                <div class="col-md-2 col-6 mb-2">
-                    <a href="/admin/auth/user/" class="btn btn-outline-info w-100 py-3">
-                        <i class="fas fa-users"></i><br>
+                <div class="col-md-2 col-4 mb-2">
+                    <a href="{% url 'admin_users' %}" class="btn btn-outline-info btn-action w-100">
+                        <i class="fas fa-users"></i>
                         <small>{% trans "Manage Users" %}</small>
                     </a>
                 </div>
-                <div class="col-md-2 col-6 mb-2">
-                    <a href="{% url 'admin_yards' %}" class="btn btn-outline-warning w-100 py-3">
-                        <i class="fas fa-warehouse"></i><br>
+                <div class="col-md-2 col-4 mb-2">
+                    <a href="{% url 'admin_dealers' %}" class="btn btn-outline-warning btn-action w-100">
+                        <i class="fas fa-store"></i>
+                        <small>{% trans "Manage Dealers" %}</small>
+                    </a>
+                </div>
+                <div class="col-md-2 col-4 mb-2">
+                    <a href="{% url 'admin_yards' %}" class="btn btn-outline-primary btn-action w-100">
+                        <i class="fas fa-warehouse"></i>
                         <small>{% trans "Manage Yards" %}</small>
                     </a>
                 </div>
-                <div class="col-md-2 col-6 mb-2">
-                    <a href="{% url 'admin_reports' %}" class="btn btn-outline-danger w-100 py-3">
-                        <i class="fas fa-flag"></i><br>
+                <div class="col-md-2 col-4 mb-2">
+                    <a href="{% url 'admin_reports' %}" class="btn btn-outline-danger btn-action w-100">
+                        <i class="fas fa-flag"></i>
                         <small>{% trans "View Reports" %}</small>
                     </a>
                 </div>
-                <div class="col-md-2 col-6 mb-2">
-                    <a href="{% url 'car_valuation' %}" class="btn btn-outline-secondary w-100 py-3">
-                        <i class="fas fa-chart-line"></i><br>
-                        <small>{% trans "Valuation" %}</small>
-                    </a>
-                </div>
-                <div class="col-md-2 col-6 mb-2">
-                    <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-primary w-100 py-3">
-                        <i class="fas fa-tachometer-alt"></i><br>
-                        <small>{% trans "Dashboard" %}</small>
+                <div class="col-md-2 col-4 mb-2">
+                    <a href="{% url 'admin_create_yard' %}" class="btn btn-outline-secondary btn-action w-100">
+                        <i class="fas fa-plus-circle"></i>
+                        <small>{% trans "Create Yard" %}</small>
                     </a>
                 </div>
             </div>
@@ -232,7 +257,7 @@
         <div class="col-12">
             <div class="card dashboard-card">
                 <div class="card-header bg-light">
-                    <h6 class="mb-0 fw-bold">{% trans "Pending Approvals" %}</h6>
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-clock text-warning"></i> {% trans "Pending Approvals" %}</h6>
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
@@ -250,10 +275,73 @@
                         </div>
                         <div class="col-md-4">
                             <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
-                                <span>{% trans "Dealers Pending Verification" %}</span>
-                                <span class="badge bg-info fs-5">0</span>
+                                <span>{% trans "Yards Pending Verification" %}</span>
+                                <span class="badge bg-info fs-5">{{ pending_yards|default:"0" }}</span>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Management -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card dashboard-card">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-warehouse text-primary"></i> {% trans "Yard Management" %}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'admin_yards' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-list"></i> {% trans "View All Yards" %}
+                        </a>
+                        <a href="{% url 'admin_create_yard' %}" class="btn btn-outline-success">
+                            <i class="fas fa-plus"></i> {% trans "Create New Yard" %}
+                        </a>
+                        <a href="{% url 'admin_assign_yard' %}" class="btn btn-outline-info">
+                            <i class="fas fa-user-plus"></i> {% trans "Assign Yard Manager" %}
+                        </a>
+                        <a href="{% url 'admin_yards' %}" class="btn btn-outline-success w-100 py-3">
+    <i class="fas fa-warehouse"></i><br>
+    <small>{% trans "Manage Yards" %}</small>
+</a>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card dashboard-card">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-store text-success"></i> {% trans "Dealer Management" %}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'admin_dealers' %}" class="btn btn-outline-success">
+                            <i class="fas fa-list"></i> {% trans "View All Dealers" %}
+                        </a>
+                        <a href="{% url 'admin_dealers' %}" class="btn btn-outline-warning">
+                            <i class="fas fa-check-circle"></i> {% trans "Verify Dealers" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card dashboard-card">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-flag text-danger"></i> {% trans "Reports & Issues" %}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'admin_reports' %}" class="btn btn-outline-danger">
+                            <i class="fas fa-list"></i> {% trans "View All Reports" %}
+                        </a>
+                        <a href="{% url 'admin_reports' %}" class="btn btn-outline-warning">
+                            <i class="fas fa-check"></i> {% trans "Resolve Reports" %}
+                        </a>
                     </div>
                 </div>
             </div>
