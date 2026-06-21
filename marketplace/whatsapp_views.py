@@ -3,6 +3,11 @@ from django.http import HttpResponseRedirect
 from urllib.parse import quote
 from .models import CarListing, ChatSession, UserProfile
 
+
+def contact(request):
+    return render(request, 'marketplace/contact.html')
+
+
 def whatsapp_chat(request, car_id):
     """Handle WhatsApp chat routing based on seller verification level"""
     car = get_object_or_404(CarListing, id=car_id, status='approved')

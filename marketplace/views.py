@@ -11,26 +11,35 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.utils import translation
 from .models import (
-    Car, CarImage, Dealer, Yard, YardDealerAssignment, DealerAssignment,
-    Favorite, Review, Report, Message, InspectionRequest, ListingPackage
+    UserProfile, Car, CarListing, CarImage, Dealer, Yard, YardDealerAssignment, 
+    DealerAssignment, Favorite, Review, Report, Message, InspectionRequest, ListingPackage
 )
 from .forms import (
-    CarForm, CarImageForm, DealerForm, ReviewForm, ReportForm, MessageForm,
-    YardForm, DealerAssignmentForm, CustomUserCreationForm
+    RegisterForm, CustomAuthenticationForm, UserProfileForm, CarForm, CarImageForm,
+    DealerForm, ReviewForm, ReportForm, MessageForm, YardForm, DealerAssignmentForm,
+    InspectionRequestForm, ListingPackageForm
 )
 
 # ========== HOME AND GENERAL PAGES ==========
 
 def home(request):
     """Home page view."""
-    featured_cars = Car.objects.filter(is_featured=True, status='available')[:6]
-    recent_cars = Car.objects.filter(status='available').order_by('-created_at')[:12]
+    featured_cars = Car.objects.filter(featured=True, is_approved=True)[:6]
+    latest_cars = Car.objects.filter(is_approved=True).order_by('-created_at')[:8]
     dealers = Dealer.objects.filter(is_verified=True)[:6]
+    
+    # Get popular makes
+    from django.db.models import Count
+    popular_makes = Car.objects.filter(is_approved=True).values('make').annotate(count=Count('make')).order_by('-count')[:8]
     
     context = {
         'featured_cars': featured_cars,
-        'recent_cars': recent_cars,
+        'latest_cars': latest_cars,
         'dealers': dealers,
+        'popular_makes': popular_makes,
+        'total_cars': Car.objects.filter(is_approved=True).count(),
+        'total_dealers': Dealer.objects.filter(is_verified=True).count(),
+        'total_sold': Car.objects.filter(is_sold=True).count(),
     }
     return render(request, 'marketplace/home.html', context)
 
@@ -50,58 +59,32 @@ def privacy(request):
     """Privacy policy page."""
     return render(request, 'marketplace/privacy.html')
 
+
 # ========== AUTHENTICATION ==========
 
 def register(request):
     """User registration view."""
     if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
+        form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
-            role = request.POST.get('role', 'buyer')
-            phone = request.POST.get('phone', '')
-            location = request.POST.get('location', '')
+            role = form.cleaned_data.get('role', 'buyer')
             
+            messages.success(request, _('Registration successful! Welcome to Tanzania Cars Marketplace.'))
+            
+            # Redirect based on role
             if role == 'dealer':
-                # Dealer: Only phone number
-                Dealer.objects.create(
-                    user=user,
-                    business_name=f"{user.username}'s Dealership",
-                    phone=phone,
-                    location='',
-                    is_verified=False,
-                    verification_level='1'
-                )
-                auth_login(request, user)
-                messages.success(request, _('Registration successful! Welcome to your Dealer Dashboard.'))
                 return redirect('dealer_dashboard')
-                
             elif role == 'yard_manager':
-                # Yard Manager: Business Name, Phone, Location
-                business_name = request.POST.get('business_name', f"{user.username}'s Yard")
-                # Create yard manager profile (you may need a YardManager model)
-                # For now, we'll create a Dealer with yard manager role
-                Dealer.objects.create(
-                    user=user,
-                    business_name=business_name,
-                    phone=phone,
-                    location=location,
-                    is_verified=False,
-                    verification_level='1'
-                )
-                auth_login(request, user)
-                messages.success(request, _('Registration successful! Welcome to your Yard Dashboard.'))
                 return redirect('yard_dashboard')
-                
-            else:  # buyer
-                auth_login(request, user)
-                messages.success(request, _('Registration successful! Welcome to Tanzania Cars Marketplace.'))
+            elif user.is_staff:
+                return redirect('admin_dashboard')
+            else:
                 return redirect('buyer_dashboard')
     else:
-        form = CustomUserCreationForm()
+        form = RegisterForm()
     
     return render(request, 'marketplace/register.html', {'form': form})
-
 
 def login(request):
     """User login view."""
@@ -112,23 +95,28 @@ def login(request):
         if user is not None:
             auth_login(request, user)
             
-            # Check user role and redirect accordingly
+            # Get user profile
+            try:
+                profile = user.userprofile
+                role = profile.role
+            except UserProfile.DoesNotExist:
+                role = 'buyer'
+            
+            messages.success(request, _('Welcome back, {}!').format(user.username))
+            
+            # Redirect based on role
             if user.is_staff:
-                messages.success(request, _('Welcome back, Admin!'))
                 return redirect('admin_dashboard')
-            elif hasattr(user, 'dealer_profile'):
-                messages.success(request, _('Welcome back to your Dealer Dashboard!'))
+            elif role == 'dealer':
                 return redirect('dealer_dashboard')
-            elif hasattr(user, 'yard_manager_profile') or user.groups.filter(name='Yard Managers').exists():
-                messages.success(request, _('Welcome back to your Yard Dashboard!'))
+            elif role == 'yard_manager':
                 return redirect('yard_dashboard')
             else:
-                messages.success(request, _('Welcome back, {}!').format(user.username))
                 return redirect('buyer_dashboard')
         else:
             messages.error(request, _('Invalid username or password.'))
+    
     return render(request, 'marketplace/login.html')
-
 
 def logout(request):
     """User logout view."""
@@ -140,34 +128,43 @@ def logout(request):
 def profile(request):
     """User profile view."""
     user = request.user
+    try:
+        profile = user.userprofile
+    except UserProfile.DoesNotExist:
+        profile = None
+    
     user_cars = Car.objects.filter(seller=user).order_by('-created_at')
     favorites = Favorite.objects.filter(user=user).select_related('car')
     
     context = {
         'user': user,
+        'profile': profile,
         'user_cars': user_cars,
         'favorites': favorites,
     }
     return render(request, 'marketplace/profile.html', context)
 
+
 # ========== CAR LISTINGS ==========
 
 def car_list(request):
     """List all available cars with filters."""
-    cars = Car.objects.filter(status='available')
+    cars = Car.objects.filter(is_approved=True)
     
+    # Search
     search_query = request.GET.get('q', '')
     if search_query:
         cars = cars.filter(
             Q(title__icontains=search_query) |
-            Q(brand__icontains=search_query) |
+            Q(make__icontains=search_query) |
             Q(model__icontains=search_query) |
             Q(description__icontains=search_query)
         )
     
-    brand = request.GET.get('brand', '')
-    if brand:
-        cars = cars.filter(brand__icontains=brand)
+    # Filters
+    make = request.GET.get('make', '')
+    if make:
+        cars = cars.filter(make__icontains=make)
     
     min_price = request.GET.get('min_price', '')
     if min_price:
@@ -189,9 +186,15 @@ def car_list(request):
     if fuel_type:
         cars = cars.filter(fuel_type=fuel_type)
     
+    body_type = request.GET.get('body_type', '')
+    if body_type:
+        cars = cars.filter(body_type=body_type)
+    
+    # Sorting
     sort_by = request.GET.get('sort', '-created_at')
     cars = cars.order_by(sort_by)
     
+    # Pagination
     paginator = Paginator(cars, 12)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -199,12 +202,14 @@ def car_list(request):
     context = {
         'page_obj': page_obj,
         'search_query': search_query,
-        'brand': brand,
+        'make': make,
         'min_price': min_price,
         'max_price': max_price,
         'condition': condition,
         'transmission': transmission,
         'fuel_type': fuel_type,
+        'body_type': body_type,
+        'sort_by': sort_by,
     }
     return render(request, 'marketplace/car_list.html', context)
 
@@ -212,8 +217,8 @@ def car_detail(request, car_id):
     """Car detail view."""
     car = get_object_or_404(Car, id=car_id)
     related_cars = Car.objects.filter(
-        Q(brand=car.brand) | Q(model=car.model)
-    ).exclude(id=car.id).filter(status='available')[:6]
+        Q(make=car.make) | Q(model=car.model)
+    ).exclude(id=car.id).filter(is_approved=True)[:6]
     
     is_favorite = False
     if request.user.is_authenticated:
@@ -234,13 +239,14 @@ def save_car(request):
         if form.is_valid():
             car = form.save(commit=False)
             car.seller = request.user
+            car.is_approved = False  # Needs admin approval
             car.save()
             
-            images = request.FILES.getlist('images')
-            for img in images:
-                CarImage.objects.create(car=car, image=img)
+            # Handle images
+            if 'images' in request.FILES:
+                CarImage.objects.create(car=car, image=request.FILES['images'], is_primary=True)
             
-            messages.success(request, _('Your car has been listed successfully!'))
+            messages.success(request, _('Your car has been listed successfully and is pending approval!'))
             return redirect('car_detail', car_id=car.id)
     else:
         form = CarForm()
@@ -264,7 +270,9 @@ def edit_car(request, car_id):
     if request.method == 'POST':
         form = CarForm(request.POST, request.FILES, instance=car)
         if form.is_valid():
-            form.save()
+            car = form.save()
+            if 'images' in request.FILES:
+                CarImage.objects.create(car=car, image=request.FILES['images'])
             messages.success(request, _('Car updated successfully!'))
             return redirect('car_detail', car_id=car.id)
     else:
@@ -296,7 +304,8 @@ def sell_car(request):
 @login_required
 def create_listing(request):
     """Create listing view."""
-    return render(request, 'marketplace/create_listing.html')
+    return redirect('sell_car')
+
 
 # ========== FAVORITES ==========
 
@@ -320,25 +329,29 @@ def favorite_car(request, car_id):
     
     return redirect('car_detail', car_id=car.id)
 
+
 # ========== DEALER DASHBOARD ==========
 
 @login_required
 def dealer_dashboard(request):
     """Dealer dashboard view."""
     try:
-        dealer = request.user.dealer_profile
-    except Dealer.DoesNotExist:
-        messages.warning(request, _('Please complete your dealer profile.'))
+        profile = request.user.userprofile
+        if profile.role != 'dealer':
+            messages.warning(request, _('You are not registered as a dealer.'))
+            return redirect('home')
+    except UserProfile.DoesNotExist:
+        messages.warning(request, _('Please complete your profile.'))
         return redirect('profile')
     
-    cars = Car.objects.filter(dealer=dealer).order_by('-created_at')
+    cars = Car.objects.filter(seller=request.user).order_by('-created_at')
     total_cars = cars.count()
-    available_cars = cars.filter(status='available').count()
-    sold_cars = cars.filter(status='sold').count()
-    pending_cars = cars.filter(status='pending').count()
+    available_cars = cars.filter(is_sold=False, is_approved=True).count()
+    sold_cars = cars.filter(is_sold=True).count()
+    pending_cars = cars.filter(is_approved=False).count()
     
     context = {
-        'dealer': dealer,
+        'profile': profile,
         'cars': cars[:10],
         'total_cars': total_cars,
         'available_cars': available_cars,
@@ -350,13 +363,7 @@ def dealer_dashboard(request):
 @login_required
 def dealer_my_cars(request):
     """Dealer's cars list."""
-    try:
-        dealer = request.user.dealer_profile
-    except Dealer.DoesNotExist:
-        messages.warning(request, _('Please complete your dealer profile.'))
-        return redirect('profile')
-    
-    cars = Car.objects.filter(dealer=dealer).order_by('-created_at')
+    cars = Car.objects.filter(seller=request.user).order_by('-created_at')
     paginator = Paginator(cars, 12)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -366,253 +373,116 @@ def dealer_my_cars(request):
 @login_required
 def dealer_add_car(request):
     """Dealer add car view."""
-    try:
-        dealer = request.user.dealer_profile
-    except Dealer.DoesNotExist:
-        messages.warning(request, _('Please complete your dealer profile first.'))
-        return redirect('profile')
-    
-    if request.method == 'POST':
-        form = CarForm(request.POST, request.FILES)
-        if form.is_valid():
-            car = form.save(commit=False)
-            car.seller = request.user
-            car.dealer = dealer
-            car.save()
-            
-            images = request.FILES.getlist('images')
-            for img in images:
-                CarImage.objects.create(car=car, image=img)
-            
-            messages.success(request, _('Car added successfully!'))
-            return redirect('dealer_my_cars')
-    else:
-        form = CarForm()
-    
-    return render(request, 'marketplace/dealer_add_car.html', {'form': form})
+    return save_car(request)
 
 @login_required
 def dealer_edit_car(request, car_id):
     """Dealer edit car view."""
-    car = get_object_or_404(Car, id=car_id)
-    
-    try:
-        dealer = request.user.dealer_profile
-        if car.dealer != dealer and not request.user.is_staff:
-            messages.error(request, _('You do not have permission to edit this car.'))
-            return redirect('dealer_my_cars')
-    except Dealer.DoesNotExist:
-        messages.error(request, _('Dealer profile not found.'))
-        return redirect('dealer_my_cars')
-    
-    if request.method == 'POST':
-        form = CarForm(request.POST, request.FILES, instance=car)
-        if form.is_valid():
-            form.save()
-            messages.success(request, _('Car updated successfully!'))
-            return redirect('dealer_my_cars')
-    else:
-        form = CarForm(instance=car)
-    
-    return render(request, 'marketplace/dealer_add_car.html', {'form': form, 'car': car})
+    return edit_car(request, car_id)
 
 @login_required
 def dealer_delete_car(request, car_id):
     """Dealer delete car view."""
-    car = get_object_or_404(Car, id=car_id)
-    
-    try:
-        dealer = request.user.dealer_profile
-        if car.dealer != dealer and not request.user.is_staff:
-            messages.error(request, _('You do not have permission to delete this car.'))
-            return redirect('dealer_my_cars')
-    except Dealer.DoesNotExist:
-        messages.error(request, _('Dealer profile not found.'))
-        return redirect('dealer_my_cars')
-    
-    if request.method == 'POST':
-        car.delete()
-        messages.success(request, _('Car deleted successfully!'))
-        return redirect('dealer_my_cars')
-    
-    return render(request, 'marketplace/dealer_my_cars.html', {'car': car})
+    return delete_car(request, car_id)
 
 @login_required
 def dealer_messages(request):
     """Dealer messages view."""
-    try:
-        dealer = request.user.dealer_profile
-    except Dealer.DoesNotExist:
-        messages.warning(request, _('Please complete your dealer profile.'))
-        return redirect('profile')
-    
     messages_list = Message.objects.filter(recipient=request.user).order_by('-created_at')
     return render(request, 'marketplace/dealer_messages.html', {'messages': messages_list})
 
 @login_required
 def dealer_sold_requests(request):
     """Dealer sold requests view."""
-    try:
-        dealer = request.user.dealer_profile
-    except Dealer.DoesNotExist:
-        messages.warning(request, _('Please complete your dealer profile.'))
-        return redirect('profile')
-    
-    cars = Car.objects.filter(dealer=dealer, status='pending').order_by('-created_at')
+    cars = Car.objects.filter(seller=request.user, is_sold=True).order_by('-created_at')
     return render(request, 'marketplace/dealer_messages.html', {'cars': cars})
 
 @login_required
 def dealer_commission_dashboard(request):
     """Dealer commission dashboard."""
-    try:
-        dealer = request.user.dealer_profile
-    except Dealer.DoesNotExist:
-        messages.warning(request, _('Please complete your dealer profile.'))
-        return redirect('profile')
-    
-    cars = Car.objects.filter(dealer=dealer, status='sold')
-    total_commission = sum(float(car.price) * (dealer.commission_rate / 100) for car in cars)
+    cars = Car.objects.filter(seller=request.user, is_sold=True)
+    total_commission = sum(float(car.price) * 0.05 for car in cars)  # 5% commission
     
     context = {
-        'dealer': dealer,
         'cars': cars,
         'total_commission': total_commission,
         'total_cars_sold': cars.count(),
     }
     return render(request, 'marketplace/dealer_commission.html', context)
 
+
 # ========== YARD MANAGER DASHBOARD ==========
 
 @login_required
 def yard_manager_dashboard(request):
     """Yard manager dashboard."""
+    try:
+        profile = request.user.userprofile
+        if profile.role != 'yard_manager':
+            messages.warning(request, _('You are not registered as a yard manager.'))
+            return redirect('home')
+    except UserProfile.DoesNotExist:
+        messages.warning(request, _('Please complete your profile.'))
+        return redirect('profile')
+    
     yards = Yard.objects.filter(manager=request.user)
     if not yards.exists():
         messages.warning(request, _('You are not assigned to any yard.'))
         return redirect('home')
     
     yard = yards.first()
-    cars = Car.objects.filter(yard=yard).order_by('-created_at')
+    cars = Car.objects.filter(seller=request.user).order_by('-created_at')
     
     context = {
+        'profile': profile,
         'yard': yard,
         'cars': cars[:10],
         'total_cars': cars.count(),
-        'available_cars': cars.filter(status='available').count(),
-        'pending_cars': cars.filter(status='pending').count(),
+        'available_cars': cars.filter(is_sold=False, is_approved=True).count(),
+        'pending_cars': cars.filter(is_approved=False).count(),
     }
     return render(request, 'marketplace/yard_manager_dashboard.html', context)
 
 @login_required
 def yard_my_cars(request):
     """Yard cars list."""
-    yards = Yard.objects.filter(manager=request.user)
-    if not yards.exists():
-        messages.warning(request, _('You are not assigned to any yard.'))
-        return redirect('home')
-    
-    yard = yards.first()
-    cars = Car.objects.filter(yard=yard).order_by('-created_at')
-    
+    cars = Car.objects.filter(seller=request.user).order_by('-created_at')
     paginator = Paginator(cars, 12)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    return render(request, 'marketplace/yard_my_cars.html', {'page_obj': page_obj, 'yard': yard})
+    return render(request, 'marketplace/yard_my_cars.html', {'page_obj': page_obj})
 
 @login_required
 def yard_add_car(request):
     """Yard add car view."""
-    yards = Yard.objects.filter(manager=request.user)
-    if not yards.exists():
-        messages.warning(request, _('You are not assigned to any yard.'))
-        return redirect('home')
-    
-    yard = yards.first()
-    
-    if request.method == 'POST':
-        form = CarForm(request.POST, request.FILES)
-        if form.is_valid():
-            car = form.save(commit=False)
-            car.seller = request.user
-            car.yard = yard
-            car.status = 'pending'
-            car.save()
-            
-            images = request.FILES.getlist('images')
-            for img in images:
-                CarImage.objects.create(car=car, image=img)
-            
-            messages.success(request, _('Car added and pending approval!'))
-            return redirect('yard_my_cars')
-    else:
-        form = CarForm()
-    
-    return render(request, 'marketplace/yard_add_car.html', {'form': form, 'yard': yard})
+    return save_car(request)
 
 @login_required
 def yard_edit_car(request, car_id):
     """Yard edit car view."""
-    car = get_object_or_404(Car, id=car_id)
-    yards = Yard.objects.filter(manager=request.user)
-    
-    if not yards.exists() or car.yard not in yards:
-        messages.error(request, _('You do not have permission to edit this car.'))
-        return redirect('yard_my_cars')
-    
-    if request.method == 'POST':
-        form = CarForm(request.POST, request.FILES, instance=car)
-        if form.is_valid():
-            form.save()
-            messages.success(request, _('Car updated successfully!'))
-            return redirect('yard_my_cars')
-    else:
-        form = CarForm(instance=car)
-    
-    return render(request, 'marketplace/yard_add_car.html', {'form': form, 'car': car})
+    return edit_car(request, car_id)
 
 @login_required
 def yard_delete_car(request, car_id):
     """Yard delete car view."""
-    car = get_object_or_404(Car, id=car_id)
-    yards = Yard.objects.filter(manager=request.user)
-    
-    if not yards.exists() or car.yard not in yards:
-        messages.error(request, _('You do not have permission to delete this car.'))
-        return redirect('yard_my_cars')
-    
-    if request.method == 'POST':
-        car.delete()
-        messages.success(request, _('Car deleted successfully!'))
-        return redirect('yard_my_cars')
-    
-    return render(request, 'marketplace/yard_my_cars.html', {'car': car})
+    return delete_car(request, car_id)
 
 @login_required
 def yard_pending_cars(request):
     """Yard pending cars view."""
-    yards = Yard.objects.filter(manager=request.user)
-    if not yards.exists():
-        messages.warning(request, _('You are not assigned to any yard.'))
-        return redirect('home')
-    
-    yard = yards.first()
-    cars = Car.objects.filter(yard=yard, status='pending').order_by('-created_at')
-    
-    return render(request, 'marketplace/yard_pending_cars.html', {'cars': cars, 'yard': yard})
+    cars = Car.objects.filter(seller=request.user, is_approved=False).order_by('-created_at')
+    return render(request, 'marketplace/yard_pending_cars.html', {'cars': cars})
 
 @login_required
 def yard_approve_car(request, car_id):
     """Yard approve car view."""
     car = get_object_or_404(Car, id=car_id)
-    yards = Yard.objects.filter(manager=request.user)
-    
-    if not yards.exists() or car.yard not in yards:
+    if car.seller != request.user and not request.user.is_staff:
         messages.error(request, _('You do not have permission to approve this car.'))
         return redirect('yard_pending_cars')
     
-    car.status = 'available'
-    car.is_verified = True
+    car.is_approved = True
     car.save()
     messages.success(request, _('Car approved and listed!'))
     return redirect('yard_pending_cars')
@@ -621,15 +491,12 @@ def yard_approve_car(request, car_id):
 def yard_reject_car(request, car_id):
     """Yard reject car view."""
     car = get_object_or_404(Car, id=car_id)
-    yards = Yard.objects.filter(manager=request.user)
-    
-    if not yards.exists() or car.yard not in yards:
+    if car.seller != request.user and not request.user.is_staff:
         messages.error(request, _('You do not have permission to reject this car.'))
         return redirect('yard_pending_cars')
     
-    car.status = 'rejected'
-    car.save()
-    messages.warning(request, _('Car rejected.'))
+    car.delete()
+    messages.warning(request, _('Car rejected and removed.'))
     return redirect('yard_pending_cars')
 
 @login_required
@@ -698,19 +565,12 @@ def yard_remove_dealer(request, dealer_id):
 @login_required
 def yard_verify_dealer(request, dealer_id):
     """Yard verify dealer view."""
-    yards = Yard.objects.filter(manager=request.user)
-    if not yards.exists():
-        messages.warning(request, _('You are not assigned to any yard.'))
-        return redirect('home')
-    
     dealer = get_object_or_404(Dealer, id=dealer_id)
     dealer.is_verified = True
-    dealer.verification_level = '2'
     dealer.save()
     messages.success(request, _('Dealer verified!'))
     return redirect('yard_manage_dealers')
 
-# ========== ADMIN DASHBOARD ==========
 
 # ========== ADMIN DASHBOARD ==========
 
@@ -723,14 +583,16 @@ def admin_dashboard(request):
     
     total_cars = Car.objects.count()
     total_users = User.objects.count()
-    total_dealers = Dealer.objects.count()
+    total_dealers = Dealer.objects.filter(is_verified=True).count()
     total_reports = Report.objects.filter(status='pending').count()
+    pending_cars = Car.objects.filter(is_approved=False).count()
     
     context = {
         'total_cars': total_cars,
         'total_users': total_users,
         'total_dealers': total_dealers,
         'total_reports': total_reports,
+        'pending_cars': pending_cars,
         'recent_cars': Car.objects.order_by('-created_at')[:10],
         'recent_users': User.objects.order_by('-date_joined')[:10],
     }
@@ -748,7 +610,7 @@ def admin_users(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    return render(request, 'marketplace/admin_users.html', {'page_obj': page_obj})
+    return render(request, 'marketplace/admin_dashboard.html', {'page_obj': page_obj})
 
 @login_required
 def admin_cars(request):
@@ -762,7 +624,7 @@ def admin_cars(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    return render(request, 'marketplace/admin_cars.html', {'page_obj': page_obj})
+    return render(request, 'marketplace/admin_dashboard.html', {'page_obj': page_obj})
 
 @login_required
 def admin_dealers(request):
@@ -776,7 +638,7 @@ def admin_dealers(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    return render(request, 'marketplace/admin_dealers.html', {'dealers': dealers, 'page_obj': page_obj})
+    return render(request, 'marketplace/admin_dashboard.html', {'page_obj': page_obj})
 
 @login_required
 def admin_yards(request):
@@ -790,7 +652,7 @@ def admin_yards(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    return render(request, 'marketplace/admin_yards.html', {'yards': yards, 'page_obj': page_obj})
+    return render(request, 'marketplace/admin_dashboard.html', {'page_obj': page_obj})
 
 @login_required
 def admin_reports_dashboard(request):
@@ -841,7 +703,7 @@ def admin_create_yard(request):
     else:
         form = YardForm()
     
-    return render(request, 'marketplace/admin_create_yard.html', {'form': form})
+    return render(request, 'marketplace/admin_dashboard.html', {'form': form})
 
 @login_required
 def admin_assign_yard(request):
@@ -877,7 +739,7 @@ def admin_assign_yard(request):
         'dealers': dealers,
         'yards': yards,
     }
-    return render(request, 'marketplace/admin_assign_yard.html', context)
+    return render(request, 'marketplace/admin_dashboard.html', context)
 
 @login_required
 def admin_verify_yard(request, yard_id):
@@ -893,6 +755,8 @@ def admin_verify_yard(request, yard_id):
     status = 'activated' if yard.is_active else 'deactivated'
     messages.success(request, _('Yard {} successfully!').format(status))
     return redirect('admin_yards')
+
+
 # ========== BUYER DASHBOARD ==========
 
 @login_required
@@ -923,6 +787,7 @@ def buyer_messages(request):
     messages_list = Message.objects.filter(recipient=request.user).order_by('-created_at')
     return render(request, 'marketplace/buyer_messages.html', {'messages': messages_list})
 
+
 # ========== INSPECTIONS ==========
 
 @login_required
@@ -950,6 +815,7 @@ def request_inspection(request):
     car = get_object_or_404(Car, id=car_id) if car_id else None
     
     return render(request, 'marketplace/request_inspection.html', {'car': car})
+
 
 # ========== CAR COMPARISON ==========
 
@@ -988,25 +854,27 @@ def remove_from_comparison(request, car_id):
     
     return redirect('compare_cars')
 
+
 # ========== CAR VALUATION ==========
 
 def car_valuation(request):
     """Car valuation tool view."""
     if request.method == 'POST':
-        brand = request.POST.get('brand')
+        make = request.POST.get('make')
         model = request.POST.get('model')
         year = int(request.POST.get('year', 0))
         mileage = int(request.POST.get('mileage', 0))
         
-        base_price = 10000
+        # Simple valuation logic
+        base_price = 10000000  # Base price in TSh
         age = 2026 - year
-        depreciation = age * 500
-        mileage_deduction = (mileage // 10000) * 500
+        depreciation = age * 500000  # Depreciation per year
+        mileage_deduction = (mileage // 10000) * 100000
         
-        estimated_price = max(1000, base_price - depreciation - mileage_deduction)
+        estimated_price = max(1000000, base_price - depreciation - mileage_deduction)
         
         context = {
-            'brand': brand,
+            'make': make,
             'model': model,
             'year': year,
             'mileage': mileage,
@@ -1016,6 +884,7 @@ def car_valuation(request):
         return render(request, 'marketplace/valuation_form.html', context)
     
     return render(request, 'marketplace/valuation_form.html')
+
 
 # ========== MESSAGES ==========
 
@@ -1077,6 +946,7 @@ def reply_message(request, message_id):
     
     return render(request, 'marketplace/reply_message.html', {'parent_message': parent_message})
 
+
 # ========== ADDITIONAL FEATURES ==========
 
 @login_required
@@ -1102,15 +972,22 @@ def report_fake_listing(request):
 def whatsapp_chat(request, car_id):
     """WhatsApp chat integration."""
     car = get_object_or_404(Car, id=car_id)
-    dealer = car.dealer
+    seller = car.seller
     
-    if dealer and dealer.phone:
-        phone = dealer.phone.replace('+', '').replace('-', '').replace(' ', '')
-        message = f"Hello, I'm interested in your {car.brand} {car.model} ({car.year}) listed on Tanzania Cars Marketplace."
+    # Get seller's phone from profile
+    try:
+        profile = seller.userprofile
+        phone = profile.phone
+    except UserProfile.DoesNotExist:
+        phone = ''
+    
+    if phone:
+        phone = phone.replace('+', '').replace('-', '').replace(' ', '')
+        message = f"Hello, I'm interested in your {car.make} {car.model} ({car.year}) listed on Tanzania Cars Marketplace."
         whatsapp_url = f"https://wa.me/{phone}?text={message}"
         return redirect(whatsapp_url)
     
-    messages.error(request, _('Dealer contact not available.'))
+    messages.error(request, _('Seller contact not available.'))
     return redirect('car_detail', car_id=car.id)
 
 @login_required
@@ -1123,40 +1000,39 @@ def mark_as_sold(request, car_id):
         return redirect('car_detail', car_id=car.id)
     
     if request.method == 'POST':
-        car.status = 'pending'
+        car.is_sold = True
         car.save()
-        messages.success(request, _('Car marked as pending sale. Waiting for approval.'))
-        return redirect('dealer_sold_requests' if hasattr(request.user, 'dealer_profile') else 'car_detail', car_id=car.id)
+        messages.success(request, _('Car marked as sold!'))
+        return redirect('car_detail', car_id=car.id)
     
     return render(request, 'marketplace/reserve_car.html', {'car': car})
 
 @login_required
 def approve_sold(request, car_id):
-    """Approve a car as sold (admin/dealer)."""
-    car = get_object_or_404(Car, id=car_id)
-    
+    """Approve a car as sold (admin)."""
     if not request.user.is_staff:
         messages.error(request, _('Access denied.'))
         return redirect('home')
     
-    car.status = 'sold'
+    car = get_object_or_404(Car, id=car_id)
+    car.is_sold = True
     car.save()
     messages.success(request, _('Sale approved!'))
-    return redirect('admin_reports' if request.user.is_staff else 'dealer_sold_requests')
+    return redirect('admin_reports')
 
 @login_required
 def reject_sold(request, car_id):
-    """Reject a car sale."""
-    car = get_object_or_404(Car, id=car_id)
-    
+    """Reject a car sale (admin)."""
     if not request.user.is_staff:
         messages.error(request, _('Access denied.'))
         return redirect('home')
     
-    car.status = 'available'
+    car = get_object_or_404(Car, id=car_id)
+    car.is_sold = False
     car.save()
     messages.warning(request, _('Sale rejected.'))
-    return redirect('admin_reports' if request.user.is_staff else 'dealer_sold_requests')
+    return redirect('admin_reports')
+
 
 # ========== SEARCH ==========
 
@@ -1165,15 +1041,16 @@ def search_cars(request):
     query = request.GET.get('q', '')
     cars = Car.objects.filter(
         Q(title__icontains=query) |
-        Q(brand__icontains=query) |
+        Q(make__icontains=query) |
         Q(model__icontains=query)
-    )
+    ).filter(is_approved=True)
     
     context = {
         'cars': cars,
         'query': query,
     }
     return render(request, 'marketplace/search_results.html', context)
+
 
 # ========== LANGUAGE SWITCHER ==========
 

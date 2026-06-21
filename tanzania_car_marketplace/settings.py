@@ -12,7 +12,7 @@ import dj_database_url
 
 # Load environment variables
 load_dotenv()
-
+SITE_ID = 2
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
 
