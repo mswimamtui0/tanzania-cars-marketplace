@@ -59,32 +59,43 @@ def register(request):
         if form.is_valid():
             user = form.save()
             role = request.POST.get('role', 'buyer')
+            phone = request.POST.get('phone', '')
+            location = request.POST.get('location', '')
             
             if role == 'dealer':
+                # Dealer: Only phone number
                 Dealer.objects.create(
                     user=user,
-                    business_name=request.POST.get('business_name', f"{user.username}'s Dealership"),
-                    phone=request.POST.get('phone', ''),
-                    location=request.POST.get('location', ''),
-                    is_verified=False
+                    business_name=f"{user.username}'s Dealership",
+                    phone=phone,
+                    location='',
+                    is_verified=False,
+                    verification_level='1'
                 )
                 auth_login(request, user)
                 messages.success(request, _('Registration successful! Welcome to your Dealer Dashboard.'))
                 return redirect('dealer_dashboard')
                 
             elif role == 'yard_manager':
+                # Yard Manager: Business Name, Phone, Location
+                business_name = request.POST.get('business_name', f"{user.username}'s Yard")
+                # Create yard manager profile (you may need a YardManager model)
+                # For now, we'll create a Dealer with yard manager role
+                Dealer.objects.create(
+                    user=user,
+                    business_name=business_name,
+                    phone=phone,
+                    location=location,
+                    is_verified=False,
+                    verification_level='1'
+                )
                 auth_login(request, user)
                 messages.success(request, _('Registration successful! Welcome to your Yard Dashboard.'))
                 return redirect('yard_dashboard')
                 
-            elif user.is_staff:
+            else:  # buyer
                 auth_login(request, user)
-                messages.success(request, _('Registration successful! Welcome Admin.'))
-                return redirect('admin_dashboard')
-                
-            else:  # buyer or default
-                auth_login(request, user)
-                messages.success(request, _('Registration successful! Welcome to your Buyer Dashboard.'))
+                messages.success(request, _('Registration successful! Welcome to Tanzania Cars Marketplace.'))
                 return redirect('buyer_dashboard')
     else:
         form = CustomUserCreationForm()
