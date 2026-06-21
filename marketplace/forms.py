@@ -166,37 +166,36 @@ class RegisterForm(UserCreationForm):
         if commit:
             user.save()
         
-        # Get the role and phone
         role = self.cleaned_data.get('role', 'buyer')
         phone = self.cleaned_data.get('phone', '')
         
-        # Create UserProfile with the role
-        profile = UserProfile.objects.create(
+        # Debug
+        print(f"DEBUG: Saving phone '{phone}' for role '{role}'")
+        
+        # Create UserProfile
+        UserProfile.objects.create(
             user=user,
             role=role,
-            phone=phone,  # <-- SAVE PHONE HERE
+            phone=phone,
             company_name=self.cleaned_data.get('business_name', ''),
             location=self.cleaned_data.get('location', ''),
             verification_level=1
         )
         
-        # If role is dealer, also create Dealer profile
+        # If dealer, create Dealer profile
         if role == 'dealer':
             Dealer.objects.create(
                 user=user,
                 business_name=self.cleaned_data.get('business_name', f"{user.username}'s Dealership"),
-                phone=phone,  # <-- SAVE PHONE HERE TOO
+                phone=phone,
                 location='',
                 is_verified=False,
                 verification_level='1'
             )
-        
-        # If role is yard_manager, create a yard manager entry
-        if role == 'yard_manager':
-            # You might want to create a YardManager model or assign to a yard
-            pass
+            print(f"DEBUG: Dealer created with phone: {phone}")
     
         return user
+
 
 class CustomAuthenticationForm(AuthenticationForm):
     """Custom login form with Bootstrap styling."""
