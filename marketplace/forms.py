@@ -48,9 +48,10 @@ class RegisterForm(UserCreationForm):
         })
     )
     
+    # PHONE IS NOW REQUIRED FOR EVERYONE
     phone = forms.CharField(
         max_length=15,
-        required=True,
+        required=True,  # <-- Changed to True
         widget=forms.TextInput(attrs={
             'class': 'form-control',
             'placeholder': 'Enter your phone number'
@@ -59,7 +60,7 @@ class RegisterForm(UserCreationForm):
     
     business_name = forms.CharField(
         max_length=200,
-        required=True,
+        required=False,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
             'placeholder': 'Enter your business name'
@@ -68,7 +69,7 @@ class RegisterForm(UserCreationForm):
     
     location = forms.CharField(
         max_length=200,
-        required=True,
+        required=False,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
             'placeholder': 'Enter your location'
@@ -122,15 +123,22 @@ class RegisterForm(UserCreationForm):
         return password2
     
     def clean_phone(self):
-        """Validate phone number based on role."""
-        return self.cleaned_data.get('phone', '')
+        """Validate phone number - required for everyone."""
+        phone = self.cleaned_data.get('phone', '').strip()
+        
+        if not phone:
+            raise ValidationError('Phone number is required.')
+        
+        if len(phone) < 7:
+            raise ValidationError('Please enter a valid phone number (at least 7 digits).')
+        
+        return phone
     
     def clean_business_name(self):
         """Validate business name based on role."""
         business_name = self.cleaned_data.get('business_name')
         role = self.cleaned_data.get('role')
         
-        # Only require business name for yard managers
         if role == 'yard_manager' and not business_name:
             raise ValidationError('Business name is required for Yard Managers.')
         
@@ -141,7 +149,6 @@ class RegisterForm(UserCreationForm):
         location = self.cleaned_data.get('location')
         role = self.cleaned_data.get('role')
         
-        # Only require location for yard managers
         if role == 'yard_manager' and not location:
             raise ValidationError('Location is required for Yard Managers.')
         
@@ -150,36 +157,35 @@ class RegisterForm(UserCreationForm):
     def save(self, commit=True):
         user = super().save(commit=False)
         user.email = self.cleaned_data['email']
-    
+        
         if commit:
             user.save()
-        
-        role = self.cleaned_data.get('role', 'buyer')
-        phone = self.cleaned_data.get('phone', '')
-        
-        # CREATE UserProfile - Phone inasave hapa
-        UserProfile.objects.create(
-            user=user,
-            role=role,
-            phone=phone,  # <-- This works
-            company_name=self.cleaned_data.get('business_name', ''),
-            location=self.cleaned_data.get('location', ''),
-            verification_level=1
-        )
-        
-        # IF DEALER - CREATE Dealer profile
-        if role == 'dealer':
-            Dealer.objects.create(
+            
+            role = self.cleaned_data.get('role', 'buyer')
+            phone = self.cleaned_data.get('phone', '')
+            
+            # Create UserProfile with the role
+            UserProfile.objects.create(
                 user=user,
-                business_name=self.cleaned_data.get('business_name', f"{user.username}'s Dealership"),
-                phone=phone,  # <-- This is NOT saving!
-                location='',
-                is_verified=False,
-                verification_level='1'
+                role=role,
+                phone=phone,
+                company_name=self.cleaned_data.get('business_name', ''),
+                location=self.cleaned_data.get('location', ''),
+                verification_level=1
             )
-    
+            
+            # If role is dealer, also create Dealer profile
+            if role == 'dealer':
+                Dealer.objects.create(
+                    user=user,
+                    business_name=self.cleaned_data.get('business_name', f"{user.username}'s Dealership"),
+                    phone=phone,
+                    location='',
+                    is_verified=False,
+                    verification_level='1'
+                )
+        
         return user
-
 
 class CustomAuthenticationForm(AuthenticationForm):
     """Custom login form with Bootstrap styling."""
