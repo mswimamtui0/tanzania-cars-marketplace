@@ -354,25 +354,11 @@
             dealerFields.classList.remove('show');
             yardManagerFields.classList.remove('show');
             
-            // Remove required attributes from all extra fields
-            dealerFields.querySelectorAll('input').forEach(function(input) {
-                input.removeAttribute('required');
-            });
-            yardManagerFields.querySelectorAll('input').forEach(function(input) {
-                input.removeAttribute('required');
-            });
-            
-            // Show and set required based on role
+            // Show fields based on role (NO required attribute)
             if (role === 'dealer') {
                 dealerFields.classList.add('show');
-                dealerFields.querySelectorAll('input').forEach(function(input) {
-                    input.setAttribute('required', 'required');
-                });
             } else if (role === 'yard_manager') {
                 yardManagerFields.classList.add('show');
-                yardManagerFields.querySelectorAll('input').forEach(function(input) {
-                    input.setAttribute('required', 'required');
-                });
             }
         }
         
