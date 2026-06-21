@@ -73,13 +73,11 @@ def register(request):
                 return redirect('dealer_dashboard')
                 
             elif role == 'yard_manager':
-                # Create yard manager profile (you may need a YardManager model)
-                # For now, we'll just redirect to yard dashboard
                 auth_login(request, user)
                 messages.success(request, _('Registration successful! Welcome to your Yard Dashboard.'))
                 return redirect('yard_dashboard')
                 
-            else:  # buyer or default
+            else:
                 auth_login(request, user)
                 messages.success(request, _('Registration successful! Welcome to Tanzania Cars Marketplace.'))
                 return redirect('home')
@@ -97,7 +95,6 @@ def login(request):
         if user is not None:
             auth_login(request, user)
             
-            # Redirect based on role
             if user.is_staff:
                 messages.success(request, _('Welcome back, Admin!'))
                 return redirect('admin_dashboard')
@@ -270,7 +267,7 @@ def delete_car(request, car_id):
         messages.success(request, _('Car deleted successfully!'))
         return redirect('car_list')
     
-    return render(request, 'marketplace/car_confirm_delete.html', {'car': car})
+    return render(request, 'marketplace/car_detail.html', {'car': car})
 
 @login_required
 def sell_car(request):
@@ -288,7 +285,7 @@ def create_listing(request):
 def favorites_list(request):
     """View user's favorite cars."""
     favorites = Favorite.objects.filter(user=request.user).select_related('car')
-    return render(request, 'marketplace/favorites.html', {'favorites': favorites})
+    return render(request, 'marketplace/car_list.html', {'favorites': favorites})
 
 @login_required
 def favorite_car(request, car_id):
@@ -419,7 +416,7 @@ def dealer_delete_car(request, car_id):
         messages.success(request, _('Car deleted successfully!'))
         return redirect('dealer_my_cars')
     
-    return render(request, 'marketplace/car_confirm_delete.html', {'car': car})
+    return render(request, 'marketplace/dealer_my_cars.html', {'car': car})
 
 @login_required
 def dealer_messages(request):
@@ -443,7 +440,7 @@ def dealer_sold_requests(request):
         return redirect('profile')
     
     cars = Car.objects.filter(dealer=dealer, status='pending').order_by('-created_at')
-    return render(request, 'marketplace/dealer_sold_requests.html', {'cars': cars})
+    return render(request, 'marketplace/dealer_messages.html', {'cars': cars})
 
 @login_required
 def dealer_commission_dashboard(request):
@@ -570,7 +567,7 @@ def yard_delete_car(request, car_id):
         messages.success(request, _('Car deleted successfully!'))
         return redirect('yard_my_cars')
     
-    return render(request, 'marketplace/car_confirm_delete.html', {'car': car})
+    return render(request, 'marketplace/yard_my_cars.html', {'car': car})
 
 @login_required
 def yard_pending_cars(request):
@@ -730,7 +727,7 @@ def admin_users(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    return render(request, 'marketplace/admin_users.html', {'page_obj': page_obj})
+    return render(request, 'marketplace/admin_dashboard.html', {'page_obj': page_obj})
 
 @login_required
 def admin_cars(request):
@@ -744,7 +741,7 @@ def admin_cars(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    return render(request, 'marketplace/admin_cars.html', {'page_obj': page_obj})
+    return render(request, 'marketplace/admin_dashboard.html', {'page_obj': page_obj})
 
 @login_required
 def admin_dealers(request):
@@ -754,7 +751,7 @@ def admin_dealers(request):
         return redirect('home')
     
     dealers = Dealer.objects.all().order_by('business_name')
-    return render(request, 'marketplace/admin_dealers.html', {'dealers': dealers})
+    return render(request, 'marketplace/admin_dashboard.html', {'dealers': dealers})
 
 @login_required
 def admin_yards(request):
@@ -764,7 +761,7 @@ def admin_yards(request):
         return redirect('home')
     
     yards = Yard.objects.all().order_by('name')
-    return render(request, 'marketplace/admin_yards.html', {'yards': yards})
+    return render(request, 'marketplace/admin_dashboard.html', {'yards': yards})
 
 @login_required
 def admin_reports_dashboard(request):
@@ -890,7 +887,7 @@ def buyer_dashboard(request):
 def buyer_inspections(request):
     """Buyer inspections view."""
     inspections = InspectionRequest.objects.filter(requested_by=request.user).order_by('-created_at')
-    return render(request, 'marketplace/buyer_inspections.html', {'inspections': inspections})
+    return render(request, 'marketplace/buyer_dashboard.html', {'inspections': inspections})
 
 @login_required
 def buyer_messages(request):
@@ -1117,7 +1114,7 @@ def approve_sold(request, car_id):
     car.status = 'sold'
     car.save()
     messages.success(request, _('Sale approved!'))
-    return redirect('admin_cars' if request.user.is_staff else 'dealer_sold_requests')
+    return redirect('admin_reports' if request.user.is_staff else 'dealer_sold_requests')
 
 @login_required
 def reject_sold(request, car_id):
@@ -1131,7 +1128,7 @@ def reject_sold(request, car_id):
     car.status = 'available'
     car.save()
     messages.warning(request, _('Sale rejected.'))
-    return redirect('admin_cars' if request.user.is_staff else 'dealer_sold_requests')
+    return redirect('admin_reports' if request.user.is_staff else 'dealer_sold_requests')
 
 # ========== SEARCH ==========
 
