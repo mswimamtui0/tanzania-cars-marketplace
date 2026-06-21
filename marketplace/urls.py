@@ -101,6 +101,8 @@ urlpatterns = [
     path('i18n/', include('django.conf.urls.i18n')),
     path('set-language/', views.set_language, name='set_language'),
     path('yard/dashboard/', views.yard_manager_dashboard, name='yard_dashboard'),
+    # Add this in the urlpatterns
+path('cars/add-car/', views.add_car, name='add_car'),
 ]
 
 # Serve media and static files in development
