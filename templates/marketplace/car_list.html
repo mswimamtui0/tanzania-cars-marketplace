@@ -1,44 +1,114 @@
 {% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1 class="text-center mb-4">Browse Cars</h1>
-    
-    <div class="row">
-        {% for car in cars %}
-        <div class="col-md-4 mb-4">
-            <div class="card shadow h-100">
-                {% if car.images and car.images.url %}
-                    <img src="{{ car.images.url }}" class="card-img-top" alt="{{ car.title }}" style="height: 200px; object-fit: cover; width: 100%;">
-                {% else %}
-                    <div class="bg-light text-center py-4" style="height: 200px; display: flex; align-items: center; justify-content: center; flex-direction: column;">
-                        <i class="fas fa-car fa-3x text-muted"></i>
-                        <small class="text-muted mt-2">No Image</small>
-                    </div>
-                {% endif %}
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <h5>{{ car.year }} {{ car.make }} {{ car.model }}</h5>
-                        {% if car.seller.userprofile.verification_level == 3 %}
-                            <span class="badge bg-success">
-                                <i class="fas fa-check-circle"></i> Verified
-                            </span>
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{% trans "Browse Cars" %}</h1>
+        <span class="badge bg-primary">{{ total_cars|default:"0" }} {% trans "cars found" %}</span>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <input type="text" name="q" class="form-control" placeholder="{% trans 'Search cars...' %}" value="{{ search_query }}">
+                </div>
+                <div class="col-md-2">
+                    <select name="make" class="form-control">
+                        <option value="">{% trans "All Makes" %}</option>
+                        {% for make_option in all_makes %}
+                            <option value="{{ make_option }}" {% if make == make_option %}selected{% endif %}>{{ make_option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <input type="number" name="min_price" class="form-control" placeholder="{% trans 'Min Price' %}" value="{{ min_price }}">
+                </div>
+                <div class="col-md-2">
+                    <input type="number" name="max_price" class="form-control" placeholder="{% trans 'Max Price' %}" value="{{ max_price }}">
+                </div>
+                <div class="col-md-2">
+                    <select name="sort" class="form-control">
+                        <option value="-created_at" {% if sort_by == '-created_at' %}selected{% endif %}>{% trans "Newest" %}</option>
+                        <option value="price" {% if sort_by == 'price' %}selected{% endif %}>{% trans "Price: Low to High" %}</option>
+                        <option value="-price" {% if sort_by == '-price' %}selected{% endif %}>{% trans "Price: High to Low" %}</option>
+                        <option value="year" {% if sort_by == 'year' %}selected{% endif %}>{% trans "Year: Old to New" %}</option>
+                        <option value="-year" {% if sort_by == '-year' %}selected{% endif %}>{% trans "Year: New to Old" %}</option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-primary w-100">{% trans "Filter" %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Car Grid -->
+    {% if page_obj %}
+        <div class="row">
+            {% for car in page_obj %}
+            <div class="col-md-3 col-6 mb-4">
+                <div class="card car-card h-100">
+                    <div class="position-relative">
+                        {% if car.images %}
+                            <img src="{{ car.images.url }}" class="card-img-top" alt="{{ car.title }}" style="height: 180px; object-fit: cover;">
+                        {% else %}
+                            <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 180px;">
+                                <i class="fas fa-car fa-3x"></i>
+                            </div>
+                        {% endif %}
+                        {% if car.featured %}
+                            <span class="featured-badge">{% trans "FEATURED" %}</span>
                         {% endif %}
                     </div>
-                    <p class="text-muted">{{ car.mileage|floatformat:0 }} km | {{ car.transmission|title }}</p>
-                    <h4 class="text-success">TSh {{ car.price|floatformat:0 }}</h4>
-                    <a href="{% url 'car_detail' car.id %}" class="btn btn-primary w-100">View Details</a>
+                    <div class="card-body">
+                        <h6 class="card-title">{{ car.year }} {{ car.make }}</h6>
+                        <p class="card-text small text-muted">{{ car.model }}</p>
+                        <div class="car-specs small text-muted">
+                            <span><i class="fas fa-tachometer-alt"></i> {{ car.mileage|floatformat:0 }} km</span>
+                        </div>
+                        <h5 class="price-tag" style="font-size: 1.1rem;">TSh {{ car.price|floatformat:0 }}</h5>
+                        <a href="{% url 'car_detail' car.id %}" class="btn btn-primary w-100">{% trans "View Details" %}</a>
+                    </div>
                 </div>
             </div>
+            {% endfor %}
         </div>
-        {% empty %}
-        <div class="col-12 text-center py-5">
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">{% trans "Previous" %}</a>
+                    </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}">{{ num }}</a>
+                    </li>
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">{% trans "Next" %}</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    {% else %}
+        <div class="text-center py-5">
             <i class="fas fa-car fa-4x text-muted mb-3"></i>
-            <h4>No cars available</h4>
-            <p>Check back soon for new listings!</p>
+            <h3>{% trans "No cars found" %}</h3>
+            <p class="text-muted">{% trans "Try adjusting your search or filters" %}</p>
+            <a href="{% url 'car_list' %}" class="btn btn-primary">{% trans "Clear Filters" %}</a>
         </div>
-        {% endfor %}
-    </div>
+    {% endif %}
 </div>
 {% endblock %}
-

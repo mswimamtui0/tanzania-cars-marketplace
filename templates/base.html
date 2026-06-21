@@ -189,6 +189,20 @@
             margin-right: 8px;
         }
         
+        /* Dashboard dropdown styling */
+        .dropdown-item i {
+            width: 20px;
+            margin-right: 10px;
+        }
+        
+        .dropdown-item.dashboard-link {
+            font-weight: 600;
+        }
+        
+        .dropdown-item.dashboard-link i {
+            color: #667eea;
+        }
+        
         /* Responsive */
         @media (max-width: 768px) {
             .navbar {
@@ -201,89 +215,120 @@
     </style>
 </head>
 <body>
-    <!-- Navigation -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm sticky-top">
-    <div class="container">
-        <a class="navbar-brand fw-bold fs-4" href="{% url 'home' %}">
-            {% trans "Tanzania Cars" %}
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'home' %}">
-                        {% trans "Home" %}
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if 'cars' in request.path %}active{% endif %}" href="{% url 'car_list' %}">
-                        {% trans "Cars" %}
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'about' %}">
-                        {% trans "About" %}
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'contact' %}">
-                        {% trans "Contact" %}
-                    </a>
-                </li>
-            </ul>
-            <ul class="navbar-nav">
-                <!-- Language Switcher -->
-                <li class="nav-item me-2">
-                    {% include 'includes/language_switcher.html' %}
-                </li>
-                
-                {% if user.is_authenticated %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                            {{ user.username }}
+    <!-- ========================================
+         NAVIGATION
+         ======================================== -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home' %}">
+                <i class="fas fa-car"></i> {% trans "Tanzania Cars" %}
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'home' %}">
+                            <i class="fas fa-home"></i> {% trans "Home" %}
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{% url 'profile' %}">
-                                {% trans "Profile" %}
-                            </a></li>
-                            <li><a class="dropdown-item" href="{% url 'favorites_list' %}">
-                                {% trans "Favorites" %}
-                            </a></li>
-                            {% if user.is_staff %}
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'cars' in request.path %}active{% endif %}" href="{% url 'car_list' %}">
+                            <i class="fas fa-car"></i> {% trans "Cars" %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'about' %}">
+                            <i class="fas fa-info-circle"></i> {% trans "About" %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'contact' %}">
+                            <i class="fas fa-envelope"></i> {% trans "Contact" %}
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <!-- Language Switcher -->
+                    <li class="nav-item me-2">
+                        {% include 'includes/language_switcher.html' %}
+                    </li>
+                    
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle"></i> {{ user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <!-- Dashboard Links Based on Role -->
+                                {% if user.is_staff %}
+                                    <li>
+                                        <a class="dropdown-item dashboard-link" href="{% url 'admin_dashboard' %}">
+                                            <i class="fas fa-tachometer-alt"></i> {% trans "Dashboard" %}
+                                        </a>
+                                    </li>
+                                {% elif user.userprofile.role == 'dealer' %}
+                                    <li>
+                                        <a class="dropdown-item dashboard-link" href="{% url 'dealer_dashboard' %}">
+                                            <i class="fas fa-tachometer-alt"></i> {% trans "Dashboard" %}
+                                        </a>
+                                    </li>
+                                {% elif user.userprofile.role == 'yard_manager' %}
+                                    <li>
+                                        <a class="dropdown-item dashboard-link" href="{% url 'yard_dashboard' %}">
+                                            <i class="fas fa-tachometer-alt"></i> {% trans "Dashboard" %}
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li>
+                                        <a class="dropdown-item dashboard-link" href="{% url 'buyer_dashboard' %}">
+                                            <i class="fas fa-tachometer-alt"></i> {% trans "Dashboard" %}
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{% url 'admin_dashboard' %}">
-                                    {% trans "Admin" %}
-                                </a></li>
-                            {% endif %}
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <form action="{% url 'logout' %}" method="post">
-                                    {% csrf_token %}
-                                    <button type="submit" class="dropdown-item">
-                                        {% trans "Logout" %}
-                                    </button>
-                                </form>
-                            </li>
-                        </ul>
-                    </li>
-                {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'login' %}">
-                            {% trans "Login" %}
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link btn btn-primary text-white px-4 rounded-pill" href="{% url 'register' %}">
-                            {% trans "Register" %}
-                        </a>
-                    </li>
-                {% endif %}
-            </ul>
+                                
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'profile' %}">
+                                        <i class="fas fa-user"></i> {% trans "Profile" %}
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'favorites_list' %}">
+                                        <i class="fas fa-heart"></i> {% trans "Favorites" %}
+                                    </a>
+                                </li>
+                                
+                                <li><hr class="dropdown-divider"></li>
+                                
+                                <li>
+                                    <form action="{% url 'logout' %}" method="post">
+                                        {% csrf_token %}
+                                        <button type="submit" class="dropdown-item">
+                                            <i class="fas fa-sign-out-alt"></i> {% trans "Logout" %}
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">
+                                <i class="fas fa-sign-in-alt"></i> {% trans "Login" %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-primary text-white px-4 rounded-pill" href="{% url 'register' %}">
+                                <i class="fas fa-user-plus"></i> {% trans "Register" %}
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
     <!-- ========================================
          MESSAGES
@@ -404,4 +449,3 @@
     </script>
 </body>
 </html>
-

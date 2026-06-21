@@ -5,10 +5,13 @@
 {% block extra_css %}
 <style>
     /* ========================================
-       HERO SECTION
+       HERO SECTION WITH LOCAL BACKGROUND IMAGE
        ======================================== */
     .hero-section {
-        background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+        background-image: url('{% static "images/CAR.jpg" %}');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
         padding: 120px 0 80px;
         position: relative;
         overflow: hidden;
@@ -17,23 +20,19 @@
         align-items: center;
     }
     
+    /* Dark overlay for better text readability */
     .hero-section::before {
         content: '';
         position: absolute;
-        top: -50%;
-        right: -20%;
-        width: 800px;
-        height: 800px;
-        background: radial-gradient(ellipse, rgba(102, 126, 234, 0.15) 0%, transparent 70%);
-        animation: pulseGlow 8s ease-in-out infinite;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(15, 12, 41, 0.65);
+        z-index: 1;
     }
     
-    @keyframes pulseGlow {
-        0%, 100% { transform: scale(1); opacity: 0.5; }
-        50% { transform: scale(1.1); opacity: 1; }
-    }
-    
-    .hero-content {
+    .hero-section .container {
         position: relative;
         z-index: 2;
     }
@@ -45,6 +44,7 @@
         line-height: 1.1;
         margin-bottom: 20px;
         letter-spacing: -1.5px;
+        text-shadow: 0 4px 20px rgba(0,0,0,0.3);
     }
     
     .hero-title span {
@@ -52,15 +52,17 @@
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+        text-shadow: none;
     }
     
     .hero-subtitle {
-        color: rgba(255,255,255,0.8);
+        color: rgba(255,255,255,0.9);
         font-size: 1.3rem;
         margin-bottom: 40px;
         max-width: 550px;
         line-height: 1.8;
         font-weight: 300;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.2);
     }
     
     .hero-search {
@@ -68,12 +70,12 @@
         border-radius: 60px;
         padding: 8px;
         max-width: 750px;
-        box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+        box-shadow: 0 30px 80px rgba(0,0,0,0.3);
         transition: all 0.3s ease;
     }
     
     .hero-search:hover {
-        box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+        box-shadow: 0 40px 100px rgba(0,0,0,0.4);
         transform: translateY(-3px);
     }
     
@@ -112,10 +114,6 @@
         box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
     }
     
-    .hero-search button i {
-        margin-right: 10px;
-    }
-    
     .hero-stats {
         margin-top: 60px;
         display: flex;
@@ -131,10 +129,11 @@
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+        text-shadow: none;
     }
     
     .hero-stat p {
-        color: rgba(255,255,255,0.6);
+        color: rgba(255,255,255,0.7);
         font-size: 1rem;
         margin-bottom: 0;
         font-weight: 300;
@@ -145,10 +144,10 @@
         align-items: center;
         gap: 10px;
         padding: 12px 25px;
-        background: rgba(255,255,255,0.06);
-        backdrop-filter: blur(20px);
+        background: rgba(255,255,255,0.08);
+        backdrop-filter: blur(10px);
         border-radius: 50px;
-        border: 1px solid rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.1);
         color: white;
         font-size: 0.9rem;
         transition: all 0.3s ease;
@@ -156,7 +155,7 @@
     }
     
     .trust-badge:hover {
-        background: rgba(255,255,255,0.12);
+        background: rgba(255,255,255,0.15);
         transform: translateY(-3px);
     }
     
@@ -360,11 +359,6 @@
         gap: 5px;
     }
     
-    .car-specs span i {
-        color: #667eea;
-        width: 16px;
-    }
-    
     /* ========================================
        POPULAR MAKES
        ======================================== */
@@ -414,6 +408,15 @@
         overflow: hidden;
     }
     
+    .sell-section .badge {
+        font-size: 0.8rem;
+        padding: 8px 20px;
+        border-radius: 50px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+    
     .sell-section h2 {
         font-size: 2.5rem;
         font-weight: 800;
@@ -456,6 +459,18 @@
     .sell-step small {
         color: #6c757d;
         font-size: 0.9rem;
+    }
+    
+    .sell-section .btn-lg {
+        border-radius: 50px;
+        padding: 16px 45px;
+        font-weight: 700;
+        transition: all 0.3s ease;
+        font-size: 1.05rem;
+    }
+    
+    .sell-section .btn-lg:hover {
+        transform: translateY(-4px);
     }
     
     /* ========================================
@@ -516,17 +531,31 @@
         box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
     }
     
+    .cta-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 50%;
+        height: 200%;
+        background: radial-gradient(ellipse, rgba(255,255,255,0.05) 0%, transparent 70%);
+    }
+    
     .cta-card h2 {
         font-size: 3rem;
         font-weight: 900;
         color: white;
         margin-bottom: 15px;
+        position: relative;
+        z-index: 2;
     }
     
     .cta-card p {
         color: rgba(255,255,255,0.85);
         font-size: 1.2rem;
         margin-bottom: 30px;
+        position: relative;
+        z-index: 2;
     }
     
     .cta-card .btn-light {
@@ -534,6 +563,8 @@
         padding: 16px 45px;
         font-weight: 700;
         transition: all 0.3s ease;
+        position: relative;
+        z-index: 2;
     }
     
     .cta-card .btn-light:hover {
@@ -546,6 +577,8 @@
         padding: 16px 45px;
         font-weight: 700;
         transition: all 0.3s ease;
+        position: relative;
+        z-index: 2;
     }
     
     .cta-card .btn-outline-light:hover {
@@ -659,7 +692,7 @@
 
 {% block content %}
 <!-- ========================================
-     HERO SECTION
+     HERO SECTION WITH LOCAL BACKGROUND
      ======================================== -->
 <section class="hero-section">
     <div class="container">
@@ -680,7 +713,7 @@
                         </div>
                         <div class="col-md-4">
                             <button type="submit" class="btn w-100">
-                                <i class="fas fa-search"></i> {% trans "Search Cars" %}
+                                {% trans "Search Cars" %}
                             </button>
                         </div>
                     </div>
@@ -705,19 +738,18 @@
                 <!-- Trust Badges -->
                 <div class="d-flex flex-wrap gap-2 mt-4">
                     <span class="trust-badge">
-                        <i class="fas fa-check-circle"></i> {% trans "Verified Cars" %}
+                        {% trans "Verified Cars" %}
                     </span>
                     <span class="trust-badge">
-                        <i class="fas fa-shield-alt"></i> {% trans "Secure Payment" %}
+                        {% trans "Secure Payment" %}
                     </span>
                     <span class="trust-badge">
-                        <i class="fas fa-headset"></i> {% trans "24/7 Support" %}
+                        {% trans "24/7 Support" %}
                     </span>
                 </div>
             </div>
             <div class="col-lg-5 d-none d-lg-block">
                 <div class="hero-image text-center">
-                    <i class="fas fa-car fa-10x text-white opacity-25"></i>
                 </div>
             </div>
         </div>
@@ -730,29 +762,28 @@
 {% if featured_cars %}
 <section class="container mt-5">
     <div class="section-header">
-        <span class="badge badge-primary">⭐ {% trans "Premium Selection" %}</span>
+        <span class="badge badge-primary">{% trans "Premium Selection" %}</span>
         <h2>{% trans "Featured Cars" %}</h2>
         <p>{% trans "Hand-picked premium vehicles from trusted dealers" %}</p>
-        <a href="{% url 'car_list' %}" class="btn btn-outline-primary">{% trans "View All Cars" %} →</a>
+        <a href="{% url 'car_list' %}" class="btn btn-outline-primary">{% trans "View All Cars" %}</a>
     </div>
     
     <div class="row">
         {% for car in featured_cars|slice:":6" %}
         <div class="col-md-4 mb-4">
             <div class="card car-card position-relative">
-                <span class="featured-badge"><i class="fas fa-star"></i> {% trans "FEATURED" %}</span>
+                <span class="featured-badge">{% trans "FEATURED" %}</span>
                 {% if car.images and car.images.url %}
                     <img src="{{ car.images.url }}" class="card-img-top" alt="{{ car.title }}">
                 {% else %}
                     <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 220px;">
-                        <i class="fas fa-car fa-4x"></i>
                     </div>
                 {% endif %}
                 <div class="card-body">
                     <h5 class="card-title">{{ car.year }} {{ car.make }} {{ car.model }}</h5>
                     <div class="car-specs">
-                        <span><i class="fas fa-tachometer-alt"></i> {{ car.mileage|floatformat:0 }} km</span>
-                        <span><i class="fas fa-cog"></i> {{ car.transmission|default:"Automatic" }}</span>
+                        <span>{{ car.mileage|floatformat:0 }} km</span>
+                        <span>{{ car.transmission|default:"Automatic" }}</span>
                     </div>
                     <h5 class="price-tag">TSh {{ car.price|floatformat:0 }}</h5>
                     <a href="{% url 'car_detail' car.id %}" class="btn btn-warning w-100">{% trans "View Details" %}</a>
@@ -769,10 +800,10 @@
      ======================================== -->
 <section class="container mt-5">
     <div class="section-header">
-        <span class="badge badge-danger">🔥 {% trans "New Listings" %}</span>
+        <span class="badge badge-danger">{% trans "New Listings" %}</span>
         <h2>{% trans "Latest Arrivals" %}</h2>
         <p>{% trans "Most recently listed cars on our platform" %}</p>
-        <a href="{% url 'car_list' %}" class="btn btn-outline-primary">{% trans "View All" %} →</a>
+        <a href="{% url 'car_list' %}" class="btn btn-outline-primary">{% trans "View All" %}</a>
     </div>
     
     <div class="row">
@@ -784,13 +815,12 @@
                     <img src="{{ car.images.url }}" class="card-img-top" alt="{{ car.title }}" style="height: 160px;">
                 {% else %}
                     <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 160px;">
-                        <i class="fas fa-car fa-2x"></i>
                     </div>
                 {% endif %}
                 <div class="card-body">
                     <h6 class="card-title">{{ car.year }} {{ car.make }} {{ car.model }}</h6>
                     <div class="car-specs">
-                        <span><i class="fas fa-tachometer-alt"></i> {{ car.mileage|floatformat:0 }} km</span>
+                        <span>{{ car.mileage|floatformat:0 }} km</span>
                     </div>
                     <h5 class="price-tag" style="font-size: 1.1rem;">TSh {{ car.price|floatformat:0 }}</h5>
                     <a href="{% url 'car_detail' car.id %}" class="btn btn-primary w-100">{% trans "View" %}</a>
@@ -806,7 +836,7 @@
      ======================================== -->
 <section class="container mt-5">
     <div class="section-header">
-        <span class="badge badge-success">🏆 {% trans "Top Brands" %}</span>
+        <span class="badge badge-success">{% trans "Top Brands" %}</span>
         <h2>{% trans "Popular Car Makes" %}</h2>
         <p>{% trans "Browse cars by your favorite brand" %}</p>
     </div>
@@ -855,10 +885,10 @@
         
         <div class="mt-4">
             <a href="{% url 'car_valuation' %}" class="btn btn-primary btn-lg rounded-pill px-5">
-                <i class="fas fa-chart-line"></i> {% trans "Get Free Valuation" %}
+                {% trans "Get Free Valuation" %}
             </a>
             <a href="{% url 'sell_car' %}" class="btn btn-outline-primary btn-lg rounded-pill px-5 ms-2">
-                <i class="fas fa-plus"></i> {% trans "List Your Car" %}
+                {% trans "List Your Car" %}
             </a>
         </div>
     </div>
@@ -869,29 +899,25 @@
      ======================================== -->
 <section class="container mt-5">
     <div class="section-header">
-        <span class="badge badge-info">🛒 {% trans "Buying Guides" %}</span>
+        <span class="badge badge-info">{% trans "Buying Guides" %}</span>
         <h2>{% trans "Buying Essentials" %}</h2>
         <p>{% trans "Everything you need for a safe car purchase" %}</p>
     </div>
     
     <div class="essentials-grid">
         <div class="essential-card text-center">
-            <i class="fas fa-history"></i>
             <h6>{% trans "Vehicle History" %}</h6>
             <small class="text-muted">{% trans "Check accident history" %}</small>
         </div>
         <div class="essential-card text-center">
-            <i class="fas fa-shield-alt"></i>
             <h6>{% trans "Security Advice" %}</h6>
             <small class="text-muted">{% trans "Safe buying tips" %}</small>
         </div>
         <div class="essential-card text-center">
-            <i class="fas fa-coins"></i>
             <h6>{% trans "Car Finance" %}</h6>
             <small class="text-muted">{% trans "Find the best loans" %}</small>
         </div>
         <div class="essential-card text-center">
-            <i class="fas fa-chart-line"></i>
             <h6>{% trans "Car Valuation" %}</h6>
             <small class="text-muted">{% trans "Know your car's worth" %}</small>
         </div>

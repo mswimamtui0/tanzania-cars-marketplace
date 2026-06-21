@@ -391,27 +391,33 @@ def add_car(request):
                 try:
                     yard = Yard.objects.get(manager=request.user)
                     car.yard = yard
-                    car.is_approved = False  # Needs yard manager approval
+                    car.is_approved = False
                 except Yard.DoesNotExist:
                     messages.warning(request, _('You are not assigned to any yard.'))
             
             car.save()
             
-            # Handle images - check if file exists and is valid
-            if 'images' in request.FILES and request.FILES['images']:
-                try:
-                    image_file = request.FILES['images']
-                    # Check if file has content
-                    if image_file.size > 0:
-                        CarImage.objects.create(
-                            car=car, 
-                            image=image_file, 
-                            is_primary=True
-                        )
-                    else:
-                        messages.warning(request, _('Image file is empty. Please upload a valid image.'))
-                except Exception as e:
-                    messages.warning(request, _('Could not upload image. Please try again.'))
+            # Handle image upload with better error handling
+            if 'images' in request.FILES:
+                image_file = request.FILES['images']
+                # Check if file has content
+                if image_file and image_file.size > 0:
+                    try:
+                        # Validate file type
+                        valid_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+                        if image_file.content_type not in valid_types:
+                            messages.warning(request, _('Please upload a valid image (JPG, PNG, GIF, or WebP).'))
+                        else:
+                            CarImage.objects.create(
+                                car=car, 
+                                image=image_file, 
+                                is_primary=True
+                            )
+                            messages.success(request, _('Image uploaded successfully!'))
+                    except Exception as e:
+                        messages.warning(request, _('Could not upload image. Please try again.'))
+                else:
+                    messages.warning(request, _('Image file is empty. Please select a valid image.'))
             
             messages.success(request, _('Car added successfully!'))
             
@@ -428,6 +434,7 @@ def add_car(request):
         form = CarForm()
     
     return render(request, 'marketplace/add_car.html', {'form': form})
+
 
 @login_required
 def edit_car(request, car_id):

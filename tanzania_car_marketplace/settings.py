@@ -133,14 +133,14 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Cloudinary Configuration
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', 'dnr7zfsdy'),
-    'API_KEY': os.environ.get('CLOUDINARY_API_KEY', '515829297827478'),
-    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', '04VbH2Fd4WTPLb_ZZWn8NKqWetA'),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY', '541729973342425'),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', 'q3DT5cc4jC7ebe05DUvHC74T4Kk'),
 }
 
 cloudinary.config(
     cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME', 'dnr7zfsdy'),
-    api_key=os.environ.get('CLOUDINARY_API_KEY', '515829297827478'),
-    api_secret=os.environ.get('CLOUDINARY_API_SECRET', '04VbH2Fd4WTPLb_ZZWn8NKqWetA'),
+    api_key=os.environ.get('CLOUDINARY_API_KEY', '541729973342425'),
+    api_secret=os.environ.get('CLOUDINARY_API_SECRET', 'q3DT5cc4jC7ebe05DUvHC74T4Kk'),
     secure=True
 )
 

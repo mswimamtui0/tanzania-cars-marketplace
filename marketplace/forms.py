@@ -226,6 +226,15 @@ class UserProfileForm(forms.ModelForm):
 class CarForm(forms.ModelForm):
     """Form for creating and editing car listings."""
     
+    # Make image optional
+    images = forms.ImageField(
+        required=False,
+        widget=forms.FileInput(attrs={
+            'class': 'form-control',
+            'accept': 'image/jpeg,image/png,image/gif,image/webp'
+        })
+    )
+    
     class Meta:
         model = Car
         fields = [
@@ -246,12 +255,11 @@ class CarForm(forms.ModelForm):
             'body_type': forms.Select(attrs={'class': 'form-control'}),
             'color': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Red'}),
             'condition': forms.Select(attrs={'class': 'form-control'}),
-            'images': forms.FileInput(attrs={'class': 'form-control'}),
+            'images': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*'}),
             'video_url': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://youtube.com/watch?v=...'}),
             'featured': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'is_negotiable': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
-
 
 class CarImageForm(forms.ModelForm):
     """Form for uploading car images."""
