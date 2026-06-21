@@ -24,20 +24,38 @@ from .forms import (
 
 def home(request):
     """Home page view."""
-    featured_cars = Car.objects.filter(featured=True, is_approved=True)[:6]
+    # Get all approved cars
+    all_cars = Car.objects.filter(is_approved=True)
+    print(f"✅ Total approved cars: {all_cars.count()}")
+    
+    # Get featured cars (approved and featured)
+    featured_cars = Car.objects.filter(is_approved=True, featured=True)[:6]
+    print(f"✅ Featured cars: {featured_cars.count()}")
+    
+    # Get latest cars (approved, ordered by created_at)
     latest_cars = Car.objects.filter(is_approved=True).order_by('-created_at')[:8]
+    print(f"✅ Latest cars: {latest_cars.count()}")
+    
+    # Debug: Print all cars with their image status
+    for car in all_cars:
+        has_image = bool(car.images)
+        print(f"  - {car.title} (Approved: {car.is_approved}, Featured: {car.featured}, Has Image: {has_image})")
+    
+    # Get dealers
     dealers = Dealer.objects.filter(is_verified=True)[:6]
     
     # Get popular makes
     from django.db.models import Count
-    popular_makes = Car.objects.filter(is_approved=True).values('make').annotate(count=Count('make')).order_by('-count')[:8]
+    popular_makes = Car.objects.filter(is_approved=True).values('make').annotate(
+        count=Count('make')
+    ).order_by('-count')[:8]
     
     context = {
         'featured_cars': featured_cars,
         'latest_cars': latest_cars,
         'dealers': dealers,
         'popular_makes': popular_makes,
-        'total_cars': Car.objects.filter(is_approved=True).count(),
+        'total_cars': all_cars.count(),
         'total_dealers': Dealer.objects.filter(is_verified=True).count(),
         'total_sold': Car.objects.filter(is_sold=True).count(),
     }
@@ -511,25 +529,24 @@ def favorite_car(request, car_id):
 # ========== DEALER DASHBOARD ==========
 
 @login_required
+@login_required
 def dealer_dashboard(request):
     """Dealer dashboard view."""
     try:
-        profile = request.user.userprofile
-        if profile.role != 'dealer':
-            messages.warning(request, _('You are not registered as a dealer.'))
-            return redirect('home')
-    except UserProfile.DoesNotExist:
-        messages.warning(request, _('Please complete your profile.'))
+        dealer = request.user.dealer_profile
+    except Dealer.DoesNotExist:
+        messages.warning(request, _('Please complete your dealer profile.'))
         return redirect('profile')
     
+    # Get cars for this dealer - using 'seller' instead of 'dealer'
     cars = Car.objects.filter(seller=request.user).order_by('-created_at')
     total_cars = cars.count()
-    available_cars = cars.filter(is_sold=False, is_approved=True).count()
+    available_cars = cars.filter(is_approved=True, is_sold=False).count()
     sold_cars = cars.filter(is_sold=True).count()
     pending_cars = cars.filter(is_approved=False).count()
     
     context = {
-        'profile': profile,
+        'dealer': dealer,
         'cars': cars[:10],
         'total_cars': total_cars,
         'available_cars': available_cars,
@@ -538,15 +555,34 @@ def dealer_dashboard(request):
     }
     return render(request, 'marketplace/dealer_dashboard.html', context)
 
+
+@login_required
 @login_required
 def dealer_my_cars(request):
     """Dealer's cars list."""
-    cars = Car.objects.filter(seller=request.user).order_by('-created_at')
-    paginator = Paginator(cars, 12)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    try:
+        dealer = request.user.dealer_profile
+    except Dealer.DoesNotExist:
+        messages.warning(request, _('Please complete your dealer profile.'))
+        return redirect('profile')
     
-    return render(request, 'marketplace/dealer_my_cars.html', {'page_obj': page_obj})
+    # Use 'seller' instead of 'dealer'
+    cars = Car.objects.filter(seller=request.user).order_by('-created_at')
+    
+    # Calculate stats
+    total_cars = cars.count()
+    available_cars = cars.filter(is_approved=True, is_sold=False).count()
+    pending_cars = cars.filter(is_approved=False).count()
+    sold_cars = cars.filter(is_sold=True).count()
+    
+    context = {
+        'cars': cars,
+        'total_cars': total_cars,
+        'available_cars': available_cars,
+        'pending_cars': pending_cars,
+        'sold_cars': sold_cars,
+    }
+    return render(request, 'marketplace/dealer_my_cars.html', context)
 
 @login_required
 def dealer_add_car(request):
