@@ -69,17 +69,119 @@
     .add-car-container .required {
         color: #dc3545;
     }
-    .add-car-container .image-preview {
-        margin-top: 10px;
+    
+    /* Image Preview Styles */
+    .image-preview-container {
+        margin-top: 15px;
+        display: none;
+        position: relative;
     }
-    .add-car-container .image-preview img {
-        border-radius: 8px;
-        border: 2px solid #e9ecef;
+    .image-preview-container.show {
+        display: block;
+    }
+    .image-preview-container .preview-wrapper {
+        position: relative;
+        display: inline-block;
+    }
+    .image-preview-container .preview-wrapper img {
         max-width: 200px;
+        max-height: 200px;
+        border-radius: 12px;
+        border: 3px solid #0d6efd;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        object-fit: cover;
     }
+    .image-preview-container .remove-image {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        width: 30px;
+        height: 30px;
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 10px rgba(220, 53, 69, 0.3);
+    }
+    .image-preview-container .remove-image:hover {
+        transform: scale(1.1);
+        background: #c82333;
+    }
+    .image-preview-container .file-name {
+        margin-top: 8px;
+        font-size: 0.9rem;
+        color: #28a745;
+        font-weight: 500;
+    }
+    .image-preview-container .file-size {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-left: 8px;
+    }
+    .image-upload-area {
+        border: 2px dashed #e9ecef;
+        border-radius: 12px;
+        padding: 30px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    .image-upload-area:hover {
+        border-color: #0d6efd;
+        background: rgba(13, 110, 253, 0.02);
+    }
+    .image-upload-area.dragover {
+        border-color: #0d6efd;
+        background: rgba(13, 110, 253, 0.05);
+    }
+    .image-upload-area i {
+        font-size: 3rem;
+        color: #adb5bd;
+        margin-bottom: 10px;
+    }
+    .image-upload-area p {
+        color: #6c757d;
+        margin-bottom: 0;
+    }
+    .image-upload-area .btn-upload {
+        background: #0d6efd;
+        color: white;
+        border: none;
+        padding: 8px 25px;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    .image-upload-area .btn-upload:hover {
+        background: #0a58ca;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(13, 110, 253, 0.3);
+    }
+    .image-upload-area input[type="file"] {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+    
     @media (max-width: 768px) {
         .add-car-container .card-body {
             padding: 25px 20px;
+        }
+        .image-preview-container .preview-wrapper img {
+            max-width: 150px;
+            max-height: 150px;
         }
     }
 </style>
@@ -92,7 +194,7 @@
                 <p>{% trans "List your car for sale on the marketplace" %}</p>
             </div>
             <div class="card-body">
-                <form method="post" enctype="multipart/form-data">
+                <form method="post" enctype="multipart/form-data" id="addCarForm">
                     {% csrf_token %}
                     
                     {% if form.errors %}
@@ -188,12 +290,29 @@
                     
                     <hr class="my-4">
                     
-                    <!-- Media -->
+                    <!-- Media with Image Preview -->
                     <h5 class="fw-bold mb-3"><i class="fas fa-image text-primary"></i> {% trans "Media" %}</h5>
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label"><i class="fas fa-image"></i> {% trans "Car Image" %}</label>
-                            <input type="file" name="images" class="form-control" accept="image/*">
+                            
+                            <!-- Image Upload Area -->
+                            <div class="image-upload-area" id="uploadArea">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>{% trans "Click or drag to upload image" %}</p>
+                                <p><small class="text-muted">{% trans "JPG, PNG, GIF, WebP (Max 10MB)" %}</small></p>
+                                <input type="file" name="images" id="imageInput" accept="image/*" onchange="previewImage(event)">
+                            </div>
+                            
+                            <!-- Image Preview -->
+                            <div class="image-preview-container" id="imagePreviewContainer">
+                                <div class="preview-wrapper">
+                                    <img id="imagePreview" src="#" alt="Preview">
+                                    <button type="button" class="remove-image" onclick="removeImage()">×</button>
+                                </div>
+                                <div class="file-name" id="fileName"></div>
+                            </div>
+                            
                             <small class="text-muted">{% trans "Upload a clear image of your car" %}</small>
                         </div>
                         <div class="col-md-6">
@@ -241,4 +360,91 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Image Preview Function
+    function previewImage(event) {
+        const input = event.target;
+        const file = input.files[0];
+        
+        if (file) {
+            // Validate file size (max 10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                alert('File is too large. Please upload an image smaller than 10MB.');
+                input.value = '';
+                return;
+            }
+            
+            // Validate file type
+            const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            if (!validTypes.includes(file.type)) {
+                alert('Please upload a valid image (JPG, PNG, GIF, or WebP).');
+                input.value = '';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('imagePreview');
+                preview.src = e.target.result;
+                document.getElementById('imagePreviewContainer').classList.add('show');
+                document.getElementById('fileName').textContent = file.name + ' (' + (file.size / 1024 / 1024).toFixed(2) + ' MB)';
+                document.getElementById('uploadArea').style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+    
+    // Remove Image Function
+    function removeImage() {
+        document.getElementById('imageInput').value = '';
+        document.getElementById('imagePreview').src = '#';
+        document.getElementById('imagePreviewContainer').classList.remove('show');
+        document.getElementById('uploadArea').style.display = 'block';
+    }
+    
+    // Drag and Drop Support
+    document.addEventListener('DOMContentLoaded', function() {
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('imageInput');
+        
+        // Prevent default drag behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        // Highlight drop area when item is dragged over it
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            uploadArea.classList.add('dragover');
+        }
+        
+        function unhighlight() {
+            uploadArea.classList.remove('dragover');
+        }
+        
+        // Handle dropped files
+        uploadArea.addEventListener('drop', function(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length) {
+                fileInput.files = files;
+                previewImage({ target: fileInput });
+            }
+        });
+    });
+</script>
 {% endblock %}
