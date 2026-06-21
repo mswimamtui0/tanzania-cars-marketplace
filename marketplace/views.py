@@ -712,6 +712,8 @@ def yard_verify_dealer(request, dealer_id):
 
 # ========== ADMIN DASHBOARD ==========
 
+# ========== ADMIN DASHBOARD ==========
+
 @login_required
 def admin_dashboard(request):
     """Admin dashboard view."""
@@ -746,7 +748,7 @@ def admin_users(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    return render(request, 'marketplace/admin_dashboard.html', {'page_obj': page_obj})
+    return render(request, 'marketplace/admin_users.html', {'page_obj': page_obj})
 
 @login_required
 def admin_cars(request):
@@ -760,7 +762,7 @@ def admin_cars(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    return render(request, 'marketplace/admin_dashboard.html', {'page_obj': page_obj})
+    return render(request, 'marketplace/admin_cars.html', {'page_obj': page_obj})
 
 @login_required
 def admin_dealers(request):
@@ -770,7 +772,11 @@ def admin_dealers(request):
         return redirect('home')
     
     dealers = Dealer.objects.all().order_by('business_name')
-    return render(request, 'marketplace/admin_dashboard.html', {'dealers': dealers})
+    paginator = Paginator(dealers, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'marketplace/admin_dealers.html', {'dealers': dealers, 'page_obj': page_obj})
 
 @login_required
 def admin_yards(request):
@@ -780,7 +786,11 @@ def admin_yards(request):
         return redirect('home')
     
     yards = Yard.objects.all().order_by('name')
-    return render(request, 'marketplace/admin_dashboard.html', {'yards': yards})
+    paginator = Paginator(yards, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'marketplace/admin_yards.html', {'yards': yards, 'page_obj': page_obj})
 
 @login_required
 def admin_reports_dashboard(request):
@@ -883,7 +893,6 @@ def admin_verify_yard(request, yard_id):
     status = 'activated' if yard.is_active else 'deactivated'
     messages.success(request, _('Yard {} successfully!').format(status))
     return redirect('admin_yards')
-
 # ========== BUYER DASHBOARD ==========
 
 @login_required
