@@ -44,11 +44,6 @@
         font-weight: 800;
     }
     
-    .stat-card .stat-label {
-        color: #6c757d;
-        font-size: 0.9rem;
-    }
-    
     .btn-action {
         border-radius: 12px;
         padding: 15px 10px;
@@ -72,6 +67,27 @@
     
     .btn-action small {
         font-size: 0.75rem;
+    }
+    
+    .pending-item {
+        border-left: 4px solid #ffc107;
+        transition: all 0.3s ease;
+    }
+    
+    .pending-item:hover {
+        background-color: #fff8e1;
+    }
+    
+    .pending-item .badge-pending {
+        background: #ffc107;
+        color: #000;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.6; }
+        100% { opacity: 1; }
     }
 </style>
 
@@ -143,6 +159,50 @@
         </div>
     </div>
 
+    <!-- Pending Yard Managers Alert -->
+    {% if pending_yard_managers %}
+    <div class="alert alert-warning alert-dismissible fade show mb-4">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+            <div>
+                <h5 class="mb-1">{% trans "Pending Yard Managers" %}</h5>
+                <p class="mb-0">
+                    {% blocktrans count count=pending_yard_managers|length %}
+                    There is {{ count }} yard manager waiting to be assigned to a yard.
+                    {% plural %}
+                    There are {{ count }} yard managers waiting to be assigned to a yard.
+                    {% endblocktrans %}
+                </p>
+            </div>
+            <a href="#pending-yard-managers" class="btn btn-warning ms-auto">
+                <i class="fas fa-arrow-right"></i> {% trans "Assign Now" %}
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Pending Yards Alert -->
+    {% if pending_yards %}
+    <div class="alert alert-info alert-dismissible fade show mb-4">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-warehouse fa-2x me-3"></i>
+            <div>
+                <h5 class="mb-1">{% trans "Pending Yards" %}</h5>
+                <p class="mb-0">
+                    {% blocktrans count count=pending_yards|length %}
+                    There is {{ count }} yard waiting to be activated.
+                    {% plural %}
+                    There are {{ count }} yards waiting to be activated.
+                    {% endblocktrans %}
+                </p>
+            </div>
+            <a href="{% url 'admin_yards' %}" class="btn btn-info ms-auto">
+                <i class="fas fa-arrow-right"></i> {% trans "Activate Now" %}
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Quick Actions -->
     <div class="card dashboard-card mb-4">
         <div class="card-header bg-light">
@@ -175,9 +235,9 @@
                     </a>
                 </div>
                 <div class="col-md-2 col-4 mb-2">
-                    <a href="{% url 'admin_reports' %}" class="btn btn-outline-danger btn-action w-100">
-                        <i class="fas fa-flag"></i>
-                        <small>{% trans "View Reports" %}</small>
+                    <a href="{% url 'admin_assign_yard' %}" class="btn btn-outline-warning btn-action w-100">
+                        <i class="fas fa-user-plus"></i>
+                        <small>{% trans "Assign Yard" %}</small>
                     </a>
                 </div>
                 <div class="col-md-2 col-4 mb-2">
@@ -187,6 +247,51 @@
                     </a>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Pending Yard Managers Section -->
+    <div id="pending-yard-managers" class="card dashboard-card mb-4">
+        <div class="card-header bg-warning">
+            <h6 class="mb-0 fw-bold text-dark">
+                <i class="fas fa-user-clock"></i> {% trans "Pending Yard Managers" %}
+                {% if pending_yard_managers %}
+                    <span class="badge bg-danger ms-2">{{ pending_yard_managers|length }}</span>
+                {% endif %}
+            </h6>
+        </div>
+        <div class="card-body p-0">
+            {% if pending_yard_managers %}
+                <div class="list-group list-group-flush">
+                    {% for profile in pending_yard_managers %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center pending-item">
+                            <div>
+                                <strong>{{ profile.user.username }}</strong>
+                                <br>
+                                <small class="text-muted">
+                                    {{ profile.user.email }} | 
+                                    Registered: {{ profile.user.date_joined|date:"Y-m-d H:i" }}
+                                </small>
+                                <br>
+                                <small class="text-muted">
+                                    <i class="fas fa-phone"></i> {{ profile.phone|default:"No phone" }} |
+                                    <i class="fas fa-building"></i> {{ profile.company_name|default:"No company" }}
+                                </small>
+                            </div>
+                            <div>
+                                <a href="{% url 'admin_assign_yard' %}?user={{ profile.user.id }}" class="btn btn-success btn-sm">
+                                    <i class="fas fa-check"></i> {% trans "Assign to Yard" %}
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="p-3 text-center text-muted">
+                    <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                    <p class="mb-0">{% trans "All yard managers are assigned to yards." %}</p>
+                </div>
+            {% endif %}
         </div>
     </div>
 
@@ -247,102 +352,6 @@
                             {% trans "No recent users" %}
                         </div>
                     {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Pending Approvals -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card dashboard-card">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0 fw-bold"><i class="fas fa-clock text-warning"></i> {% trans "Pending Approvals" %}</h6>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
-                                <span>{% trans "Cars Pending Approval" %}</span>
-                                <span class="badge bg-warning fs-5">{{ pending_cars|default:"0" }}</span>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
-                                <span>{% trans "Reports Pending Review" %}</span>
-                                <span class="badge bg-danger fs-5">{{ total_reports|default:"0" }}</span>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
-                                <span>{% trans "Yards Pending Verification" %}</span>
-                                <span class="badge bg-info fs-5">{{ pending_yards|default:"0" }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Admin Management -->
-    <div class="row mt-4">
-        <div class="col-md-4">
-            <div class="card dashboard-card">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0 fw-bold"><i class="fas fa-warehouse text-primary"></i> {% trans "Yard Management" %}</h6>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="{% url 'admin_yards' %}" class="btn btn-outline-primary">
-                            <i class="fas fa-list"></i> {% trans "View All Yards" %}
-                        </a>
-                        <a href="{% url 'admin_create_yard' %}" class="btn btn-outline-success">
-                            <i class="fas fa-plus"></i> {% trans "Create New Yard" %}
-                        </a>
-                        <a href="{% url 'admin_assign_yard' %}" class="btn btn-outline-info">
-                            <i class="fas fa-user-plus"></i> {% trans "Assign Yard Manager" %}
-                        </a>
-                        <a href="{% url 'admin_yards' %}" class="btn btn-outline-success w-100 py-3">
-    <i class="fas fa-warehouse"></i><br>
-    <small>{% trans "Manage Yards" %}</small>
-</a>
-
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card dashboard-card">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0 fw-bold"><i class="fas fa-store text-success"></i> {% trans "Dealer Management" %}</h6>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="{% url 'admin_dealers' %}" class="btn btn-outline-success">
-                            <i class="fas fa-list"></i> {% trans "View All Dealers" %}
-                        </a>
-                        <a href="{% url 'admin_dealers' %}" class="btn btn-outline-warning">
-                            <i class="fas fa-check-circle"></i> {% trans "Verify Dealers" %}
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card dashboard-card">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0 fw-bold"><i class="fas fa-flag text-danger"></i> {% trans "Reports & Issues" %}</h6>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="{% url 'admin_reports' %}" class="btn btn-outline-danger">
-                            <i class="fas fa-list"></i> {% trans "View All Reports" %}
-                        </a>
-                        <a href="{% url 'admin_reports' %}" class="btn btn-outline-warning">
-                            <i class="fas fa-check"></i> {% trans "Resolve Reports" %}
-                        </a>
-                    </div>
                 </div>
             </div>
         </div>

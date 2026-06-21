@@ -782,6 +782,7 @@ def yard_verify_dealer(request, dealer_id):
 # ========== ADMIN DASHBOARD ==========
 
 @login_required
+@login_required
 def admin_dashboard(request):
     """Admin dashboard view."""
     if not request.user.is_staff:
@@ -794,16 +795,29 @@ def admin_dashboard(request):
     total_reports = Report.objects.filter(status='pending').count()
     pending_cars = Car.objects.filter(is_approved=False).count()
     
+    # Get pending yard managers (users with yard_manager role but no yard assigned)
+    pending_yard_managers = UserProfile.objects.filter(
+        role='yard_manager'
+    ).exclude(
+        user__managed_yards__isnull=False  # Exclude those already assigned to a yard
+    ).select_related('user')
+    
+    # Get pending yards (yards without managers)
+    pending_yards = Yard.objects.filter(manager__isnull=True, is_active=False)
+    
     context = {
         'total_cars': total_cars,
         'total_users': total_users,
         'total_dealers': total_dealers,
         'total_reports': total_reports,
         'pending_cars': pending_cars,
+        'pending_yard_managers': pending_yard_managers,
+        'pending_yards': pending_yards,
         'recent_cars': Car.objects.order_by('-created_at')[:10],
         'recent_users': User.objects.order_by('-date_joined')[:10],
     }
     return render(request, 'marketplace/admin_dashboard.html', context)
+
 
 @login_required
 def admin_users(request):
@@ -1264,3 +1278,65 @@ def set_language(request):
             request.session[translation.LANGUAGE_SESSION_KEY] = language
             messages.success(request, _('Language changed successfully!'))
     return redirect(request.META.get('HTTP_REFERER', 'home'))
+
+@login_required
+def admin_verify_yard(request, yard_id):
+    """Admin verify yard view."""
+    if not request.user.is_staff:
+        messages.error(request, _('Access denied. Admin only.'))
+        return redirect('home')
+    
+    yard = get_object_or_404(Yard, id=yard_id)
+    yard.is_active = not yard.is_active
+    yard.save()
+    
+    status = 'activated' if yard.is_active else 'deactivated'
+    messages.success(request, _('Yard {} successfully!').format(status))
+    return redirect('admin_yards')
+
+
+
+@login_required
+def admin_verify_yard_list(request):
+    """Admin view to verify pending yards."""
+    if not request.user.is_staff:
+        messages.error(request, _('Access denied. Admin only.'))
+        return redirect('home')
+    
+    # Get all yards that are not verified
+    pending_yards = Yard.objects.filter(is_active=False)
+    
+    context = {
+        'pending_yards': pending_yards,
+    }
+    return render(request, 'marketplace/admin_verify_yard_list.html', context)
+
+@login_required
+def admin_verify_yard(request, yard_id):
+    """Admin verify a specific yard."""
+    if not request.user.is_staff:
+        messages.error(request, _('Access denied. Admin only.'))
+        return redirect('home')
+    
+    yard = get_object_or_404(Yard, id=yard_id)
+    yard.is_active = True
+    yard.save()
+    
+    messages.success(request, f'Yard "{yard.name}" verified successfully!')
+    return redirect('admin_verify_yard_list')
+
+
+@login_required
+def admin_verify_yard_list(request):
+    """Admin view to verify pending yards."""
+    if not request.user.is_staff:
+        messages.error(request, _('Access denied. Admin only.'))
+        return redirect('home')
+    
+    # Get all yards that are not active
+    pending_yards = Yard.objects.filter(is_active=False)
+    
+    context = {
+        'pending_yards': pending_yards,
+    }
+    return render(request, 'marketplace/admin_verify_yard_list.html', context)
