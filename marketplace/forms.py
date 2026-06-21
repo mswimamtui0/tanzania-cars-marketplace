@@ -127,8 +127,9 @@ class RegisterForm(UserCreationForm):
         role = self.cleaned_data.get('role')
         
         # Only require phone for dealers and yard managers
-        if role in ['dealer', 'yard_manager'] and not phone:
-            raise ValidationError('Phone number is required for Dealers and Yard Managers.')
+        if role in ['dealer', 'yard_manager']:
+            if not phone or not phone.strip():
+                raise ValidationError('Phone number is required for Dealers and Yard Managers.')
         
         return phone
     
@@ -187,6 +188,7 @@ class RegisterForm(UserCreationForm):
                 )
         
         return user
+
 
 class CustomAuthenticationForm(AuthenticationForm):
     """Custom login form with Bootstrap styling."""
