@@ -1,23 +1,48 @@
-from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
+from django.db import models
 from django.contrib.auth.models import User
-from .models import (
-    UserProfile, 
-    Car, 
-    CarListing, 
-    Dealer, 
-    Yard, 
-    YardDealerAssignment, 
-    DealerAssignment,
-    Favorite, 
-    Review, 
-    Report, 
-    Message, 
-    InspectionRequest, 
-    ListingPackage,
-    CarImage
-)
+from django.utils import timezone
+from django.urls import reverse
+from cloudinary.models import CloudinaryField
 
+# ========================================
+# USER PROFILE MODEL
+# ========================================
+
+class UserProfile(models.Model):
+    ROLE_CHOICES = [
+        ('admin', 'Admin'),
+        ('dealer', 'Dealer'),
+        ('yard_manager', 'Yard Manager'),
+        ('buyer', 'Buyer'),
+    ]
+    
+    VERIFICATION_CHOICES = [
+        (1, 'Level 1 - Unverified'),
+        (2, 'Level 2 - Partially Verified'),
+        (3, 'Level 3 - Fully Verified'),
+    ]
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='userprofile')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='buyer')
+    phone = models.CharField(max_length=15, blank=True)
+    email_verified = models.BooleanField(default=False)
+    verification_level = models.IntegerField(choices=VERIFICATION_CHOICES, default=1)
+    id_uploaded = models.BooleanField(default=False)
+    location_verified = models.BooleanField(default=False)
+    verified_badge = models.BooleanField(default=False)
+    company_name = models.CharField(max_length=200, blank=True)
+    whatsapp_number = models.CharField(max_length=15, blank=True)
+    location = models.CharField(max_length=200, blank=True)
+    commission_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
+    total_sales = models.IntegerField(default=0)
+    total_commission = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
+    is_active_agent = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.role}"
+
+# ... then your other models (Car, Dealer, Yard, etc.)
 # ========================================
 # CUSTOM USER ADMIN
 # ========================================
