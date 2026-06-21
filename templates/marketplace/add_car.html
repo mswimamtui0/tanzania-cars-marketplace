@@ -4,63 +4,54 @@
 
 {% block content %}
 <style>
-    .add-car-form {
+    .add-car-container {
         max-width: 800px;
         margin: 0 auto;
+        padding: 20px;
     }
-    
-    .add-car-form .card {
+    .add-car-container .card {
         border: none;
         border-radius: 20px;
         box-shadow: 0 10px 40px rgba(0,0,0,0.08);
     }
-    
-    .add-car-form .card-header {
+    .add-car-container .card-header {
         background: linear-gradient(135deg, #0d6efd, #0a58ca);
         padding: 25px 30px;
         border: none;
         border-radius: 20px 20px 0 0 !important;
     }
-    
-    .add-car-form .card-header h3 {
+    .add-car-container .card-header h3 {
         font-weight: 700;
         color: white;
         margin: 0;
     }
-    
-    .add-car-form .card-header p {
+    .add-car-container .card-header p {
         color: rgba(255,255,255,0.8);
         margin: 5px 0 0;
     }
-    
-    .add-car-form .card-body {
+    .add-car-container .card-body {
         padding: 35px 30px;
     }
-    
-    .add-car-form .form-control {
+    .add-car-container .form-control {
         border-radius: 12px;
         padding: 12px 16px;
         border: 2px solid #e9ecef;
         transition: all 0.3s ease;
     }
-    
-    .add-car-form .form-control:focus {
+    .add-car-container .form-control:focus {
         border-color: #0d6efd;
         box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
     }
-    
-    .add-car-form .form-label {
+    .add-car-container .form-label {
         font-weight: 600;
         color: #212529;
         margin-bottom: 8px;
     }
-    
-    .add-car-form .form-label i {
+    .add-car-container .form-label i {
         margin-right: 8px;
         color: #0d6efd;
     }
-    
-    .add-car-form .btn-submit {
+    .add-car-container .btn-submit {
         background: linear-gradient(135deg, #0d6efd, #0a58ca);
         border: none;
         padding: 14px;
@@ -71,51 +62,37 @@
         color: white;
         width: 100%;
     }
-    
-    .add-car-form .btn-submit:hover {
+    .add-car-container .btn-submit:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(13, 110, 253, 0.3);
     }
-    
-    .add-car-form .form-text {
-        color: #6c757d;
-        font-size: 0.85rem;
-    }
-    
-    .add-car-form .required {
+    .add-car-container .required {
         color: #dc3545;
     }
-    
-    .add-car-form .image-preview {
+    .add-car-container .image-preview {
         margin-top: 10px;
-        max-width: 200px;
     }
-    
-    .add-car-form .image-preview img {
+    .add-car-container .image-preview img {
         border-radius: 8px;
         border: 2px solid #e9ecef;
+        max-width: 200px;
     }
-    
-    .add-car-form .row.gap-3 {
-        row-gap: 1rem;
-    }
-    
     @media (max-width: 768px) {
-        .add-car-form .card-body {
+        .add-car-container .card-body {
             padding: 25px 20px;
         }
     }
 </style>
 
 <div class="container py-4">
-    <div class="add-car-form">
+    <div class="add-car-container">
         <div class="card">
             <div class="card-header">
                 <h3><i class="fas fa-plus-circle"></i> {% trans "Add New Car" %}</h3>
                 <p>{% trans "List your car for sale on the marketplace" %}</p>
             </div>
             <div class="card-body">
-                <form method="post" enctype="multipart/form-data" id="addCarForm">
+                <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     
                     {% if form.errors %}
@@ -129,31 +106,16 @@
                     <h5 class="fw-bold mb-3"><i class="fas fa-info-circle text-primary"></i> {% trans "Basic Information" %}</h5>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">
-                                <i class="fas fa-tag"></i> {% trans "Title" %} <span class="required">*</span>
-                            </label>
+                            <label class="form-label"><i class="fas fa-tag"></i> {% trans "Title" %} <span class="required">*</span></label>
                             <input type="text" name="title" class="form-control" placeholder="e.g., Toyota Corolla 2020" required>
-                            {% if form.title.errors %}
-                                <div class="text-danger small">{{ form.title.errors.0 }}</div>
-                            {% endif %}
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">
-                                <i class="fas fa-tag"></i> {% trans "Price (TSh)" %} <span class="required">*</span>
-                            </label>
+                            <label class="form-label"><i class="fas fa-money-bill"></i> {% trans "Price (TSh)" %} <span class="required">*</span></label>
                             <input type="number" name="price" class="form-control" placeholder="e.g., 25000000" required>
-                            {% if form.price.errors %}
-                                <div class="text-danger small">{{ form.price.errors.0 }}</div>
-                            {% endif %}
                         </div>
                         <div class="col-12">
-                            <label class="form-label">
-                                <i class="fas fa-align-left"></i> {% trans "Description" %} <span class="required">*</span>
-                            </label>
+                            <label class="form-label"><i class="fas fa-align-left"></i> {% trans "Description" %} <span class="required">*</span></label>
                             <textarea name="description" class="form-control" rows="4" placeholder="Describe your car in detail..." required></textarea>
-                            {% if form.description.errors %}
-                                <div class="text-danger small">{{ form.description.errors.0 }}</div>
-                            {% endif %}
                         </div>
                     </div>
                     
@@ -163,45 +125,23 @@
                     <h5 class="fw-bold mb-3"><i class="fas fa-car text-primary"></i> {% trans "Vehicle Details" %}</h5>
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label class="form-label">
-                                <i class="fas fa-calendar"></i> {% trans "Year" %} <span class="required">*</span>
-                            </label>
+                            <label class="form-label"><i class="fas fa-calendar"></i> {% trans "Year" %} <span class="required">*</span></label>
                             <input type="number" name="year" class="form-control" placeholder="2020" min="1990" max="2025" required>
-                            {% if form.year.errors %}
-                                <div class="text-danger small">{{ form.year.errors.0 }}</div>
-                            {% endif %}
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">
-                                <i class="fas fa-car"></i> {% trans "Make" %} <span class="required">*</span>
-                            </label>
+                            <label class="form-label"><i class="fas fa-car"></i> {% trans "Make" %} <span class="required">*</span></label>
                             <input type="text" name="make" class="form-control" placeholder="e.g., Toyota" required>
-                            {% if form.make.errors %}
-                                <div class="text-danger small">{{ form.make.errors.0 }}</div>
-                            {% endif %}
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">
-                                <i class="fas fa-car"></i> {% trans "Model" %} <span class="required">*</span>
-                            </label>
+                            <label class="form-label"><i class="fas fa-car"></i> {% trans "Model" %} <span class="required">*</span></label>
                             <input type="text" name="model" class="form-control" placeholder="e.g., Corolla" required>
-                            {% if form.model.errors %}
-                                <div class="text-danger small">{{ form.model.errors.0 }}</div>
-                            {% endif %}
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">
-                                <i class="fas fa-tachometer-alt"></i> {% trans "Mileage (km)" %} <span class="required">*</span>
-                            </label>
+                            <label class="form-label"><i class="fas fa-tachometer-alt"></i> {% trans "Mileage (km)" %} <span class="required">*</span></label>
                             <input type="number" name="mileage" class="form-control" placeholder="e.g., 50000" min="0" required>
-                            {% if form.mileage.errors %}
-                                <div class="text-danger small">{{ form.mileage.errors.0 }}</div>
-                            {% endif %}
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">
-                                <i class="fas fa-gas-pump"></i> {% trans "Fuel Type" %} <span class="required">*</span>
-                            </label>
+                            <label class="form-label"><i class="fas fa-gas-pump"></i> {% trans "Fuel Type" %} <span class="required">*</span></label>
                             <select name="fuel_type" class="form-control" required>
                                 <option value="">{% trans "Select fuel type" %}</option>
                                 <option value="petrol">{% trans "Petrol" %}</option>
@@ -209,27 +149,17 @@
                                 <option value="electric">{% trans "Electric" %}</option>
                                 <option value="hybrid">{% trans "Hybrid" %}</option>
                             </select>
-                            {% if form.fuel_type.errors %}
-                                <div class="text-danger small">{{ form.fuel_type.errors.0 }}</div>
-                            {% endif %}
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">
-                                <i class="fas fa-cog"></i> {% trans "Transmission" %} <span class="required">*</span>
-                            </label>
+                            <label class="form-label"><i class="fas fa-cog"></i> {% trans "Transmission" %} <span class="required">*</span></label>
                             <select name="transmission" class="form-control" required>
                                 <option value="">{% trans "Select transmission" %}</option>
                                 <option value="manual">{% trans "Manual" %}</option>
                                 <option value="automatic">{% trans "Automatic" %}</option>
                             </select>
-                            {% if form.transmission.errors %}
-                                <div class="text-danger small">{{ form.transmission.errors.0 }}</div>
-                            {% endif %}
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">
-                                <i class="fas fa- car"></i> {% trans "Body Type" %} <span class="required">*</span>
-                            </label>
+                            <label class="form-label"><i class="fas fa-car"></i> {% trans "Body Type" %} <span class="required">*</span></label>
                             <select name="body_type" class="form-control" required>
                                 <option value="">{% trans "Select body type" %}</option>
                                 <option value="sedan">{% trans "Sedan" %}</option>
@@ -240,32 +170,19 @@
                                 <option value="coupe">{% trans "Coupe" %}</option>
                                 <option value="convertible">{% trans "Convertible" %}</option>
                             </select>
-                            {% if form.body_type.errors %}
-                                <div class="text-danger small">{{ form.body_type.errors.0 }}</div>
-                            {% endif %}
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">
-                                <i class="fas fa-palette"></i> {% trans "Color" %} <span class="required">*</span>
-                            </label>
+                            <label class="form-label"><i class="fas fa-palette"></i> {% trans "Color" %} <span class="required">*</span></label>
                             <input type="text" name="color" class="form-control" placeholder="e.g., Red" required>
-                            {% if form.color.errors %}
-                                <div class="text-danger small">{{ form.color.errors.0 }}</div>
-                            {% endif %}
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">
-                                <i class="fas fa-clipboard-check"></i> {% trans "Condition" %} <span class="required">*</span>
-                            </label>
+                            <label class="form-label"><i class="fas fa-clipboard-check"></i> {% trans "Condition" %} <span class="required">*</span></label>
                             <select name="condition" class="form-control" required>
                                 <option value="">{% trans "Select condition" %}</option>
                                 <option value="new">{% trans "New" %}</option>
                                 <option value="used">{% trans "Used" %}</option>
                                 <option value="certified">{% trans "Certified Pre-Owned" %}</option>
                             </select>
-                            {% if form.condition.errors %}
-                                <div class="text-danger small">{{ form.condition.errors.0 }}</div>
-                            {% endif %}
                         </div>
                     </div>
                     
@@ -275,23 +192,13 @@
                     <h5 class="fw-bold mb-3"><i class="fas fa-image text-primary"></i> {% trans "Media" %}</h5>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">
-                                <i class="fas fa-image"></i> {% trans "Car Image" %}
-                            </label>
+                            <label class="form-label"><i class="fas fa-image"></i> {% trans "Car Image" %}</label>
                             <input type="file" name="images" class="form-control" accept="image/*">
-                            <small class="form-text">{% trans "Upload a clear image of your car (JPG, PNG)" %}</small>
-                            {% if form.images.errors %}
-                                <div class="text-danger small">{{ form.images.errors.0 }}</div>
-                            {% endif %}
+                            <small class="text-muted">{% trans "Upload a clear image of your car" %}</small>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">
-                                <i class="fas fa-video"></i> {% trans "Video URL" %}
-                            </label>
+                            <label class="form-label"><i class="fas fa-video"></i> {% trans "Video URL" %}</label>
                             <input type="url" name="video_url" class="form-control" placeholder="https://youtube.com/watch?v=...">
-                            {% if form.video_url.errors %}
-                                <div class="text-danger small">{{ form.video_url.errors.0 }}</div>
-                            {% endif %}
                         </div>
                     </div>
                     
@@ -306,7 +213,6 @@
                                 <label class="form-check-label" for="featured">
                                     <i class="fas fa-star text-warning"></i> {% trans "Featured Listing" %}
                                 </label>
-                                <small class="d-block text-muted">{% trans "Get more visibility for your car" %}</small>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -324,41 +230,15 @@
                             <i class="fas fa-plus-circle me-2"></i> {% trans "List Car" %}
                         </button>
                     </div>
-                    
-                    <div class="mt-3 text-center">
-                        <a href="{% if request.user.userprofile.role == 'dealer' %}{% url 'dealer_my_cars' %}{% else %}{% url 'yard_cars' %}{% endif %}" class="text-decoration-none">
-                            <i class="fas fa-arrow-left"></i> {% trans "Back to My Cars" %}
-                        </a>
-                    </div>
                 </form>
+                
+                <div class="mt-3 text-center">
+                    <a href="{% if request.user.userprofile.role == 'dealer' %}{% url 'dealer_my_cars' %}{% else %}{% url 'yard_cars' %}{% endif %}" class="text-decoration-none">
+                        <i class="fas fa-arrow-left"></i> {% trans "Back to My Cars" %}
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 </div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Preview image upload
-        const imageInput = document.querySelector('input[type="file"]');
-        if (imageInput) {
-            imageInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        // Check if preview div exists, if not create it
-                        let preview = document.querySelector('.image-preview');
-                        if (!preview) {
-                            preview = document.createElement('div');
-                            preview.className = 'image-preview';
-                            imageInput.parentNode.appendChild(preview);
-                        }
-                        preview.innerHTML = `<img src="${event.target.result}" alt="Preview" style="max-width: 200px; border-radius: 8px;">`;
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-        }
-    });
-</script>
 {% endblock %}
