@@ -158,8 +158,9 @@
                             <td colspan="5" class="text-center py-4">
                                 <i class="fas fa-car fa-3x text-muted mb-3"></i>
                                 <h5>{% trans "No cars in this yard yet" %}</h5>
-                                <a href="{% url 'yard_add_car' %}" class="btn btn-primary">{% trans "Add Your First Car" %}</a>
-                            </td>
+                                <a href="{% url 'add_car' %}" class="btn btn-success">
+    <i class="fas fa-plus"></i> {% trans "Add New Car" %}
+</a>                          </td>
                         </tr>
                         {% endfor %}
                     </tbody>
