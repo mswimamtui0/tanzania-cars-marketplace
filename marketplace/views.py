@@ -77,14 +77,20 @@ def register(request):
                 messages.success(request, _('Registration successful! Welcome to your Yard Dashboard.'))
                 return redirect('yard_dashboard')
                 
-            else:
+            elif user.is_staff:
                 auth_login(request, user)
-                messages.success(request, _('Registration successful! Welcome to Tanzania Cars Marketplace.'))
-                return redirect('home')
+                messages.success(request, _('Registration successful! Welcome Admin.'))
+                return redirect('admin_dashboard')
+                
+            else:  # buyer or default
+                auth_login(request, user)
+                messages.success(request, _('Registration successful! Welcome to your Buyer Dashboard.'))
+                return redirect('buyer_dashboard')
     else:
         form = CustomUserCreationForm()
     
     return render(request, 'marketplace/register.html', {'form': form})
+
 
 def login(request):
     """User login view."""
@@ -95,21 +101,23 @@ def login(request):
         if user is not None:
             auth_login(request, user)
             
+            # Check user role and redirect accordingly
             if user.is_staff:
                 messages.success(request, _('Welcome back, Admin!'))
                 return redirect('admin_dashboard')
             elif hasattr(user, 'dealer_profile'):
                 messages.success(request, _('Welcome back to your Dealer Dashboard!'))
                 return redirect('dealer_dashboard')
-            elif user.groups.filter(name='Yard Managers').exists():
+            elif hasattr(user, 'yard_manager_profile') or user.groups.filter(name='Yard Managers').exists():
                 messages.success(request, _('Welcome back to your Yard Dashboard!'))
                 return redirect('yard_dashboard')
             else:
                 messages.success(request, _('Welcome back, {}!').format(user.username))
-                return redirect('home')
+                return redirect('buyer_dashboard')
         else:
             messages.error(request, _('Invalid username or password.'))
     return render(request, 'marketplace/login.html')
+
 
 def logout(request):
     """User logout view."""
