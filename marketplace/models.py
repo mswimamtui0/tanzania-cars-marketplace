@@ -25,7 +25,7 @@ class UserProfile(models.Model):
     
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='userprofile')
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='buyer')
-    phone = models.CharField(max_length=15, blank=True)
+    phone = models.CharField(max_length=15, blank=True, null=True, default='')
     email_verified = models.BooleanField(default=False)
     verification_level = models.IntegerField(choices=VERIFICATION_CHOICES, default=1)
     id_uploaded = models.BooleanField(default=False)
