@@ -244,6 +244,7 @@ def profile(request):
 
 def car_list(request):
     """List all available cars with filters."""
+    # Get all approved cars (not filtering by status)
     cars = Car.objects.filter(is_approved=True)
     
     # Search
@@ -294,6 +295,9 @@ def car_list(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
+    # Get all makes for filter dropdown
+    all_makes = Car.objects.filter(is_approved=True).values_list('make', flat=True).distinct()
+    
     context = {
         'page_obj': page_obj,
         'search_query': search_query,
@@ -305,8 +309,11 @@ def car_list(request):
         'fuel_type': fuel_type,
         'body_type': body_type,
         'sort_by': sort_by,
+        'all_makes': all_makes,
+        'total_cars': cars.count(),
     }
     return render(request, 'marketplace/car_list.html', context)
+
 
 def car_detail(request, car_id):
     """Car detail view."""
@@ -349,9 +356,67 @@ def save_car(request):
     return render(request, 'marketplace/sell_car.html', {'form': form})
 
 @login_required
+@login_required
 def add_car(request):
-    """Add car view."""
-    return save_car(request)
+    """Add car view - for both dealers and yard managers."""
+    # Check user role
+    try:
+        profile = request.user.userprofile
+        role = profile.role
+    except UserProfile.DoesNotExist:
+        messages.error(request, _('Profile not found. Please contact support.'))
+        return redirect('home')
+    
+    # Check if user has permission to add cars
+    if role not in ['dealer', 'yard_manager']:
+        messages.error(request, _('You do not have permission to add cars.'))
+        return redirect('home')
+    
+    if request.method == 'POST':
+        form = CarForm(request.POST, request.FILES)
+        if form.is_valid():
+            car = form.save(commit=False)
+            car.seller = request.user
+            
+            # If user is dealer, link to dealer
+            if role == 'dealer':
+                try:
+                    dealer = Dealer.objects.get(user=request.user)
+                    car.dealer = dealer
+                except Dealer.DoesNotExist:
+                    pass
+            
+            # If user is yard manager, link to yard
+            if role == 'yard_manager':
+                try:
+                    yard = Yard.objects.get(manager=request.user)
+                    car.yard = yard
+                    car.is_approved = False  # Needs yard manager approval
+                except Yard.DoesNotExist:
+                    messages.warning(request, _('You are not assigned to any yard. Your car will be listed without yard association.'))
+            
+            car.save()
+            
+            # Handle images
+            if 'images' in request.FILES:
+                CarImage.objects.create(car=car, image=request.FILES['images'], is_primary=True)
+            
+            messages.success(request, _('Car added successfully!'))
+            
+            # Redirect based on role
+            if role == 'dealer':
+                return redirect('dealer_my_cars')
+            else:
+                return redirect('yard_cars')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
+    else:
+        form = CarForm()
+    
+    return render(request, 'marketplace/add_car.html', {'form': form})
+
 
 @login_required
 def edit_car(request, car_id):

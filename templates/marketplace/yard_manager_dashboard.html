@@ -1,55 +1,112 @@
 {% extends 'base.html' %}
 {% load i18n %}
+{% load static %}
 
 {% block content %}
-<div class="container mt-4">
+<style>
+    .stat-card {
+        border-radius: 16px;
+        padding: 20px;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+    
+    .stat-card .stat-number {
+        font-size: 2rem;
+        font-weight: 800;
+    }
+    
+    .dashboard-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.06);
+        transition: all 0.3s ease;
+    }
+    
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    .btn-add-car {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-add-car:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+    }
+</style>
+
+<div class="container py-4">
+    <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1><i class="fas fa-warehouse"></i> {% trans "Yard Manager Dashboard" %}</h1>
-        <a href="{% url 'yard_add_car' %}" class="btn btn-success">
-            <i class="fas fa-plus"></i> {% trans "Add New Car" %}
+        <div>
+            <h1 class="fw-bold"><i class="fas fa-warehouse text-primary"></i> {% trans "Yard Manager Dashboard" %}</h1>
+            <p class="text-muted">{% trans "Welcome back," %} <strong>{{ user.username }}</strong>!</p>
+            {% if yard %}
+                <p class="text-muted"><i class="fas fa-map-marker-alt text-primary"></i> {% trans "Managing" %}: <strong>{{ yard.name }}</strong> - {{ yard.location }}</p>
+            {% else %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> {% trans "You are not assigned to any yard yet. Please contact the administrator." %}
+                </div>
+            {% endif %}
+        </div>
+        <a href="{% url 'add_car' %}" class="btn btn-add-car btn-lg rounded-pill px-4">
+            <i class="fas fa-plus-circle me-2"></i> {% trans "Add New Car" %}
         </a>
     </div>
-    <p>{% trans "Welcome back" %}, <strong>{{ user.username }}</strong>!</p>
-    
-    {% if yard %}
-        <p><strong>{% trans "Managing" %}:</strong> {{ yard.name }} - {{ yard.location }}</p>
-    {% else %}
-        <div class="alert alert-warning">
-            <i class="fas fa-exclamation-triangle"></i> {% trans "You are not assigned to any yard yet. Please contact the administrator." %}
-        </div>
-    {% endif %}
 
     <!-- Statistics Cards -->
-    <div class="row mb-4">
+    <div class="row g-4 mb-4">
         <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body text-center">
-                    <h3>{{ total_cars|default:"0" }}</h3>
-                    <p>{% trans "Total Cars" %}</p>
+            <div class="stat-card bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50">{% trans "Total Cars" %}</h6>
+                        <h2 class="mb-0 stat-number">{{ total_cars|default:"0" }}</h2>
+                    </div>
+                    <i class="fas fa-car fa-3x opacity-50"></i>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-success text-white">
-                <div class="card-body text-center">
-                    <h3>{{ available_cars|default:"0" }}</h3>
-                    <p>{% trans "Available" %}</p>
+            <div class="stat-card bg-success text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50">{% trans "Available" %}</h6>
+                        <h2 class="mb-0 stat-number">{{ available_cars|default:"0" }}</h2>
+                    </div>
+                    <i class="fas fa-check-circle fa-3x opacity-50"></i>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-warning text-dark">
-                <div class="card-body text-center">
-                    <h3>{{ pending_cars|default:"0" }}</h3>
-                    <p>{% trans "Pending Approval" %}</p>
+            <div class="stat-card bg-warning text-dark">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-dark-50">{% trans "Pending" %}</h6>
+                        <h2 class="mb-0 stat-number">{{ pending_cars|default:"0" }}</h2>
+                    </div>
+                    <i class="fas fa-clock fa-3x opacity-50"></i>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-info text-white">
-                <div class="card-body text-center">
-                    <h3>{{ dealer_count|default:"0" }}</h3>
-                    <p>{% trans "Dealers" %}</p>
+            <div class="stat-card bg-info text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50">{% trans "Dealers" %}</h6>
+                        <h2 class="mb-0 stat-number">{{ dealer_count|default:"0" }}</h2>
+                    </div>
+                    <i class="fas fa-users fa-3x opacity-50"></i>
                 </div>
             </div>
         </div>
@@ -58,40 +115,46 @@
     <!-- Quick Actions -->
     <div class="row mb-4">
         <div class="col-md-12">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-bolt"></i> {% trans "Quick Actions" %}</h5>
+            <div class="card dashboard-card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-bolt"></i> {% trans "Quick Actions" %}</h5>
                 </div>
                 <div class="card-body">
-                    <div class="row">
+                    <div class="row g-2">
                         <div class="col-md-2 col-6 mb-2">
-                            <a href="{% url 'add_car' %}" class="btn btn-success w-100">
-    <i class="fas fa-plus"></i> {% trans "Add Car" %}
-</a>
-                        </div>
-                        <div class="col-md-2 col-6 mb-2">
-                            <a href="{% url 'yard_cars' %}" class="btn btn-primary w-100">
-                                <i class="fas fa-car"></i> {% trans "My Cars" %}
+                            <a href="{% url 'add_car' %}" class="btn btn-success w-100 py-3">
+                                <i class="fas fa-plus"></i><br>
+                                <small>{% trans "Add Car" %}</small>
                             </a>
                         </div>
                         <div class="col-md-2 col-6 mb-2">
-                            <a href="{% url 'yard_pending_cars' %}" class="btn btn-warning w-100">
-                                <i class="fas fa-clock"></i> {% trans "Pending" %}
+                            <a href="{% url 'yard_cars' %}" class="btn btn-primary w-100 py-3">
+                                <i class="fas fa-car"></i><br>
+                                <small>{% trans "My Cars" %}</small>
                             </a>
                         </div>
                         <div class="col-md-2 col-6 mb-2">
-                            <a href="{% url 'yard_manage_dealers' %}" class="btn btn-info w-100">
-                                <i class="fas fa-users"></i> {% trans "Dealers" %}
+                            <a href="{% url 'yard_pending_cars' %}" class="btn btn-warning w-100 py-3">
+                                <i class="fas fa-clock"></i><br>
+                                <small>{% trans "Pending" %}</small>
                             </a>
                         </div>
                         <div class="col-md-2 col-6 mb-2">
-                            <a href="{% url 'yard_assign_dealer' %}" class="btn btn-secondary w-100">
-                                <i class="fas fa-user-plus"></i> {% trans "Assign Dealer" %}
+                            <a href="{% url 'yard_manage_dealers' %}" class="btn btn-info w-100 py-3">
+                                <i class="fas fa-users"></i><br>
+                                <small>{% trans "Dealers" %}</small>
                             </a>
                         </div>
                         <div class="col-md-2 col-6 mb-2">
-                            <a href="{% url 'yard_dashboard' %}" class="btn btn-dark w-100">
-                                <i class="fas fa-home"></i> {% trans "Dashboard" %}
+                            <a href="{% url 'yard_assign_dealer' %}" class="btn btn-secondary w-100 py-3">
+                                <i class="fas fa-user-plus"></i><br>
+                                <small>{% trans "Assign Dealer" %}</small>
+                            </a>
+                        </div>
+                        <div class="col-md-2 col-6 mb-2">
+                            <a href="{% url 'yard_dashboard' %}" class="btn btn-dark w-100 py-3">
+                                <i class="fas fa-home"></i><br>
+                                <small>{% trans "Dashboard" %}</small>
                             </a>
                         </div>
                     </div>
@@ -101,13 +164,13 @@
     </div>
 
     <!-- Recent Cars -->
-    <div class="card shadow">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="fas fa-list"></i> {% trans "Recent Cars" %} ({{ total_cars|default:"0" }})</h5>
+    <div class="card dashboard-card">
+        <div class="card-header bg-light">
+            <h6 class="mb-0 fw-bold">{% trans "Recent Cars" %} ({{ total_cars|default:"0" }})</h6>
         </div>
-        <div class="card-body">
+        <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="table table-hover mb-0">
                     <thead>
                         <tr>
                             <th>{% trans "Car" %}</th>
@@ -124,7 +187,7 @@
                                 <strong>{{ car.year }} {{ car.make }} {{ car.model }}</strong>
                                 <br><small class="text-muted">{{ car.mileage|floatformat:0 }} km</small>
                             </td>
-                            <td>{{ car.price|floatformat:0 }}</td>
+                            <td>TSh {{ car.price|floatformat:0 }}</td>
                             <td>
                                 {% if car.is_approved and not car.is_sold %}
                                     <span class="badge bg-success">{% trans "Approved" %}</span>
@@ -150,6 +213,9 @@
                                             <i class="fas fa-times"></i>
                                         </a>
                                     {% endif %}
+                                    <a href="{% url 'edit_car' car.id %}" class="btn btn-sm btn-warning" title="{% trans 'Edit' %}">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
                                 </div>
                             </td>
                         </tr>
@@ -158,9 +224,8 @@
                             <td colspan="5" class="text-center py-4">
                                 <i class="fas fa-car fa-3x text-muted mb-3"></i>
                                 <h5>{% trans "No cars in this yard yet" %}</h5>
-                                <a href="{% url 'add_car' %}" class="btn btn-success">
-    <i class="fas fa-plus"></i> {% trans "Add New Car" %}
-</a>                          </td>
+                                <a href="{% url 'add_car' %}" class="btn btn-primary">{% trans "Add Your First Car" %}</a>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
