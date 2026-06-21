@@ -393,13 +393,25 @@ def add_car(request):
                     car.yard = yard
                     car.is_approved = False  # Needs yard manager approval
                 except Yard.DoesNotExist:
-                    messages.warning(request, _('You are not assigned to any yard. Your car will be listed without yard association.'))
+                    messages.warning(request, _('You are not assigned to any yard.'))
             
             car.save()
             
-            # Handle images
-            if 'images' in request.FILES:
-                CarImage.objects.create(car=car, image=request.FILES['images'], is_primary=True)
+            # Handle images - check if file exists and is valid
+            if 'images' in request.FILES and request.FILES['images']:
+                try:
+                    image_file = request.FILES['images']
+                    # Check if file has content
+                    if image_file.size > 0:
+                        CarImage.objects.create(
+                            car=car, 
+                            image=image_file, 
+                            is_primary=True
+                        )
+                    else:
+                        messages.warning(request, _('Image file is empty. Please upload a valid image.'))
+                except Exception as e:
+                    messages.warning(request, _('Could not upload image. Please try again.'))
             
             messages.success(request, _('Car added successfully!'))
             
@@ -416,7 +428,6 @@ def add_car(request):
         form = CarForm()
     
     return render(request, 'marketplace/add_car.html', {'form': form})
-
 
 @login_required
 def edit_car(request, car_id):
