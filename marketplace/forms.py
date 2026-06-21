@@ -121,26 +121,38 @@ class RegisterForm(UserCreationForm):
         
         return password2
     
-    def clean(self):
-        """Additional validation for specific roles."""
-        cleaned_data = super().clean()
-        role = cleaned_data.get('role')
+    def clean_phone(self):
+        """Validate phone number based on role."""
+        phone = self.cleaned_data.get('phone')
+        role = self.cleaned_data.get('role')
         
-        # For Yard Managers, require business_name, phone, and location
-        if role == 'yard_manager':
-            if not cleaned_data.get('business_name'):
-                self.add_error('business_name', 'Business name is required for Yard Managers.')
-            if not cleaned_data.get('phone'):
-                self.add_error('phone', 'Phone number is required for Yard Managers.')
-            if not cleaned_data.get('location'):
-                self.add_error('location', 'Location is required for Yard Managers.')
+        # Only require phone for dealers and yard managers
+        if role in ['dealer', 'yard_manager'] and not phone:
+            raise ValidationError('Phone number is required for Dealers and Yard Managers.')
         
-        # For Dealers, require phone
-        if role == 'dealer':
-            if not cleaned_data.get('phone'):
-                self.add_error('phone', 'Phone number is required for Dealers.')
+        return phone
+    
+    def clean_business_name(self):
+        """Validate business name based on role."""
+        business_name = self.cleaned_data.get('business_name')
+        role = self.cleaned_data.get('role')
         
-        return cleaned_data
+        # Only require business name for yard managers
+        if role == 'yard_manager' and not business_name:
+            raise ValidationError('Business name is required for Yard Managers.')
+        
+        return business_name
+    
+    def clean_location(self):
+        """Validate location based on role."""
+        location = self.cleaned_data.get('location')
+        role = self.cleaned_data.get('role')
+        
+        # Only require location for yard managers
+        if role == 'yard_manager' and not location:
+            raise ValidationError('Location is required for Yard Managers.')
+        
+        return location
     
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -173,12 +185,8 @@ class RegisterForm(UserCreationForm):
                     is_verified=False,
                     verification_level='1'
                 )
-            
-            # If role is yard_manager, we just create UserProfile with role='yard_manager'
-            # The yard manager will be assigned to a yard by admin later
         
         return user
-
 
 class CustomAuthenticationForm(AuthenticationForm):
     """Custom login form with Bootstrap styling."""
