@@ -187,7 +187,7 @@
                     <p>{% trans "Join thousands of car buyers and sellers" %}</p>
                 </div>
                 <div class="card-body">
-                    <form method="post" id="registerForm">
+                    <form method="post" id="registerForm" novalidate>
                         {% csrf_token %}
                         
                         {% if form.non_field_errors %}
@@ -201,7 +201,7 @@
                         <!-- Username -->
                         <div class="mb-3">
                             <label class="form-label">
-                                <i class="fas fa-user"></i> {% trans "Username" %}
+                                <i class="fas fa-user"></i> {% trans "Username" %} <span class="text-danger">*</span>
                             </label>
                             <input type="text" name="username" class="form-control" placeholder="{% trans 'Choose a username' %}" required 
                                    value="{{ form.username.value|default:'' }}">
@@ -213,7 +213,7 @@
                         <!-- Email -->
                         <div class="mb-3">
                             <label class="form-label">
-                                <i class="fas fa-envelope"></i> {% trans "Email Address" %}
+                                <i class="fas fa-envelope"></i> {% trans "Email Address" %} <span class="text-danger">*</span>
                             </label>
                             <input type="email" name="email" class="form-control" placeholder="{% trans 'Enter your email address' %}" required
                                    value="{{ form.email.value|default:'' }}">
@@ -225,7 +225,7 @@
                         <!-- Password -->
                         <div class="mb-3">
                             <label class="form-label">
-                                <i class="fas fa-lock"></i> {% trans "Password" %}
+                                <i class="fas fa-lock"></i> {% trans "Password" %} <span class="text-danger">*</span>
                             </label>
                             <input type="password" name="password1" class="form-control" placeholder="{% trans 'Choose a password (min 4 characters)' %}" required minlength="4">
                             {% if form.password1.errors %}
@@ -237,7 +237,7 @@
                         <!-- Confirm Password -->
                         <div class="mb-3">
                             <label class="form-label">
-                                <i class="fas fa-check-circle"></i> {% trans "Confirm Password" %}
+                                <i class="fas fa-check-circle"></i> {% trans "Confirm Password" %} <span class="text-danger">*</span>
                             </label>
                             <input type="password" name="password2" class="form-control" placeholder="{% trans 'Confirm your password' %}" required>
                             {% if form.password2.errors %}
@@ -248,7 +248,7 @@
                         <!-- Role Selection -->
                         <div class="mb-3">
                             <label class="form-label">
-                                <i class="fas fa-user-tag"></i> {% trans "I want to register as:" %}
+                                <i class="fas fa-user-tag"></i> {% trans "I want to register as:" %} <span class="text-danger">*</span>
                             </label>
                             <select name="role" id="roleSelect" class="role-select form-control" required>
                                 <option value="buyer" {% if form.role.value == 'buyer' %}selected{% endif %}>
@@ -266,7 +266,7 @@
                             {% endif %}
                         </div>
                         
-                        <!-- Extra Fields -->
+                        <!-- Extra Fields Container -->
                         <div id="extraFieldsContainer">
                             <!-- Dealer Fields -->
                             <div id="dealerFields" class="extra-fields {% if form.role.value == 'dealer' %}show{% endif %}">
@@ -274,7 +274,7 @@
                                 <div class="mb-3">
                                     <label class="form-label">{% trans "Phone Number" %} <span class="text-danger">*</span></label>
                                     <input type="tel" name="phone" class="form-control" placeholder="{% trans 'Enter your phone number' %}"
-                                           value="{{ form.phone.value|default:'' }}" required>
+                                           value="{{ form.phone.value|default:'' }}">
                                     {% if form.phone.errors %}
                                         <div class="text-danger small">{{ form.phone.errors.0 }}</div>
                                     {% endif %}
@@ -288,7 +288,7 @@
                                 <div class="mb-3">
                                     <label class="form-label">{% trans "Business Name" %} <span class="text-danger">*</span></label>
                                     <input type="text" name="business_name" class="form-control" placeholder="{% trans 'Enter your business name' %}"
-                                           value="{{ form.business_name.value|default:'' }}" required>
+                                           value="{{ form.business_name.value|default:'' }}">
                                     {% if form.business_name.errors %}
                                         <div class="text-danger small">{{ form.business_name.errors.0 }}</div>
                                     {% endif %}
@@ -296,7 +296,7 @@
                                 <div class="mb-3">
                                     <label class="form-label">{% trans "Phone Number" %} <span class="text-danger">*</span></label>
                                     <input type="tel" name="phone" class="form-control" placeholder="{% trans 'Enter your phone number' %}"
-                                           value="{{ form.phone.value|default:'' }}" required>
+                                           value="{{ form.phone.value|default:'' }}">
                                     {% if form.phone.errors %}
                                         <div class="text-danger small">{{ form.phone.errors.0 }}</div>
                                     {% endif %}
@@ -305,7 +305,7 @@
                                 <div class="mb-3">
                                     <label class="form-label">{% trans "Location" %} <span class="text-danger">*</span></label>
                                     <input type="text" name="location" class="form-control" placeholder="{% trans 'Enter your yard location' %}"
-                                           value="{{ form.location.value|default:'' }}" required>
+                                           value="{{ form.location.value|default:'' }}">
                                     {% if form.location.errors %}
                                         <div class="text-danger small">{{ form.location.errors.0 }}</div>
                                     {% endif %}
@@ -376,8 +376,11 @@
             }
         }
         
-        roleSelect.addEventListener('change', toggleFields);
+        // Run on page load
         toggleFields();
+        
+        // Run on change
+        roleSelect.addEventListener('change', toggleFields);
     });
 </script>
 {% endblock %}
