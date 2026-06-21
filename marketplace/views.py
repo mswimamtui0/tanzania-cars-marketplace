@@ -5,7 +5,6 @@ from django.contrib.auth import authenticate, login as auth_login, logout as aut
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.db.models import Q
-from .models import CarListing
 from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
 from django.utils import timezone
@@ -20,40 +19,18 @@ from .forms import (
     YardForm, DealerAssignmentForm, CustomUserCreationForm
 )
 
-from .models import UserProfile, CarListing, CarYard, Wishlist, ComparisonSet, SoldRequest, Reservation, InspectionRequest, DealerCommission, FakeListingReport, YardDealerAssignment, Message
-
 # ========== HOME AND GENERAL PAGES ==========
 
 def home(request):
-    """Professional homepage with all sections"""
-    from django.db.models import Count, Q
-    from django.contrib.auth.models import User
-    
-    # Featured cars (carousel)
-    featured_cars = CarListing.objects.filter(status='approved', is_featured=True)[:10]
-    
-    # Latest cars
-    latest_cars = CarListing.objects.filter(status='approved').order_by('-created_at')[:8]
-    
-    # Popular makes (for display)
-    popular_makes = CarListing.objects.filter(status='approved').values('make').annotate(count=Count('id')).order_by('-count')[:8]
-    
-    # Statistics
-    total_cars = CarListing.objects.filter(status='approved').count()
-    total_dealers = User.objects.filter(userprofile__role='dealer').count()
-    total_sold = CarListing.objects.filter(status='sold').count()
-    
-    # Blog/News posts (if you have blog module)
-    recent_blog_posts = []
+    """Home page view."""
+    featured_cars = Car.objects.filter(is_featured=True, status='available')[:6]
+    recent_cars = Car.objects.filter(status='available').order_by('-created_at')[:12]
+    dealers = Dealer.objects.filter(is_verified=True)[:6]
     
     context = {
         'featured_cars': featured_cars,
-        'latest_cars': latest_cars,
-        'popular_makes': popular_makes,
-        'total_cars': total_cars,
-        'total_dealers': total_dealers,
-        'total_sold': total_sold,
-        'recent_blog_posts': recent_blog_posts,
+        'recent_cars': recent_cars,
+        'dealers': dealers,
     }
     return render(request, 'marketplace/home.html', context)
 
@@ -81,12 +58,9 @@ def register(request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            # Get the selected role from POST data
             role = request.POST.get('role', 'buyer')
             
-            # Create user profile based on role
             if role == 'dealer':
-                # Create dealer profile
                 Dealer.objects.create(
                     user=user,
                     business_name=request.POST.get('business_name', f"{user.username}'s Dealership"),
@@ -99,8 +73,8 @@ def register(request):
                 return redirect('dealer_dashboard')
                 
             elif role == 'yard_manager':
-                # Create yard manager (you may need a YardManager model)
-                # For now, redirect to yard dashboard
+                # Create yard manager profile (you may need a YardManager model)
+                # For now, we'll just redirect to yard dashboard
                 auth_login(request, user)
                 messages.success(request, _('Registration successful! Welcome to your Yard Dashboard.'))
                 return redirect('yard_dashboard')
@@ -114,8 +88,6 @@ def register(request):
     
     return render(request, 'marketplace/register.html', {'form': form})
 
-
-
 def login(request):
     """User login view."""
     if request.method == 'POST':
@@ -125,14 +97,14 @@ def login(request):
         if user is not None:
             auth_login(request, user)
             
-            # Check user role and redirect accordingly
+            # Redirect based on role
             if user.is_staff:
                 messages.success(request, _('Welcome back, Admin!'))
                 return redirect('admin_dashboard')
             elif hasattr(user, 'dealer_profile'):
                 messages.success(request, _('Welcome back to your Dealer Dashboard!'))
                 return redirect('dealer_dashboard')
-            elif hasattr(user, 'yard_manager_profile') or user.groups.filter(name='Yard Managers').exists():
+            elif user.groups.filter(name='Yard Managers').exists():
                 messages.success(request, _('Welcome back to your Yard Dashboard!'))
                 return redirect('yard_dashboard')
             else:
@@ -168,7 +140,6 @@ def car_list(request):
     """List all available cars with filters."""
     cars = Car.objects.filter(status='available')
     
-    # Search
     search_query = request.GET.get('q', '')
     if search_query:
         cars = cars.filter(
@@ -178,7 +149,6 @@ def car_list(request):
             Q(description__icontains=search_query)
         )
     
-    # Filters
     brand = request.GET.get('brand', '')
     if brand:
         cars = cars.filter(brand__icontains=brand)
@@ -203,11 +173,9 @@ def car_list(request):
     if fuel_type:
         cars = cars.filter(fuel_type=fuel_type)
     
-    # Sorting
     sort_by = request.GET.get('sort', '-created_at')
     cars = cars.order_by(sort_by)
     
-    # Pagination
     paginator = Paginator(cars, 12)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -252,7 +220,6 @@ def save_car(request):
             car.seller = request.user
             car.save()
             
-            # Handle images
             images = request.FILES.getlist('images')
             for img in images:
                 CarImage.objects.create(car=car, image=img)
@@ -266,7 +233,7 @@ def save_car(request):
 
 @login_required
 def add_car(request):
-    """Add car view - alias for save_car."""
+    """Add car view."""
     return save_car(request)
 
 @login_required
@@ -274,7 +241,6 @@ def edit_car(request, car_id):
     """Edit a car listing."""
     car = get_object_or_404(Car, id=car_id)
     
-    # Check permission
     if request.user != car.seller and not request.user.is_staff:
         messages.error(request, _('You do not have permission to edit this car.'))
         return redirect('car_detail', car_id=car.id)
@@ -295,7 +261,6 @@ def delete_car(request, car_id):
     """Delete a car listing."""
     car = get_object_or_404(Car, id=car_id)
     
-    # Check permission
     if request.user != car.seller and not request.user.is_staff:
         messages.error(request, _('You do not have permission to delete this car.'))
         return redirect('car_detail', car_id=car.id)
@@ -309,13 +274,13 @@ def delete_car(request, car_id):
 
 @login_required
 def sell_car(request):
-    """Sell car view - redirects to add car."""
-    return redirect('add_car')
+    """Sell car view."""
+    return render(request, 'marketplace/sell_car.html')
 
 @login_required
 def create_listing(request):
-    """Create listing view - redirects to add car."""
-    return redirect('add_car')
+    """Create listing view."""
+    return render(request, 'marketplace/create_listing.html')
 
 # ========== FAVORITES ==========
 
@@ -354,6 +319,7 @@ def dealer_dashboard(request):
     total_cars = cars.count()
     available_cars = cars.filter(status='available').count()
     sold_cars = cars.filter(status='sold').count()
+    pending_cars = cars.filter(status='pending').count()
     
     context = {
         'dealer': dealer,
@@ -361,6 +327,7 @@ def dealer_dashboard(request):
         'total_cars': total_cars,
         'available_cars': available_cars,
         'sold_cars': sold_cars,
+        'pending_cars': pending_cars,
     }
     return render(request, 'marketplace/dealer_dashboard.html', context)
 
@@ -908,12 +875,14 @@ def buyer_dashboard(request):
     """Buyer dashboard view."""
     favorites = Favorite.objects.filter(user=request.user).select_related('car')
     inspection_requests = InspectionRequest.objects.filter(requested_by=request.user).order_by('-created_at')
-    messages_list = Message.objects.filter(recipient=request.user, is_read=False).count()
+    messages_count = Message.objects.filter(recipient=request.user, is_read=False).count()
     
     context = {
         'favorites': favorites[:5],
         'inspection_requests': inspection_requests[:5],
-        'unread_messages': messages_list,
+        'unread_messages': messages_count,
+        'favorites_count': favorites.count(),
+        'inspections_count': inspection_requests.count(),
     }
     return render(request, 'marketplace/buyer_dashboard.html', context)
 
@@ -971,11 +940,10 @@ def add_to_comparison(request, car_id):
     """Add car to comparison."""
     car = get_object_or_404(Car, id=car_id)
     
-    # Store comparison list in session
     comparison_list = request.session.get('comparison_list', [])
     if car_id not in comparison_list:
         comparison_list.append(car_id)
-        if len(comparison_list) > 4:  # Max 4 cars to compare
+        if len(comparison_list) > 4:
             comparison_list.pop(0)
         request.session['comparison_list'] = comparison_list
         messages.success(request, _('Car added to comparison!'))
@@ -1005,7 +973,6 @@ def car_valuation(request):
         year = int(request.POST.get('year', 0))
         mileage = int(request.POST.get('mileage', 0))
         
-        # Simple valuation logic
         base_price = 10000
         age = 2026 - year
         depreciation = age * 500
@@ -1165,37 +1132,6 @@ def reject_sold(request, car_id):
     car.save()
     messages.warning(request, _('Sale rejected.'))
     return redirect('admin_cars' if request.user.is_staff else 'dealer_sold_requests')
-
-# ========== RESERVATIONS ==========
-
-@login_required
-def reserve_car(request, car_id):
-    """Reserve a car."""
-    car = get_object_or_404(Car, id=car_id)
-    
-    if request.method == 'POST':
-        # Add reservation logic here
-        messages.success(request, _('Car reserved successfully!'))
-        return redirect('car_detail', car_id=car.id)
-    
-    return render(request, 'marketplace/reserve_car.html', {'car': car})
-
-@login_required
-def create_reservation(request):
-    """Create a reservation."""
-    if request.method == 'POST':
-        car_id = request.POST.get('car_id')
-        car = get_object_or_404(Car, id=car_id)
-        # Add reservation logic
-        messages.success(request, _('Reservation created!'))
-        return redirect('car_detail', car_id=car.id)
-    
-    return render(request, 'marketplace/reserve_car.html')
-
-
-def blog_detail(request, slug):
-    """Simple blog detail view"""
-    return render(request, 'marketplace/blog_detail.html', {'slug': slug})
 
 # ========== SEARCH ==========
 
