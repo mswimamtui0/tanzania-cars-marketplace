@@ -123,14 +123,18 @@ class RegisterForm(UserCreationForm):
     
     def clean_phone(self):
         """Validate phone number based on role."""
-        phone = self.cleaned_data.get('phone')
+        phone = self.cleaned_data.get('phone', '')
         role = self.cleaned_data.get('role')
-        
-        # Only require phone for dealers and yard managers
+    
+    # Only require phone for dealers and yard managers
         if role in ['dealer', 'yard_manager']:
-            if not phone or not phone.strip():
+        # Check if phone is empty or None
+            if not phone or phone.strip() == '':
                 raise ValidationError('Phone number is required for Dealers and Yard Managers.')
-        
+        # Optional: Validate phone format (basic)
+        if len(phone.strip()) < 7:
+            raise ValidationError('Please enter a valid phone number (at least 7 digits).')
+    
         return phone
     
     def clean_business_name(self):
