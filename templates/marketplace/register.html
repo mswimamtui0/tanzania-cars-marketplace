@@ -266,15 +266,15 @@
                             {% endif %}
                         </div>
                         
-                        <!-- Extra Fields Container -->
+                        <!-- Extra Fields -->
                         <div id="extraFieldsContainer">
                             <!-- Dealer Fields -->
                             <div id="dealerFields" class="extra-fields {% if form.role.value == 'dealer' %}show{% endif %}">
                                 <h6><i class="fas fa-store text-success"></i> {% trans "Dealer Information" %}</h6>
                                 <div class="mb-3">
-                                    <label class="form-label">{% trans "Phone Number" %}</label>
+                                    <label class="form-label">{% trans "Phone Number" %} <span class="text-danger">*</span></label>
                                     <input type="tel" name="phone" class="form-control" placeholder="{% trans 'Enter your phone number' %}"
-                                           value="{{ form.phone.value|default:'' }}">
+                                           value="{{ form.phone.value|default:'' }}" required>
                                     {% if form.phone.errors %}
                                         <div class="text-danger small">{{ form.phone.errors.0 }}</div>
                                     {% endif %}
@@ -286,26 +286,26 @@
                             <div id="yardManagerFields" class="extra-fields {% if form.role.value == 'yard_manager' %}show{% endif %}">
                                 <h6><i class="fas fa-building text-info"></i> {% trans "Yard Manager Information" %}</h6>
                                 <div class="mb-3">
-                                    <label class="form-label">{% trans "Business Name" %}</label>
+                                    <label class="form-label">{% trans "Business Name" %} <span class="text-danger">*</span></label>
                                     <input type="text" name="business_name" class="form-control" placeholder="{% trans 'Enter your business name' %}"
-                                           value="{{ form.business_name.value|default:'' }}">
+                                           value="{{ form.business_name.value|default:'' }}" required>
                                     {% if form.business_name.errors %}
                                         <div class="text-danger small">{{ form.business_name.errors.0 }}</div>
                                     {% endif %}
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">{% trans "Phone Number" %}</label>
+                                    <label class="form-label">{% trans "Phone Number" %} <span class="text-danger">*</span></label>
                                     <input type="tel" name="phone" class="form-control" placeholder="{% trans 'Enter your phone number' %}"
-                                           value="{{ form.phone.value|default:'' }}">
+                                           value="{{ form.phone.value|default:'' }}" required>
                                     {% if form.phone.errors %}
                                         <div class="text-danger small">{{ form.phone.errors.0 }}</div>
                                     {% endif %}
                                     <small class="text-muted">{% trans "Example: 0712345678" %}</small>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">{% trans "Location" %}</label>
+                                    <label class="form-label">{% trans "Location" %} <span class="text-danger">*</span></label>
                                     <input type="text" name="location" class="form-control" placeholder="{% trans 'Enter your yard location' %}"
-                                           value="{{ form.location.value|default:'' }}">
+                                           value="{{ form.location.value|default:'' }}" required>
                                     {% if form.location.errors %}
                                         <div class="text-danger small">{{ form.location.errors.0 }}</div>
                                     {% endif %}
@@ -354,17 +354,25 @@
             dealerFields.classList.remove('show');
             yardManagerFields.classList.remove('show');
             
-            // Remove required attributes
-            dealerFields.querySelectorAll('input').forEach(input => input.removeAttribute('required'));
-            yardManagerFields.querySelectorAll('input').forEach(input => input.removeAttribute('required'));
+            // Remove required attributes from all extra fields
+            dealerFields.querySelectorAll('input').forEach(function(input) {
+                input.removeAttribute('required');
+            });
+            yardManagerFields.querySelectorAll('input').forEach(function(input) {
+                input.removeAttribute('required');
+            });
             
-            // Show relevant fields
+            // Show and set required based on role
             if (role === 'dealer') {
                 dealerFields.classList.add('show');
-                dealerFields.querySelectorAll('input').forEach(input => input.setAttribute('required', 'required'));
+                dealerFields.querySelectorAll('input').forEach(function(input) {
+                    input.setAttribute('required', 'required');
+                });
             } else if (role === 'yard_manager') {
                 yardManagerFields.classList.add('show');
-                yardManagerFields.querySelectorAll('input').forEach(input => input.setAttribute('required', 'required'));
+                yardManagerFields.querySelectorAll('input').forEach(function(input) {
+                    input.setAttribute('required', 'required');
+                });
             }
         }
         
