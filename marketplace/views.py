@@ -132,19 +132,30 @@ def register(request):
         if form.is_valid():
             user = form.save()
             
-            # Get the role
+            # Get data from form
             role = form.cleaned_data.get('role', 'buyer')
+            phone = form.cleaned_data.get('phone', '')
             
-            # Log the user in
+            # Debug: Print to see if phone is captured
+            print(f"DEBUG: Role={role}, Phone={phone}")
+            
+            # If dealer, update Dealer model with phone
+            if role == 'dealer':
+                try:
+                    dealer = Dealer.objects.get(user=user)
+                    dealer.phone = phone
+                    dealer.save()
+                    print(f"DEBUG: Updated dealer phone to: {dealer.phone}")
+                except Dealer.DoesNotExist:
+                    print("DEBUG: Dealer not found")
+            
+            # Log user in
             auth_login(request, user)
-            
             messages.success(request, _('Registration successful!'))
             
-            # Redirect based on role
             if role == 'dealer':
                 return redirect('dealer_dashboard')
             elif role == 'yard_manager':
-                # IMPORTANT: Use the correct URL name for yard dashboard
                 return redirect('yard_dashboard')
             else:
                 return redirect('buyer_dashboard')
@@ -156,6 +167,7 @@ def register(request):
         form = RegisterForm()
     
     return render(request, 'marketplace/register.html', {'form': form})
+
 
 def login(request):
     """User login view."""

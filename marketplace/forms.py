@@ -157,30 +157,26 @@ class RegisterForm(UserCreationForm):
         role = self.cleaned_data.get('role', 'buyer')
         phone = self.cleaned_data.get('phone', '')
         
-        # Debug
-        print(f"DEBUG: Saving phone '{phone}' for role '{role}'")
-        
-        # Create UserProfile
+        # CREATE UserProfile - Phone inasave hapa
         UserProfile.objects.create(
             user=user,
             role=role,
-            phone=phone,
+            phone=phone,  # <-- This works
             company_name=self.cleaned_data.get('business_name', ''),
             location=self.cleaned_data.get('location', ''),
             verification_level=1
         )
         
-        # If dealer, create Dealer profile
+        # IF DEALER - CREATE Dealer profile
         if role == 'dealer':
             Dealer.objects.create(
                 user=user,
                 business_name=self.cleaned_data.get('business_name', f"{user.username}'s Dealership"),
-                phone=phone,
+                phone=phone,  # <-- This is NOT saving!
                 location='',
                 is_verified=False,
                 verification_level='1'
             )
-            print(f"DEBUG: Dealer created with phone: {phone}")
     
         return user
 
