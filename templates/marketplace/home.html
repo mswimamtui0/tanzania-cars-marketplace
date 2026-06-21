@@ -359,6 +359,11 @@
         gap: 5px;
     }
     
+    .car-specs span i {
+        color: #667eea;
+        width: 16px;
+    }
+    
     /* ========================================
        POPULAR MAKES
        ======================================== */
@@ -722,15 +727,15 @@
                 <!-- Statistics -->
                 <div class="hero-stats">
                     <div class="hero-stat">
-                        <h3>{{ total_cars|default:"10,000+" }}</h3>
+                        <h3>{{ total_cars|default:"0" }}</h3>
                         <p>{% trans "Cars Available" %}</p>
                     </div>
                     <div class="hero-stat">
-                        <h3>{{ total_dealers|default:"500+" }}</h3>
+                        <h3>{{ total_dealers|default:"0" }}</h3>
                         <p>{% trans "Trusted Dealers" %}</p>
                     </div>
                     <div class="hero-stat">
-                        <h3>{{ total_sold|default:"50,000+" }}</h3>
+                        <h3>{{ total_sold|default:"0" }}</h3>
                         <p>{% trans "Cars Sold" %}</p>
                     </div>
                 </div>
@@ -759,7 +764,6 @@
 <!-- ========================================
      FEATURED CARS
      ======================================== -->
-{% if featured_cars %}
 <section class="container mt-5">
     <div class="section-header">
         <span class="badge badge-primary">{% trans "Premium Selection" %}</span>
@@ -768,32 +772,43 @@
         <a href="{% url 'car_list' %}" class="btn btn-outline-primary">{% trans "View All Cars" %}</a>
     </div>
     
-    <div class="row">
-        {% for car in featured_cars|slice:":6" %}
-        <div class="col-md-4 mb-4">
-            <div class="card car-card position-relative">
-                <span class="featured-badge">{% trans "FEATURED" %}</span>
-                {% if car.images and car.images.url %}
-                    <img src="{{ car.images.url }}" class="card-img-top" alt="{{ car.title }}">
-                {% else %}
-                    <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 220px;">
+    {% if featured_cars %}
+        <div class="row">
+            {% for car in featured_cars|slice:":6" %}
+            <div class="col-md-4 mb-4">
+                <div class="card car-card position-relative">
+                    <span class="featured-badge">{% trans "FEATURED" %}</span>
+                    {% if car.car_images.first and car.car_images.first.image.url %}
+                        <img src="{{ car.car_images.first.image.url }}" class="card-img-top" alt="{{ car.title }}">
+                    {% elif car.images and car.images.url %}
+                        <img src="{{ car.images.url }}" class="card-img-top" alt="{{ car.title }}">
+                    {% else %}
+                        <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 220px;">
+                            <i class="fas fa-car fa-4x"></i>
+                        </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ car.year }} {{ car.make }} {{ car.model }}</h5>
+                        <div class="car-specs">
+                            <span>{{ car.mileage|floatformat:0 }} km</span>
+                            <span>{{ car.transmission|default:"Automatic" }}</span>
+                        </div>
+                        <h5 class="price-tag">TSh {{ car.price|floatformat:0 }}</h5>
+                        <a href="{% url 'car_detail' car.id %}" class="btn btn-warning w-100">{% trans "View Details" %}</a>
                     </div>
-                {% endif %}
-                <div class="card-body">
-                    <h5 class="card-title">{{ car.year }} {{ car.make }} {{ car.model }}</h5>
-                    <div class="car-specs">
-                        <span>{{ car.mileage|floatformat:0 }} km</span>
-                        <span>{{ car.transmission|default:"Automatic" }}</span>
-                    </div>
-                    <h5 class="price-tag">TSh {{ car.price|floatformat:0 }}</h5>
-                    <a href="{% url 'car_detail' car.id %}" class="btn btn-warning w-100">{% trans "View Details" %}</a>
                 </div>
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-    </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-car fa-3x text-muted mb-3"></i>
+            <h3>{% trans "No featured cars available yet" %}</h3>
+            <p class="text-muted">{% trans "Check back later for premium listings" %}</p>
+            <a href="{% url 'car_list' %}" class="btn btn-outline-primary">{% trans "Browse All Cars" %}</a>
+        </div>
+    {% endif %}
 </section>
-{% endif %}
 
 <!-- ========================================
      LATEST CARS
@@ -806,29 +821,41 @@
         <a href="{% url 'car_list' %}" class="btn btn-outline-primary">{% trans "View All" %}</a>
     </div>
     
-    <div class="row">
-        {% for car in latest_cars|slice:":8" %}
-        <div class="col-md-3 col-6 mb-4">
-            <div class="card car-card position-relative">
-                <span class="new-badge">{% trans "NEW" %}</span>
-                {% if car.images and car.images.url %}
-                    <img src="{{ car.images.url }}" class="card-img-top" alt="{{ car.title }}" style="height: 160px;">
-                {% else %}
-                    <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 160px;">
+    {% if latest_cars %}
+        <div class="row">
+            {% for car in latest_cars|slice:":8" %}
+            <div class="col-md-3 col-6 mb-4">
+                <div class="card car-card position-relative">
+                    <span class="new-badge">{% trans "NEW" %}</span>
+                    {% if car.car_images.first and car.car_images.first.image.url %}
+                        <img src="{{ car.car_images.first.image.url }}" class="card-img-top" alt="{{ car.title }}" style="height: 160px;">
+                    {% elif car.images and car.images.url %}
+                        <img src="{{ car.images.url }}" class="card-img-top" alt="{{ car.title }}" style="height: 160px;">
+                    {% else %}
+                        <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 160px;">
+                            <i class="fas fa-car fa-2x"></i>
+                        </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h6 class="card-title">{{ car.year }} {{ car.make }} {{ car.model }}</h6>
+                        <div class="car-specs">
+                            <span>{{ car.mileage|floatformat:0 }} km</span>
+                        </div>
+                        <h5 class="price-tag" style="font-size: 1.1rem;">TSh {{ car.price|floatformat:0 }}</h5>
+                        <a href="{% url 'car_detail' car.id %}" class="btn btn-primary w-100">{% trans "View" %}</a>
                     </div>
-                {% endif %}
-                <div class="card-body">
-                    <h6 class="card-title">{{ car.year }} {{ car.make }} {{ car.model }}</h6>
-                    <div class="car-specs">
-                        <span>{{ car.mileage|floatformat:0 }} km</span>
-                    </div>
-                    <h5 class="price-tag" style="font-size: 1.1rem;">TSh {{ car.price|floatformat:0 }}</h5>
-                    <a href="{% url 'car_detail' car.id %}" class="btn btn-primary w-100">{% trans "View" %}</a>
                 </div>
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-    </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-car fa-3x text-muted mb-3"></i>
+            <h3>{% trans "No cars available yet" %}</h3>
+            <p class="text-muted">{% trans "Be the first to list your car!" %}</p>
+            <a href="{% url 'add_car' %}" class="btn btn-primary">{% trans "Add Your Car" %}</a>
+        </div>
+    {% endif %}
 </section>
 
 <!-- ========================================
