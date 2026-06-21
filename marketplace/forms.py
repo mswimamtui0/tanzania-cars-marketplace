@@ -50,7 +50,7 @@ class RegisterForm(UserCreationForm):
     
     phone = forms.CharField(
         max_length=15,
-        required=False,
+        required=True,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
             'placeholder': 'Enter your phone number'
@@ -59,7 +59,7 @@ class RegisterForm(UserCreationForm):
     
     business_name = forms.CharField(
         max_length=200,
-        required=False,
+        required=True,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
             'placeholder': 'Enter your business name'
@@ -68,7 +68,7 @@ class RegisterForm(UserCreationForm):
     
     location = forms.CharField(
         max_length=200,
-        required=False,
+        required=True,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
             'placeholder': 'Enter your location'
@@ -123,17 +123,12 @@ class RegisterForm(UserCreationForm):
     
     def clean_phone(self):
         """Validate phone number based on role."""
-        phone = self.cleaned_data.get('phone', '')
         role = self.cleaned_data.get('role')
+        phone = self.cleaned_data.get('phone', '').strip()
     
     # Only require phone for dealers and yard managers
-        if role in ['dealer', 'yard_manager']:
-        # Check if phone is empty or None
-            if not phone or phone.strip() == '':
-                raise ValidationError('Phone number is required for Dealers and Yard Managers.')
-        # Optional: Validate phone format (basic)
-        if len(phone.strip()) < 7:
-            raise ValidationError('Please enter a valid phone number (at least 7 digits).')
+        if role in ['dealer', 'yard_manager'] and not phone:
+            raise ValidationError('Phone number is required for Dealers and Yard Managers.')
     
         return phone
     
