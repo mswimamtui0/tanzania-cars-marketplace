@@ -835,6 +835,7 @@ def admin_users(request):
 
 
 @login_required
+@login_required
 def admin_verify_yard(request):
     """Admin verifies yard managers and yards"""
     if request.user.userprofile.role != 'admin' and not request.user.is_superuser:
