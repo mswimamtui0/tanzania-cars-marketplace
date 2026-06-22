@@ -103,7 +103,20 @@ urlpatterns = [
     path('yard/dashboard/', views.yard_manager_dashboard, name='yard_dashboard'),
     # Add this in the urlpatterns
 path('cars/add-car/', views.add_car, name='add_car'),
-]
+# In urls.py
+path('dealer/sold-requests/', views.dealer_sold_requests, name='dealer_sold_requests'),
+path('dealer/approve-sold/<int:car_id>/', views.approve_sold, name='approve_sold'),
+path('dealer/reject-sold/<int:car_id>/', views.reject_sold, name='reject_sold'),
+# Admin - Yard Verification
+path('admin/verify-yards/', views.admin_verify_yard_list, name='admin_verify_yard_list'),
+path('admin/verify-yard/<int:yard_id>/', views.admin_verify_yard, name='admin_verify_yard'),
+path('admin/verify-yards/', views.admin_verify_yard_list, name='admin_verify_yard_list'),
+]# Admin Yard Management
+path('admin-verify-yard/', views.admin_verify_yard, name='admin_verify_yard'),
+path('admin-assign-yard/', views.admin_assign_yard, name='admin_assign_yard'),
+path('admin-create-yard/', views.admin_create_yard, name='admin_create_yard'),
+path('admin-reports/', views.admin_reports_dashboard, name='admin_reports'),
+path('report-resolve/<int:report_id>/', views.resolve_report, name='resolve_report'),
 
 # Serve media and static files in development
 if settings.DEBUG:

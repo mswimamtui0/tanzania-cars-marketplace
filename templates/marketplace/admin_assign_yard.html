@@ -27,7 +27,7 @@
                             <select name="manager_id" class="form-control" required>
                                 <option value="">-- Select a Manager --</option>
                                 {% for manager in managers %}
-                                    <option value="{{ manager.id }}">{{ manager.username }} ({{ manager.email }})</option>
+                                    <option value="{{ manager.id }}">{{ manager.username }}</option>
                                 {% empty %}
                                     <option value="">No yard managers available</option>
                                 {% endfor %}
@@ -42,4 +42,3 @@
     </div>
 </div>
 {% endblock %}
-

@@ -204,52 +204,49 @@
     {% endif %}
 
     <!-- Quick Actions -->
-    <div class="card dashboard-card mb-4">
-        <div class="card-header bg-light">
-            <h5 class="mb-0 fw-bold"><i class="fas fa-bolt text-primary"></i> {% trans "Quick Actions" %}</h5>
-        </div>
-        <div class="card-body">
-            <div class="row g-2">
-                <div class="col-md-2 col-4 mb-2">
-                    <a href="{% url 'admin_cars' %}" class="btn btn-outline-success btn-action w-100">
-                        <i class="fas fa-car"></i>
-                        <small>{% trans "Manage Cars" %}</small>
-                    </a>
-                </div>
-                <div class="col-md-2 col-4 mb-2">
-                    <a href="{% url 'admin_users' %}" class="btn btn-outline-info btn-action w-100">
-                        <i class="fas fa-users"></i>
-                        <small>{% trans "Manage Users" %}</small>
-                    </a>
-                </div>
-                <div class="col-md-2 col-4 mb-2">
-                    <a href="{% url 'admin_dealers' %}" class="btn btn-outline-warning btn-action w-100">
-                        <i class="fas fa-store"></i>
-                        <small>{% trans "Manage Dealers" %}</small>
-                    </a>
-                </div>
-                <div class="col-md-2 col-4 mb-2">
-                    <a href="{% url 'admin_yards' %}" class="btn btn-outline-primary btn-action w-100">
-                        <i class="fas fa-warehouse"></i>
-                        <small>{% trans "Manage Yards" %}</small>
-                    </a>
-                </div>
-                <div class="col-md-2 col-4 mb-2">
-                    <a href="{% url 'admin_assign_yard' %}" class="btn btn-outline-warning btn-action w-100">
-                        <i class="fas fa-user-plus"></i>
-                        <small>{% trans "Assign Yard" %}</small>
-                    </a>
-                </div>
-                <div class="col-md-2 col-4 mb-2">
-                    <a href="{% url 'admin_create_yard' %}" class="btn btn-outline-secondary btn-action w-100">
-                        <i class="fas fa-plus-circle"></i>
-                        <small>{% trans "Create Yard" %}</small>
-                    </a>
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-bolt"></i> Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-2 col-6 mb-2">
+                        <a href="/admin/" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-cog"></i> Admin Panel
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-6 mb-2">
+                        <a href="{% url 'car_list' %}" class="btn btn-outline-success w-100">
+                            <i class="fas fa-car"></i> Manage Cars
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-6 mb-2">
+                        <a href="/admin/auth/user/" class="btn btn-outline-info w-100">
+                            <i class="fas fa-users"></i> Manage Users
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-6 mb-2">
+                        <a href="{% url 'admin_verify_yard' %}" class="btn btn-outline-warning w-100">
+                            <i class="fas fa-check-circle"></i> Verify Yards
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-6 mb-2">
+                        <a href="{% url 'admin_reports' %}" class="btn btn-outline-danger w-100">
+                            <i class="fas fa-flag"></i> View Reports
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-6 mb-2">
+                        <a href="{% url 'car_valuation' %}" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-chart-line"></i> Car Valuation
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
+</div>
     <!-- Pending Yard Managers Section -->
     <div id="pending-yard-managers" class="card dashboard-card mb-4">
         <div class="card-header bg-warning">

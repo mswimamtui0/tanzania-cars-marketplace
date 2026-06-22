@@ -5,7 +5,6 @@
     <h1><i class="fas fa-check-circle"></i> Yard Verification</h1>
     <p>Assign yard managers to yards so they can add cars</p>
 
-    <!-- Statistics -->
     <div class="row mb-4">
         <div class="col-md-4">
             <div class="card bg-warning">
@@ -33,132 +32,33 @@
         </div>
     </div>
 
-    <!-- Quick Actions -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <a href="{% url 'admin_create_yard' %}" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Create New Yard
-                    </a>
-                    <a href="{% url 'admin_assign_yard' %}" class="btn btn-warning">
-                        <i class="fas fa-user-check"></i> Assign Yard Manager
-                    </a>
-                </div>
-            </div>
+            <a href="{% url 'admin_create_yard' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Create New Yard
+            </a>
+            <a href="{% url 'admin_assign_yard' %}" class="btn btn-warning">
+                <i class="fas fa-user-check"></i> Assign Yard Manager
+            </a>
         </div>
     </div>
 
-    <!-- Assigned Yards -->
     <div class="card shadow">
         <div class="card-header bg-success text-white">
             <h5 class="mb-0">✅ Assigned Yards</h5>
         </div>
         <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Yard Name</th>
-                            <th>Location</th>
-                            <th>Manager</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for yard in assigned_yards %}
-                        <tr>
-                            <td><strong>{{ yard.name }}</strong></td>
-                            <td>{{ yard.location }}, {{ yard.city }}</td>
-                            <td>{{ yard.manager.username|default:"Not assigned" }}</td>
-                            <td><span class="badge bg-success">Active</span></td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="4" class="text-center">No assigned yards yet.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Pending Yards -->
-    <div class="card shadow mt-4">
-        <div class="card-header bg-warning">
-            <h5 class="mb-0">⏳ Pending Yards (Need Manager)</h5>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Yard Name</th>
-                            <th>Location</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for yard in pending_yards %}
-                        <tr>
-                            <td><strong>{{ yard.name }}</strong></td>
-                            <td>{{ yard.location }}, {{ yard.city }}</td>
-                            <td>
-                                <a href="{% url 'admin_assign_yard' %}" class="btn btn-sm btn-primary">Assign Manager</a>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="3" class="text-center">No pending yards.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Yard Managers -->
-    <div class="card shadow mt-4">
-        <div class="card-header bg-info text-white">
-            <h5 class="mb-0">👤 Yard Managers</h5>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Username</th>
-                            <th>Email</th>
-                            <th>Assigned Yard</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for manager in yard_managers %}
-                        <tr>
-                            <td>{{ manager.username }}</td>
-                            <td>{{ manager.email }}</td>
-                            <td>
-                                {% for yard in manager.managed_yards.all %}
-                                    {{ yard.name }}{% if not forloop.last %}, {% endif %}
-                                {% empty %}
-                                    <span class="text-muted">Not assigned</span>
-                                {% endfor %}
-                            </td>
-                            <td>
-                                {% if manager.managed_yards.all %}
-                                    <span class="badge bg-success">Active</span>
-                                {% else %}
-                                    <span class="badge bg-warning">Pending</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="4" class="text-center">No yard managers registered.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            <table class="table">
+                <thead><tr><th>Yard Name</th><th>Location</th><th>Manager</th></tr></thead>
+                <tbody>
+                    {% for yard in assigned_yards %}
+                    <tr><td>{{ yard.name }}</td><td>{{ yard.location }}</td><td>{{ yard.manager.username|default:"Not assigned" }}</td></tr>
+                    {% empty %}
+                    <tr><td colspan="3">No assigned yards.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 {% endblock %}
-

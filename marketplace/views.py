@@ -833,6 +833,133 @@ def admin_users(request):
     
     return render(request, 'marketplace/admin_dashboard.html', {'page_obj': page_obj})
 
+
+@login_required
+def admin_verify_yard(request):
+    """Admin verifies yard managers and yards"""
+    if request.user.userprofile.role != 'admin' and not request.user.is_superuser:
+        messages.error(request, 'Access denied. Admin privileges required.')
+        return redirect('dashboard')
+    
+    yard_managers = User.objects.filter(userprofile__role='yard_manager')
+    pending_yards = CarYard.objects.filter(manager__isnull=True)
+    assigned_yards = CarYard.objects.filter(manager__isnull=False)
+    
+    context = {
+        'yard_managers': yard_managers,
+        'pending_yards': pending_yards,
+        'assigned_yards': assigned_yards,
+        'pending_count': pending_yards.count(),
+        'assigned_count': assigned_yards.count(),
+    }
+    return render(request, 'marketplace/admin_verify_yard.html', context)
+
+@login_required
+def admin_assign_yard(request):
+    """Admin assigns a yard manager to a yard"""
+    if request.user.userprofile.role != 'admin' and not request.user.is_superuser:
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        yard_id = request.POST.get('yard_id')
+        manager_id = request.POST.get('manager_id')
+        
+        if not yard_id or not manager_id:
+            messages.error(request, 'Please select both yard and manager.')
+            return redirect('admin_assign_yard')
+        
+        try:
+            yard = CarYard.objects.get(id=yard_id)
+            manager = User.objects.get(id=manager_id, userprofile__role='yard_manager')
+            
+            yard.manager = manager
+            yard.save()
+            
+            messages.success(request, f'✅ {manager.username} assigned to {yard.name}!')
+        except CarYard.DoesNotExist:
+            messages.error(request, 'Yard not found.')
+        except User.DoesNotExist:
+            messages.error(request, 'Yard manager not found.')
+        
+        return redirect('admin_verify_yard')
+    
+    yards = CarYard.objects.filter(manager__isnull=True)
+    managers = User.objects.filter(userprofile__role='yard_manager')
+    
+    return render(request, 'marketplace/admin_assign_yard.html', {
+        'yards': yards,
+        'managers': managers
+    })
+
+@login_required
+def admin_create_yard(request):
+    """Admin creates a new yard"""
+    if request.user.userprofile.role != 'admin' and not request.user.is_superuser:
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        try:
+            yard = CarYard.objects.create(
+                name=request.POST.get('name'),
+                location=request.POST.get('location'),
+                city=request.POST.get('city'),
+                phone=request.POST.get('phone', ''),
+                email=request.POST.get('email', ''),
+                description=request.POST.get('description', '')
+            )
+            messages.success(request, f'✅ Yard "{yard.name}" created successfully!')
+            return redirect('admin_verify_yard')
+        except Exception as e:
+            messages.error(request, f'Error creating yard: {str(e)}')
+    
+    return render(request, 'marketplace/admin_create_yard.html')
+
+@login_required
+def admin_reports_dashboard(request):
+    """Admin views all reports"""
+    if request.user.userprofile.role != 'admin' and not request.user.is_superuser:
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+    
+    reports = FakeListingReport.objects.all().order_by('-created_at')
+    pending_reports = reports.filter(status='pending')
+    
+    context = {
+        'reports': reports,
+        'pending_reports': pending_reports,
+        'pending_count': pending_reports.count(),
+        'investigating_count': reports.filter(status='investigating').count(),
+        'resolved_count': reports.filter(status='resolved').count(),
+    }
+    return render(request, 'marketplace/admin_reports.html', context)
+
+@login_required
+def resolve_report(request, report_id):
+    """Admin resolves a report"""
+    if request.user.userprofile.role != 'admin' and not request.user.is_superuser:
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard')
+    
+    report = get_object_or_404(FakeListingReport, id=report_id)
+    
+    if request.method == 'POST':
+        report.status = request.POST.get('status')
+        report.admin_notes = request.POST.get('admin_notes', '')
+        report.resolved_at = timezone.now()
+        report.save()
+        
+        if report.status == 'resolved' and request.POST.get('hide_car') == 'on':
+            report.car.status = 'rejected'
+            report.car.save()
+        
+        messages.success(request, f'Report #{report.id} has been updated.')
+        return redirect('admin_reports')
+    
+    return render(request, 'marketplace/resolve_report.html', {'report': report})
+
+
 @login_required
 def admin_cars(request):
     """Admin cars management view."""

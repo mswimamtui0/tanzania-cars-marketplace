@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2><i class="fas fa-check-circle text-success"></i> {% trans "Verify Yards" %}</h2>
+    
+    <div class="card mt-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>{% trans "Yard Name" %}</th>
+                            <th>{% trans "Location" %}</th>
+                            <th>{% trans "Capacity" %}</th>
+                            <th>{% trans "Manager" %}</th>
+                            <th>{% trans "Status" %}</th>
+                            <th>{% trans "Actions" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for yard in pending_yards %}
+                        <tr>
+                            <td><strong>{{ yard.name }}</strong></td>
+                            <td>{{ yard.location }}</td>
+                            <td>{{ yard.capacity }}</td>
+                            <td>{{ yard.manager.username|default:"Not Assigned" }}</td>
+                            <td>
+                                <span class="badge bg-warning">{% trans "Pending" %}</span>
+                            </td>
+                            <td>
+                                <a href="{% url 'admin_verify_yard' yard.id %}" class="btn btn-sm btn-success">
+                                    <i class="fas fa-check"></i> {% trans "Verify" %}
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                <h5>{% trans "All yards are verified!" %}</h5>
+                                <p class="text-muted">{% trans "No pending yards to verify." %}</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
